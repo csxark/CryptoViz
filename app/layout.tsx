@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: 'CryptoViz',
   description: 'A visualizer for various cryptographic algorithms.',
   icons: {
-    icon: '/favicon.ico', // This tells Next.js to use the file in your app folder
+    icon: '/favicon.ico',
   },
 };
 

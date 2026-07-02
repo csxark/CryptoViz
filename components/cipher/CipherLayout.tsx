@@ -21,6 +21,28 @@ interface HistoryEntry {
   timestamp: string
 }
 
+const getHistoryStorageKey = (cipherId: string) => `cryptoviz-history-${cipherId}`
+
+const isValidHistoryEntry = (entry: unknown): entry is HistoryEntry => {
+  return (
+    typeof entry === 'object' &&
+    entry !== null &&
+    'id' in entry &&
+    'input' in entry &&
+    'key' in entry &&
+    'action' in entry &&
+    'output' in entry &&
+    'timestamp' in entry
+  )
+}
+
+const isValidHistoryArray = (data: unknown): data is HistoryEntry[] => {
+  return (
+    Array.isArray(data) &&
+    data.every(isValidHistoryEntry)
+  )
+}
+
 export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const { runCipher, loading, error: workerError } = useCipherWorker()
 
@@ -50,9 +72,14 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     setActiveTab('result')
 
     try {
-      const stored = window.localStorage.getItem(`cryptoviz-history-${cipher.id}`)
+      const stored = window.localStorage.getItem(getHistoryStorageKey(cipher.id))
       if (stored) {
-        setHistory(JSON.parse(stored))
+        const parsed = JSON.parse(stored)
+        if (isValidHistoryArray(parsed)) {
+          setHistory(parsed)
+        } else {
+          setHistory([])
+        }
       } else {
         setHistory([])
       }
@@ -114,7 +141,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
           const next = [entry, ...prev].slice(0, 5)
           if (typeof window !== 'undefined') {
             try {
-              window.localStorage.setItem(`cryptoviz-history-${cipher.id}`, JSON.stringify(next))
+              window.localStorage.setItem(getHistoryStorageKey(cipher.id), JSON.stringify(next))
             } catch (e) {
               // Silently fail if localStorage is unavailable (quota exceeded, disabled, private mode, etc.)
               console.warn('Failed to save history:', e)

@@ -1,0 +1,34 @@
+---
+title: Caesar Cipher
+description: One of the simplest and most widely known encryption techniques, used by Julius Caesar for private correspondence.
+readingTime: 5 min
+---
+
+## Overview
+
+The Caesar cipher is a **substitution cipher** where each letter in the plaintext is shifted by a fixed number of positions down the alphabet.
+
+$$E_n(x) = (x + n) \bmod 26$$
+
+$$D_n(x) = (x - n) \bmod 26$$
+
+Where $x$ is the position of the letter (0–25) and $n$ is the shift (the key).
+
+## Example
+
+With a shift of 3:
+
+- Plaintext: `HELLO`
+- Ciphertext: `KHOOR`
+
+## Cryptanalysis
+
+The Caesar cipher is trivial to break:
+
+- Only 25 possible keys (26 including shift 0)
+- Can be broken by brute force or frequency analysis
+- Letter frequency patterns remain unchanged
+
+## Why It Matters
+
+Despite its weakness, the Caesar cipher introduces fundamental concepts: key space, substitution, and the importance of large key spaces in cryptographic security.

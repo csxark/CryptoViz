@@ -1,0 +1,105 @@
+---
+title: Symmetric vs Asymmetric Cryptography
+description: A detailed comparison of symmetric and asymmetric encryption, including how they work, their trade-offs, and common use cases.
+readingTime: 10 min
+---
+
+## Symmetric Cryptography
+
+In symmetric cryptography, both parties share the **same secret key** for encryption and decryption.
+
+### Encryption Formula
+
+$$C = E(K, P)$$
+
+Where:
+- $C$ = ciphertext
+- $E$ = encryption algorithm
+- $K$ = secret key
+- $P$ = plaintext
+
+### Decryption Formula
+
+$$P = D(K, C)$$
+
+### Examples
+
+- **AES** (Advanced Encryption Standard)
+- **DES** / **3DES** (Data Encryption Standard)
+- **ChaCha20** (stream cipher)
+- **One-Time Pad** (information-theoretically secure)
+
+### Advantages
+
+- Fast and efficient for bulk data
+- Smaller key sizes compared to asymmetric (e.g., AES-256 vs RSA-4096)
+- Simpler hardware implementations
+- Well-suited for encrypting data at rest
+
+### Disadvantages
+
+- **Key distribution problem** — both parties must securely share the key before communicating
+- Poor scalability — $n$ parties need $\frac{n(n-1)}{2}$ unique keys
+- No built-in support for digital signatures or non-repudiation
+
+## Asymmetric Cryptography
+
+Asymmetric cryptography uses a **key pair**: a public key $K_{pub}$ that can be freely shared, and a private key $K_{priv}$ that must be kept secret.
+
+### Encryption Formula
+
+$$C = E(K_{pub}, P)$$
+
+### Decryption Formula
+
+$$P = D(K_{priv}, C)$$
+
+### Digital Signature
+
+Signing: $$S = Sign(K_{priv}, M)$$
+Verification: $$Verify(K_{pub}, M, S) \in \{true, false\}$$
+
+### Examples
+
+- **RSA** (Rivest-Shamir-Adleman)
+- **ECC** (Elliptic Curve Cryptography)
+- **Diffie-Hellman** (key exchange)
+- **DSA** / **ECDSA** (digital signatures)
+
+### Advantages
+
+- Solves the key distribution problem
+- Scales linearly — each party needs only one key pair
+- Enables digital signatures and non-repudiation
+- Foundation of PKI (Public Key Infrastructure)
+
+### Disadvantages
+
+- Much slower than symmetric cryptography
+- Larger key sizes required for equivalent security
+- Ciphertext expansion (ciphertext is larger than plaintext)
+- Susceptible to quantum computing attacks (Shor's algorithm)
+
+## Comparison Table
+
+| Property | Symmetric | Asymmetric |
+|---|---|---|
+| Key count per user | 1 | 2 (public + private) |
+| Speed | Very fast | Slow |
+| Key size (bits) | 128–256 | 2048–4096 |
+| Key distribution | Hard | Easy |
+| Digital signatures | No | Yes |
+| Bulk encryption | Yes | No (used for key exchange) |
+
+## Hybrid Cryptography
+
+In practice, most secure communication protocols use **hybrid cryptography**:
+
+1. Asymmetric cryptography is used to exchange a **session key**
+2. The session key is used with symmetric cryptography to encrypt the actual data
+
+$$K_{session} = \text{Random session key}$$
+$$E_{asym}(K_{pub}, K_{session}) \rightarrow \text{Encrypted session key}$$
+$$E_{sym}(K_{session}, P) \rightarrow \text{Ciphertext}$$
+
+This gives us the best of both worlds: the security of asymmetric key exchange with the performance of symmetric encryption. TLS/SSL, PGP, and Signal all use this approach.

@@ -1,0 +1,59 @@
+---
+title: SHA-256
+description: Part of the SHA-2 family, SHA-256 is a cryptographic hash function widely used in blockchain, TLS, and integrity verification.
+readingTime: 9 min
+---
+
+## Overview
+
+SHA-256 (Secure Hash Algorithm 256-bit) produces a fixed 256-bit (32-byte) hash from input of any length. It is a **one-way function**: given a hash, it is computationally infeasible to find the original input.
+
+$$ H(M) = h $$
+
+Where $M$ is the message and $h$ is the 256-bit hash value.
+
+## Properties
+
+- **Preimage resistance**: given $h$, hard to find $M$ such that $H(M) = h$
+- **Second preimage resistance**: given $M_1$, hard to find $M_2 \neq M_1$ with $H(M_1) = H(M_2)$
+- **Collision resistance**: hard to find any $M_1 \neq M_2$ with $H(M_1) = H(M_2)$
+
+## Algorithm Structure
+
+### Padding
+
+The message is padded so its length is congruent to $448 \bmod 512$. The padding consists of a single `1` bit followed by enough `0` bits, then the original message length (in bits) as a 64-bit big-endian integer.
+
+### Parsing
+
+The padded message is divided into 512-bit (64-byte) blocks: $M^{(1)}, M^{(2)}, \ldots, M^{(N)}$.
+
+### Hash Computation
+
+SHA-256 uses 64 rounds with 8 working variables. The initial hash values $H^{(0)}$ are derived from the fractional parts of the square roots of the first 8 primes.
+
+Each block $M^{(i)}$ is processed through the **compression function**:
+
+$$ H^{(i)} = \text{Compress}(H^{(i-1)}, M^{(i)}) $$
+
+### Compression Function
+
+The message block is expanded into 64 words using the message schedule:
+
+$$ W_t = \begin{cases} M_t^{(i)} & 0 \leq t \leq 15 \\ \sigma_1(W_{t-2}) + W_{t-7} + \sigma_0(W_{t-15}) + W_{t-16} & 16 \leq t \leq 63 \end{cases} $$
+
+Where:
+
+$$ \sigma_0(x) = \text{ROTR}^{7}(x) \oplus \text{ROTR}^{18}(x) \oplus \text{SHR}^{3}(x) $$
+$$ \sigma_1(x) = \text{ROTR}^{17}(x) \oplus \text{ROTR}^{19}(x) \oplus \text{SHR}^{10}(x) $$
+
+## Constants
+
+The 64 round constants $K_t$ are derived from the fractional parts of the cube roots of the first 64 primes.
+
+## Uses
+
+- **Bitcoin** and other cryptocurrencies use double-SHA-256 for proof-of-work
+- **TLS** uses SHA-256 in certificate signatures and HMAC
+- **File integrity** verification (checksums)
+- **Password hashing** (with salting, as in PBKDF2)

@@ -1,0 +1,98 @@
+---
+title: Common Cryptographic Attacks
+description: An overview of the most important attacks on cryptographic systems, from brute force to side-channel analysis.
+readingTime: 9 min
+---
+
+## Brute Force Attack
+
+A brute force attack tries every possible key until the correct one is found. The feasibility of this attack depends entirely on the **key space** size.
+
+$$ \text{Keys to try} = 2^n $$
+
+Where $n$ is the key length in bits.
+
+A 56-bit DES key has $2^{56}$ possibilities — feasible for modern hardware. A 128-bit AES key has $2^{128}$ possibilities, which is computationally infeasible with current technology.
+
+| Key Size | Combinations | Time (1 trillion keys/s) |
+|---|---|---|
+| 56 bits | $7.2 \times 10^{16}$ | ~20 hours |
+| 128 bits | $3.4 \times 10^{38}$ | ~$10^{19}$ years |
+| 256 bits | $1.1 \times 10^{77}$ | ~$10^{58}$ years |
+
+## Man-in-the-Middle (MITM) Attack
+
+In a MITM attack, the adversary secretly intercepts and potentially modifies communication between two parties. This is especially dangerous for public-key cryptography when there is no authentication.
+
+The attack proceeds as:
+1. Alice sends her public key to Bob
+2. Eve intercepts it and replaces it with her own public key
+3. Bob encrypts a message using Eve's key (thinking it's Alice's)
+4. Eve decrypts, reads/modifies, re-encrypts with Alice's real public key, and forwards it
+
+**Defense**: Digital certificates signed by a trusted Certificate Authority (CA) prevent MITM by binding public keys to verified identities.
+
+## Side-Channel Attacks
+
+Side-channel attacks exploit physical characteristics of the cryptographic implementation rather than mathematical weaknesses.
+
+### Timing Attacks
+
+The time an algorithm takes to process different inputs can leak information about the secret key. For example, in a naive RSA implementation using square-and-multiply, the execution time reveals which bits are set in the private exponent.
+
+**Mitigation**: Constant-time programming ensures execution time is independent of the secret data.
+
+### Power Analysis
+
+Simple Power Analysis (SPA) observes power consumption traces during cryptographic operations. Differential Power Analysis (DPA) uses statistical analysis of many traces to extract keys.
+
+**Mitigation**: Power-balanced logic, random noise injection, and masking techniques.
+
+### Cache Attacks
+
+By monitoring cache behavior (e.g., Prime+Probe, Flush+Reload), an attacker sharing a physical machine can recover AES keys or RSA private keys.
+
+## Known-Plaintext Attack (KPA)
+
+The attacker has access to both the plaintext and its corresponding ciphertext and attempts to recover the key.
+
+$$ \text{Given: } (P_1, C_1), (P_2, C_2), \ldots \text{ Find: } K $$
+
+Classical ciphers like the Caesar cipher are trivially broken under KPA. Modern ciphers like AES are designed to resist KPA.
+
+## Chosen-Plaintext Attack (CPA)
+
+The attacker can encrypt arbitrary plaintexts and observe the resulting ciphertexts. This models a scenario where the attacker has access to an encryption oracle.
+
+**Distinguishing games** in security proofs often use CPA: can an adversary distinguish the encryption of two chosen messages?
+
+## Chosen-Ciphertext Attack (CCA)
+
+The attacker can decrypt arbitrary ciphertexts (except the target). CCA security is essential for real-world systems.
+
+RSA with textbook (raw) RSA is not CCA-secure due to its **malleability**: $E(P_1) \cdot E(P_2) = E(P_1 \cdot P_2)$. The attacker can manipulate ciphertexts and observe decrypted results.
+
+**Defense**: Use OAEP (Optimal Asymmetric Encryption Padding) for RSA, and authenticated encryption (GCM, CCM) for symmetric ciphers.
+
+## Birthday Attack
+
+Based on the birthday paradox, this attack targets hash functions. To find a collision in an $n$-bit hash function, the attacker only needs approximately $2^{n/2}$ attempts rather than $2^n$.
+
+$$ \text{Expected attempts for collision} \approx 1.17 \times \sqrt{2^n} = 1.17 \times 2^{n/2} $$
+
+For SHA-256 ($n = 256$), a birthday attack needs $2^{128}$ hashes — still infeasible. For MD5 ($n = 128$), $2^{64}$ hashes have been achieved in practice.
+
+## Replay Attack
+
+An adversary captures a valid message and retransmits it later to produce an unauthorized effect. For example, capturing an encrypted "transfer $1000" message and replaying it multiple times.
+
+**Defense**: Include timestamps, sequence numbers, or nonces in the protocol, verified by the receiver.
+
+## Quantum Attacks
+
+Large-scale quantum computers pose a threat to current cryptography:
+
+- **Shor's algorithm** can factor large integers and compute discrete logarithms in polynomial time, breaking RSA, DSA, and ECDSA
+- **Grover's algorithm** provides a quadratic speedup for brute force searches, reducing a 256-bit symmetric key's effective security to 128 bits
+
+This has motivated the development of **Post-Quantum Cryptography** (PQC) based on lattice-based, code-based, and multivariate cryptography.

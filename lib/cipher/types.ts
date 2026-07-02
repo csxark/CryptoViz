@@ -54,6 +54,7 @@ export interface CipherOptions {
   padding?: string
   encoding?: Encoding
   iv?: string
+  hexInput?: boolean
   /** When true, capture state after every sub-step (for visualizer) */
   instrument?: boolean
 }
@@ -70,6 +71,8 @@ export type CipherName =
   | 'des'
   | '3des'
   | 'aes'
+  | 'blowfish'
+  | 'chacha20'
   | 'rsa'
   | 'dh'
   | 'ecc'
@@ -84,4 +87,6 @@ export interface TestVector {
   key: string
   expected: string
   description?: string
+  iv?: string
+  options?: Record<string, unknown>
 }

@@ -1,0 +1,48 @@
+---
+title: RSA (Rivest-Shamir-Adleman)
+description: One of the first practical public-key cryptosystems, RSA is widely used for secure data transmission and digital signatures.
+readingTime: 9 min
+---
+
+## Overview
+
+RSA is an **asymmetric cryptosystem** based on the practical difficulty of factoring the product of two large prime numbers. It was described in 1977 by Ron Rivest, Adi Shamir, and Leonard Adleman.
+
+## Key Generation
+
+1. Choose two large distinct primes $p$ and $q$
+2. Compute $n = p \times q$
+3. Compute $\phi(n) = (p-1)(q-1)$ (Euler's totient)
+4. Choose a public exponent $e$ such that $1 < e < \phi(n)$ and $\gcd(e, \phi(n)) = 1$
+5. Compute the private exponent $d$ where $d \equiv e^{-1} \pmod{\phi(n)}$
+
+The **public key** is $(e, n)$ and the **private key** is $(d, n)$.
+
+## Encryption
+
+$$ C = M^e \bmod n $$
+
+Where $M$ is the plaintext (as an integer $0 < M < n$) and $C$ is the ciphertext.
+
+## Decryption
+
+$$ M = C^d \bmod n $$
+
+The correctness follows from Euler's theorem:
+
+$$ M^{ed} \equiv M \pmod{n} $$
+
+## Security
+
+RSA security relies on the **factoring problem**: given $n$, find $p$ and $q$. The best known algorithms (GNFS, Number Field Sieve) have sub-exponential complexity:
+
+$$ L_n[1/3, (64/9)^{1/3}] \approx e^{1.9(\ln n)^{1/3}(\ln \ln n)^{2/3}} $$
+
+Current recommendations use 2048-bit or 4096-bit keys.
+
+## Attacks
+
+- **Textbook RSA** is deterministic and malleable — always use OAEP padding
+- **Small exponent attacks** — if $e$ is small and $M$ is small, $M^e < n$ and simple integer root extraction recovers $M$
+- **Timing attacks** — mitigated with constant-time exponentiation
+- **Quantum** — Shor's algorithm factors $n$ in polynomial time on a quantum computer

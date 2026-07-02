@@ -1,0 +1,70 @@
+---
+title: Introduction to Cryptography
+description: A beginner-friendly overview of cryptography, its history, and why visualizing algorithms helps you learn faster.
+readingTime: 8 min
+---
+
+## What is Cryptography?
+
+Cryptography is the practice and study of techniques for secure communication in the presence of adversaries. At its core, cryptography enables two parties to exchange information without a third party being able to understand it.
+
+The word itself comes from the Greek *kryptos* ("hidden") and *graphein* ("to write"). While modern cryptography relies on advanced mathematics and computer science, its roots go back thousands of years to ancient civilizations that used simple substitution ciphers to protect military and diplomatic secrets.
+
+A cryptographic system typically consists of:
+
+- **Plaintext** — the original readable message
+- **Encryption** — the process of converting plaintext into ciphertext
+- **Ciphertext** — the scrambled, unreadable output
+- **Decryption** — the reverse process, recovering plaintext from ciphertext
+- **Key** — a secret parameter used during encryption and decryption
+
+### Kerckhoff's Principle
+
+A foundational idea in cryptography is **Kerckhoff's Principle**: a cryptosystem should remain secure even if everything about the system, except the key, is public knowledge. Security through obscurity is not real security.
+
+## Types of Ciphers
+
+Ciphers can be broadly classified into two categories:
+
+### Classical Ciphers
+
+These are historical ciphers often performed by hand or with simple mechanical aids. They include:
+
+- **Substitution ciphers** — each letter is replaced by another letter or symbol (e.g., Caesar cipher, Atbash)
+- **Transposition ciphers** — the order of letters is rearranged (e.g., Rail Fence, Columnar transposition)
+- **Polyalphabetic ciphers** — use multiple substitution alphabets (e.g., Vigenère cipher)
+
+Classical ciphers are generally weak against modern attacks, but they are excellent for learning the fundamental concepts.
+
+### Modern Ciphers
+
+Modern cryptography is divided into two main branches:
+
+**Symmetric Cryptography** — the same key is used for both encryption and decryption.
+
+$$E(K, P) = C$$
+$$D(K, C) = P$$
+
+Where $E$ is the encryption function, $D$ is the decryption function, $K$ is the secret key, $P$ is the plaintext, and $C$ is the ciphertext.
+
+**Asymmetric Cryptography** — different keys are used for encryption and decryption (public key and private key).
+
+$$E(K_{pub}, P) = C$$
+$$D(K_{priv}, C) = P$$
+
+## Why Visualize?
+
+Cryptographic algorithms can be mathematically dense and difficult to grasp from textbook descriptions alone. Visualization bridges the gap between abstract formulas and intuitive understanding.
+
+CryptoViz provides interactive, step-by-step visualizations that let you:
+
+- Watch **each round** of AES as it substitutes bytes, shifts rows, mixes columns, and adds round keys
+- See **SHA-256 compression** as it processes message blocks through 64 rounds
+- Follow **RSA key generation** from prime selection to public/private key derivation
+- Compare **classical ciphers** side-by-side with real-time plaintext/ciphertext feedback
+
+By seeing algorithms in motion, you build mental models that translate directly to deeper mathematical comprehension.
+
+## Further Reading
+
+This documentation covers the foundational concepts needed to make the most of CryptoViz's interactive playground. Whether you're a student, a developer, or a security professional revisiting the basics, these visualizations are designed to complement your learning journey.

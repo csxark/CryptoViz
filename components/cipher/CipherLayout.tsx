@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import type { CipherDefinition } from '../../lib/cipher/registry'
 import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
 import StepAnimator from './StepAnimator'
 import PlayfairGrid from './PlayfairGrid'
 import RailFenceViz from './RailFenceViz'
 import DHVisualizer from './DHVisualizer'
+import { SkeletonOutput, SkeletonStep } from '../ui/Skeleton'
 
 interface CipherLayoutProps {
   cipher: CipherDefinition
@@ -18,6 +20,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const [input, setInput] = useState(cipher.defaultInput)
   const [key, setKey] = useState(cipher.defaultKey)
   const [action, setAction] = useState<'encrypt' | 'decrypt'>('encrypt')
+  const [initialLoading, setInitialLoading] = useState(true)
   
   // Custom options states
   const [hexInput, setHexInput] = useState(true)
@@ -36,6 +39,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     setResult(null)
     setError(null)
     setCurrentStep(0)
+    setInitialLoading(true)
 
     // Reset option defaults
     if (cipher.options) {
@@ -76,9 +80,11 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       const res = await runCipher(currentAction, cipher.id, input, key, options)
       setResult(res)
       setCurrentStep(0)
+      setInitialLoading(false)
     } catch (err: any) {
       setError(err.message || 'An error occurred during calculation.')
       setResult(null)
+      setInitialLoading(false)
     }
   }
 
@@ -320,47 +326,83 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         {/* Output & Trace Column (Right) */}
         <div className="flex flex-col gap-4 md:col-span-7">
           {/* Main output display */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-            <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-              {cipher.category === 'hash' ? 'Generated Hash Digest' : 'Output Result'}
-            </span>
-            <div className="mt-2 min-h-[48px] rounded-lg bg-zinc-50 p-3 font-mono text-sm leading-relaxed break-all text-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-200">
-              {loading ? (
-                <span className="flex items-center gap-1.5 text-zinc-400">
-                  <span className="h-1.5 w-1.5 animate-ping rounded-full bg-teal-500" />
-                  Computing...
+          <AnimatePresence mode="wait">
+            {initialLoading && loading ? (
+              <motion.div
+                key="skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <SkeletonOutput />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="output"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40"
+              >
+                <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                  {cipher.category === 'hash' ? 'Generated Hash Digest' : 'Output Result'}
                 </span>
-              ) : result ? (
-                result.output
-              ) : (
-                <span className="italic text-zinc-400">No output</span>
-              )}
-            </div>
+                <div className="mt-2 min-h-[48px] rounded-lg bg-zinc-50 p-3 font-mono text-sm leading-relaxed break-all text-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-200">
+                  {loading ? (
+                    <span className="flex items-center gap-1.5 text-zinc-400">
+                      <span className="h-1.5 w-1.5 animate-ping rounded-full bg-teal-500" />
+                      Computing...
+                    </span>
+                  ) : result ? (
+                    result.output
+                  ) : (
+                    <span className="italic text-zinc-400">No output</span>
+                  )}
+                </div>
 
-            {result && result.durationMs !== undefined && (
-              <div className="mt-3 flex items-center justify-between border-t border-zinc-100 pt-3 text-xs text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
-                <span>Off-thread Execution time</span>
-                <span className="font-mono">{result.durationMs.toFixed(2)} ms</span>
-              </div>
+                {result && result.durationMs !== undefined && (
+                  <div className="mt-3 flex items-center justify-between border-t border-zinc-100 pt-3 text-xs text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
+                    <span>Off-thread Execution time</span>
+                    <span className="font-mono">{result.durationMs.toFixed(2)} ms</span>
+                  </div>
+                )}
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
 
           {/* Custom Visualizer rendering (like grids, paint mixer, etc.) */}
           {renderSpecificVisualizer()}
 
           {/* Interactive Walkthrough Trace */}
-          {result && result.steps && result.steps.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 px-1">
-                Step-by-Step Mathematical Trace
-              </span>
-              <StepAnimator
-                steps={result.steps}
-                currentStep={currentStep}
-                onStepChange={setCurrentStep}
-              />
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {initialLoading && loading ? (
+              <motion.div
+                key="steps-skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <SkeletonStep />
+              </motion.div>
+            ) : result && result.steps && result.steps.length > 0 ? (
+              <motion.div
+                key="steps"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+                className="flex flex-col gap-2"
+              >
+                <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 px-1">
+                  Step-by-Step Mathematical Trace
+                </span>
+                <StepAnimator
+                  steps={result.steps}
+                  currentStep={currentStep}
+                  onStepChange={setCurrentStep}
+                />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
       </div>
     </div>

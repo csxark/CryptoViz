@@ -1,0 +1,51 @@
+---
+title: AES (Advanced Encryption Standard)
+description: The global standard for symmetric encryption, AES is a block cipher used worldwide by governments and organizations.
+readingTime: 10 min
+---
+
+## Overview
+
+AES is a **symmetric block cipher** with a fixed block size of 128 bits. It supports key sizes of 128, 192, or 256 bits. AES replaced DES as the US federal standard in 2001 after a public competition won by the Rijndael algorithm.
+
+AES operates on a **4×4 column-major order matrix of bytes**, called the *state*.
+
+$$ \text{State} = \begin{bmatrix} s_{0,0} & s_{0,1} & s_{0,2} & s_{0,3} \\ s_{1,0} & s_{1,1} & s_{1,2} & s_{1,3} \\ s_{2,0} & s_{2,1} & s_{2,2} & s_{2,3} \\ s_{3,0} & s_{3,1} & s_{3,2} & s_{3,3} \end{bmatrix} $$
+
+## Round Structure
+
+AES-128 performs 10 rounds, each consisting of four steps:
+
+### 1. SubBytes
+
+Each byte is replaced using a **S-box** (substitution box), which is a 256-byte lookup table designed for non-linearity and resistance against differential and linear cryptanalysis.
+
+$$ s'_{i,j} = S[s_{i,j}] $$
+
+### 2. ShiftRows
+
+The rows of the state are shifted cyclically:
+- Row 0: no shift
+- Row 1: shift left by 1
+- Row 2: shift left by 2
+- Row 3: shift left by 3
+
+### 3. MixColumns
+
+Each column is transformed using a matrix multiplication in $GF(2^8)$:
+
+$$ \begin{bmatrix} s'_{0,j} \\ s'_{1,j} \\ s'_{2,j} \\ s'_{3,j} \end{bmatrix} = \begin{bmatrix} 2 & 3 & 1 & 1 \\ 1 & 2 & 3 & 1 \\ 1 & 1 & 2 & 3 \\ 3 & 1 & 1 & 2 \end{bmatrix} \begin{bmatrix} s_{0,j} \\ s_{1,j} \\ s_{2,j} \\ s_{3,j} \end{bmatrix} $$
+
+### 4. AddRoundKey
+
+The round key (derived from the original key via the key schedule) is XORed with the state.
+
+$$ s'_{i,j} = s_{i,j} \oplus k_{i,j} $$
+
+## Key Schedule
+
+The round keys are derived from the cipher key using a key expansion algorithm. For AES-128, the 16-byte key is expanded into 11 round keys (one for the initial AddRoundKey plus one for each of the 10 rounds).
+
+## Security
+
+As of 2026, AES-128 remains secure with no practical attacks. AES-256 provides an additional margin against quantum attacks.

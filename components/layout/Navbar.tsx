@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { motion } from 'motion/react'
 
 export default function Navbar() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark')
@@ -135,7 +136,12 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="sm:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white/95 backdrop-blur-md dark:bg-zinc-950/95">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="sm:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white/95 backdrop-blur-md dark:bg-zinc-950/95"
+        >
           <div className="space-y-1 px-4 pb-4 pt-2">
             {navLinks.map((link) => {
               const isActive = pathname.startsWith(link.href) && link.href !== '#'
@@ -154,8 +160,17 @@ export default function Navbar() {
                 </Link>
               )
             })}
+            <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+              <Link
+                href="/visualizer/caesar/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex w-full items-center justify-center rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-500 dark:bg-teal-500 dark:hover:bg-teal-400"
+              >
+                Open Playground
+              </Link>
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </nav>
   )

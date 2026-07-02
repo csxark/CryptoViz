@@ -206,6 +206,42 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
       },
     ],
   },
+  {
+    id: 'blowfish',
+    name: 'Blowfish',
+    category: 'symmetric',
+    description: 'A fast 64-bit block cipher using a Feistel network with 16 rounds and key-dependent S-boxes derived from Pi.',
+    defaultKey: 'secretkey123456',
+    defaultInput: 'Hello, World!',
+    securityStatus: 'deprecated',
+    keyPlaceholder: 'Secret key (4–56 bytes)',
+    options: [
+      {
+        name: 'Rounds',
+        id: 'rounds',
+        type: 'number',
+        default: 16,
+      },
+    ],
+  },
+  {
+    id: 'chacha20',
+    name: 'ChaCha20',
+    category: 'symmetric',
+    description: 'A high-speed 256-bit stream cipher with 20 rounds of diffusion, standardized in RFC 8439.',
+    defaultKey: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f',
+    defaultInput: 'Hello, World!',
+    securityStatus: 'secure',
+    keyPlaceholder: '64-character hex key (32 bytes)',
+    options: [
+      {
+        name: 'Hex Input Mode',
+        id: 'hexInput',
+        type: 'boolean',
+        default: false,
+      },
+    ],
+  },
   // Asymmetric
   {
     id: 'rsa',

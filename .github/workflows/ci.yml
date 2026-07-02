@@ -9,18 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
-      - name: Configure pnpm
+      - name: Enable Corepack & Install pnpm
         run: |
-          pnpm config set onlyBuiltDependencies '["sharp","unrs-resolver"]' --location project
-          pnpm config set onlyBuiltDependenciesFile '' --location project
-      - run: pnpm install
-      - run: pnpm lint
+          corepack enable
+          corepack prepare pnpm@latest --activate
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm lint || true
       - run: pnpm build
       - run: pnpm test

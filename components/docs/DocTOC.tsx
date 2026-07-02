@@ -19,6 +19,7 @@ export default function DocTOC() {
       text: h.textContent || '',
       level: parseInt(h.tagName[1], 10),
     }))
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setItems(tocItems)
   }, [])
 

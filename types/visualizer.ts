@@ -8,5 +8,5 @@ export interface Algorithm {
 export interface VisualizerStep {
   label: string;
   description: string;
-  data: any;
+  data: Record<string, unknown>;
 }

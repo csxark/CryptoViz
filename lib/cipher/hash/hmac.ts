@@ -52,7 +52,7 @@ export function encrypt(
     const steps: CipherStep[] = []
     
     // Step 1: Key padding / hashing
-    let KPrime = new Uint8Array(64)
+    const KPrime = new Uint8Array(64)
     let keyPrepNote = ''
     if (keyBytes.length > 64) {
       const hashedKey = sha256(keyBytes)

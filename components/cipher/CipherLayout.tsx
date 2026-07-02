@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import type { CipherDefinition } from '../../lib/cipher/registry'
+import type { CipherResult } from '../../lib/cipher/types'
 import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
 import StepAnimator from './StepAnimator'
 import PlayfairGrid from './PlayfairGrid'
@@ -28,12 +29,13 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const [demoMode, setDemoMode] = useState(true)
   const [bobSecret, setBobSecret] = useState('15')
 
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<CipherResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
 
   // Reset inputs when cipher changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInput(cipher.defaultInput)
     setKey(cipher.defaultKey)
     setResult(null)
@@ -41,13 +43,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     setCurrentStep(0)
     setInitialLoading(true)
 
-    // Reset option defaults
     if (cipher.options) {
       cipher.options.forEach((opt) => {
-        if (opt.id === 'hexInput') setHexInput(opt.default)
-        if (opt.id === 'rounds') setRounds(opt.default)
-        if (opt.id === 'demoMode') setDemoMode(opt.default)
-        if (opt.id === 'bobSecret') setBobSecret(opt.default)
+        if (opt.id === 'hexInput') { setHexInput(opt.default) }
+        if (opt.id === 'rounds') { setRounds(opt.default) }
+        if (opt.id === 'demoMode') { setDemoMode(opt.default) }
+        if (opt.id === 'bobSecret') { setBobSecret(opt.default) }
       })
     }
   }, [cipher])
@@ -56,7 +57,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     setError(null)
     try {
       // Gather options
-      const options: any = {
+      const options: Record<string, unknown> = {
         instrument: true, // Always request instrumented steps for visualizer
       }
 
@@ -81,8 +82,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       setResult(res)
       setCurrentStep(0)
       setInitialLoading(false)
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during calculation.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred during calculation.')
       setResult(null)
       setInitialLoading(false)
     }
@@ -90,8 +91,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
 
   // Auto-run once on mount/load
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     handleRun()
-  }, [cipher, action, hexInput, rounds, demoMode])
+  }, [cipher, action, hexInput, rounds, demoMode, bobSecret])
 
   // Helper for status badge styling
   const getStatusBadge = (status: 'secure' | 'deprecated' | 'broken') => {

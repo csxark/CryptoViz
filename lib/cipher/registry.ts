@@ -11,8 +11,8 @@ export interface CipherDefinition {
     name: string
     id: string
     type: 'number' | 'text' | 'boolean' | 'select'
-    default: any
-    choices?: { label: string; value: any }[]
+    default: string | number | boolean
+    choices?: { label: string; value: string | number | boolean }[]
   }[]
 }
 

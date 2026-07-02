@@ -200,12 +200,12 @@ export function decrypt(
   const hashHex = fromByteArray(hashBytes, 'hex')
 
   let isValid = false
-  let sigObj: any = null
+  let sigObj: { r: bigint; s: bigint } | null = null
   try {
     const sigCompactBytes = parseSignatureToCompact(sigHex)
     isValid = p256.verify(sigCompactBytes, hashBytes, pubKeyBytes)
     sigObj = p256.Signature.fromBytes(sigCompactBytes)
-  } catch (err) {
+  } catch {
     // Treat invalid signature formatting/points as invalid signature rather than crashing
     isValid = false
   }

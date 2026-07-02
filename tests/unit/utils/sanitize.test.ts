@@ -10,7 +10,9 @@ describe('Sanitize Utility Unit Tests', () => {
   })
 
   it('handles non-string inputs safely', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(sanitize(null as any)).toBe('')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(sanitize(undefined as any)).toBe('')
   })
 })

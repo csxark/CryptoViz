@@ -15,7 +15,7 @@ interface WorkerRequest {
   cipherId: string
   input: string
   key: string
-  options?: any
+  options?: Record<string, unknown>
 }
 
 interface WorkerResponse {
@@ -36,7 +36,7 @@ export function useCipherWorker() {
       string,
       {
         resolve: (value: CipherResult) => void
-        reject: (reason: any) => void
+        reject: (reason: unknown) => void
       }
     >
   >(new Map())
@@ -87,7 +87,7 @@ export function useCipherWorker() {
       cipherId: string,
       input: string,
       key: string,
-      options?: any
+      options?: Record<string, unknown>
     ): Promise<CipherResult> => {
       return new Promise<CipherResult>((resolve, reject) => {
         if (!workerRef.current) {

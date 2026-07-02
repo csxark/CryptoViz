@@ -25,7 +25,7 @@ import { encrypt as sha512Encrypt, decrypt as sha512Decrypt } from '../cipher/ha
 import { encrypt as md5Encrypt, decrypt as md5Decrypt } from '../cipher/hash/md5'
 import { encrypt as hmacEncrypt, decrypt as hmacDecrypt } from '../cipher/hash/hmac'
 import { encrypt as bcryptEncrypt, decrypt as bcryptDecrypt } from '../cipher/hash/bcrypt'
-
+import type { CipherResult } from '../cipher/types'
 
 interface WorkerRequest {
   id: string
@@ -33,13 +33,13 @@ interface WorkerRequest {
   cipherId: string
   input: string
   key: string
-  options?: any
+  options?: Record<string, unknown>
 }
 
 interface WorkerResponse {
   id: string
   success: boolean
-  result?: any
+  result?: CipherResult
   error?: string
 }
 
@@ -47,7 +47,7 @@ self.addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
   const { id, action, cipherId, input, key, options } = event.data
 
   try {
-    let result: any
+    let result: CipherResult
 
     const encryptMode = action === 'encrypt'
 
@@ -166,11 +166,11 @@ self.addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
       success: true,
       result,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     self.postMessage({
       id,
       success: false,
-      error: error?.message || String(error),
+      error: error instanceof Error ? error.message : String(error),
     })
   }
 })

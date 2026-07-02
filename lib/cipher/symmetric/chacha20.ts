@@ -320,7 +320,7 @@ export function encrypt(
     nonce = new Uint8Array(12)
   }
 
-  const initialCounter = (options as any).initialCounter ?? 0
+  const initialCounter = (options as CipherOptions & { initialCounter?: number }).initialCounter ?? 0
 
   if (options.instrument) {
     return chacha20Instrumented(keyBytes, nonce, inputBytes, initialCounter)

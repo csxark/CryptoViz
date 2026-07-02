@@ -1,6 +1,15 @@
 name: Deploy to Vercel
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -11,4 +20,4 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          vercel-args: ${{ github.event.inputs.environment == 'production' && '--prod' || '' }}

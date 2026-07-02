@@ -14,11 +14,8 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - name: Configure pnpm
-        run: |
-          pnpm config set onlyBuiltDependencies '["sharp","unrs-resolver"]' --location project
-          pnpm config set onlyBuiltDependenciesFile '' --location project
-      - run: pnpm install
+      - run: pnpm install --ignore-scripts
+      - run: pnpm rebuild sharp unrs-resolver
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm test

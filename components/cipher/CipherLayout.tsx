@@ -45,10 +45,10 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
 
     if (cipher.options) {
       cipher.options.forEach((opt) => {
-        if (opt.id === 'hexInput') { setHexInput(opt.default) }
-        if (opt.id === 'rounds') { setRounds(opt.default) }
-        if (opt.id === 'demoMode') { setDemoMode(opt.default) }
-        if (opt.id === 'bobSecret') { setBobSecret(opt.default) }
+        if (opt.id === 'hexInput') { setHexInput(Boolean(opt.default)) }
+        if (opt.id === 'rounds') { setRounds(Number(opt.default)) }
+        if (opt.id === 'demoMode') { setDemoMode(Boolean(opt.default)) }
+        if (opt.id === 'bobSecret') { setBobSecret(String(opt.default)) }
       })
     }
   }, [cipher])

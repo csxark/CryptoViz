@@ -35,10 +35,11 @@ export default function Navbar() {
   }
 
   const navLinks = [
-    { name: 'Playground', href: '/visualizer/caesar/' },
-    { name: 'Docs', href: '/docs' },
-    { name: 'Resources', href: '/resources' },
-  ];
+  { name: 'Playground', href: '/visualizer/caesar/' },
+  { name: 'Docs', href: '/docs' },
+  { name: 'Resources', href: '/resources' },
+  { name: 'Benchmark', href: '/benchmark' },
+];
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">

@@ -27,7 +27,8 @@ import { encrypt as bcryptEncrypt, decrypt as bcryptDecrypt } from '../cipher/ha
 
 interface WorkerRequest {
   id: string
-  action: 'encrypt' | 'decrypt'
+  action: 'encrypt' | 'decrypt' | 'benchmark'
+  iterations?: number
   cipherId: string
   input: string
   key: string
@@ -42,10 +43,100 @@ interface WorkerResponse {
 }
 
 self.addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
-  const { id, action, cipherId, input, key, options } = event.data
+  const {
+  id,
+  action,
+  cipherId,
+  input,
+  key,
+  options,
+  iterations = 100,
+} = event.data
 
   try {
     let result: any
+
+    if (action === "benchmark") {
+  const benchmarkStart = performance.now();
+
+  for (let i = 0; i < iterations; i++) {
+    switch (cipherId) {
+      case "caesar":
+        caesarEncrypt(input, key, options);
+        break;
+      case "rot13":
+        rot13Encrypt(input, key, options);
+        break;
+      case "vigenere":
+        vigenereEncrypt(input, key, options);
+        break;
+      case "atbash":
+        atbashEncrypt(input, key, options);
+        break;
+      case "playfair":
+        playfairEncrypt(input, key, options);
+        break;
+      case "railfence":
+        railfenceEncrypt(input, key, options);
+        break;
+      case "xor":
+        xorEncrypt(input, key, options);
+        break;
+      case "otp":
+        otpEncrypt(input, key, options);
+        break;
+      case "des":
+        desEncrypt(input, key, options);
+        break;
+      case "3des":
+        des3Encrypt(input, key, options);
+        break;
+      case "aes":
+        aesEncrypt(input, key, options);
+        break;
+      case "rsa":
+        rsaEncrypt(input, key, options);
+        break;
+      case "dh":
+        dhEncrypt(input, key, options);
+        break;
+      case "ecc":
+        eccEncrypt(input, key, options);
+        break;
+      case "sha256":
+        sha256Encrypt(input, key, options);
+        break;
+      case "sha512":
+        sha512Encrypt(input, key, options);
+        break;
+      case "md5":
+        md5Encrypt(input, key, options);
+        break;
+      case "hmac":
+        hmacEncrypt(input, key, options);
+        break;
+      case "bcrypt":
+        bcryptEncrypt(input, key, options);
+        break;
+      default:
+        throw new Error(`Unsupported cipher ID: ${cipherId}`);
+    }
+  }
+
+  const benchmarkEnd = performance.now();
+
+  self.postMessage({
+    id,
+    success: true,
+    result: {
+      totalTime: benchmarkEnd - benchmarkStart,
+      averageTime: (benchmarkEnd - benchmarkStart) / iterations,
+      iterations,
+    },
+  });
+
+  return;
+}
 
     const encryptMode = action === 'encrypt'
 

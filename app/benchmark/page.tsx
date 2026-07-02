@@ -186,7 +186,7 @@ export default function BenchmarkPage() {
       )}
 
       {results.length > 0 && (
-        <></>
+        <>
                   <div className="mt-10 border rounded-xl p-6">
 
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">

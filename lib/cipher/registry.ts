@@ -212,10 +212,10 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     name: 'RSA-2048',
     category: 'asymmetric',
     description: 'An asymmetric cipher based on the difficulty of factoring large semiprimes. Supports key generation, encryption, and decryption.',
-    defaultKey: '61,53',
+    defaultKey: '61,53,17',
     defaultInput: 'HELLO',
     securityStatus: 'secure',
-    keyPlaceholder: 'p,q primes (demo) or public/private key string',
+    keyPlaceholder: 'Enter: 3 values (p,q,e) or 2 values (n,e / n,d) if you already have n',
     options: [
       {
         name: 'Demo Mode (Small Primes)',

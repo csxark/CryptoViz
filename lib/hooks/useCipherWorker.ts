@@ -52,6 +52,7 @@ export function useCipherWorker() {
 
     worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       const { id, success, result, error: workerError } = event.data
+
       const request = activeRequestsRef.current.get(id)
 
       if (request) {
@@ -96,8 +97,10 @@ export function useCipherWorker() {
             const worker = new Worker(
               new URL('../workers/cipher.worker.ts', import.meta.url)
             )
+
             worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
               const { id, success, result, error: workerError } = event.data
+
               const req = activeRequestsRef.current.get(id)
               if (req) {
                 if (success && result) req.resolve(result)

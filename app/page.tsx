@@ -125,14 +125,14 @@ export default function Home() {
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
             Looking for a starting point or more instructions? Head over to{" "}
             <a
-              href="https://vercel.com/templates?framework=next.js"
+              href=""
               className="font-medium text-zinc-950 dark:text-zinc-50 hover:underline"
             >
               Templates
             </a>{" "}
             or the{" "}
             <a
-              href="https://nextjs.org/learn"
+              href=""
               className="font-medium text-zinc-950 dark:text-zinc-50 hover:underline"
             >
               Learning
@@ -148,8 +148,8 @@ export default function Home() {
               Open Interactive Playground
             </Link>
             <a
-              href="https://github.com"
-              target="_blank"
+              href="/docs"
+              // target="_blank"
               rel="noreferrer"
               className="rounded-lg border border-zinc-200 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 shadow-sm transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 hover:scale-[1.02]"
             >

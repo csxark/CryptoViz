@@ -26,12 +26,30 @@ describe('Vigenere Cipher Unit Tests', () => {
     expect(result.steps.length).toBe(input.length + 3)
     expect(result.steps[result.steps.length - 1].label).toBe('Vigenère table alignment')
     expect(result.steps[result.steps.length - 1].matrix).toBeDefined()
+    expect(result.output).toBe('RIJVS')
+
+    // Verify metadata
+    expect(result.metadata.name).toBe('Vigenère Cipher')
+    expect(result.metadata.securityStatus).toBe('broken')
+
+    // Verify structure of steps
+    for (const step of result.steps) {
+      expect(step).toHaveProperty('index')
+      expect(step).toHaveProperty('label')
+      expect(step).toHaveProperty('inputState')
+      expect(step).toHaveProperty('outputState')
+    }
   })
 
   it('handles non-alphabetic characters in input and filters keys correctly', () => {
     expect(encrypt('Hello, World!', 'key').output).toBe('Rijvs, Uyvjn!')
     expect(() => encrypt('HELLO', '12345')).toThrowError(CipherError)
     expect(() => encrypt('HELLO', '')).toThrowError(CipherError)
+
+    // Max length check (> 4096 bytes)
+    const longInput = 'A'.repeat(4097)
+    expect(() => encrypt(longInput, 'key')).toThrowError(CipherError)
+    expect(() => encrypt(longInput, 'key')).toThrow(/exceeds/)
   })
 
   it('property-based fuzzing: encrypt then decrypt returns original for alphabetic input', () => {

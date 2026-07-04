@@ -20,6 +20,25 @@ describe('Atbash Cipher Unit Tests', () => {
     // Atbash budget: 1 per char + 1 setup = input.length + 1
     expect(result.steps.length).toBe(input.length + 1)
     expect(result.steps[0].label).toBe('Alphabet mirror table')
+    expect(result.output).toBe('SVOOL')
+
+    // Verify metadata
+    expect(result.metadata.name).toBe('Atbash Cipher')
+    expect(result.metadata.securityStatus).toBe('broken')
+
+    // Verify structure of steps
+    for (const step of result.steps) {
+      expect(step).toHaveProperty('index')
+      expect(step).toHaveProperty('label')
+      expect(step).toHaveProperty('inputState')
+      expect(step).toHaveProperty('outputState')
+    }
+  })
+
+  it('passes non-alphabetic and special characters through unchanged', () => {
+    const input = '123!@# 🔥'
+    const result = encrypt(input)
+    expect(result.output).toBe(input)
   })
 
   it('is self-inverse', () => {
@@ -31,6 +50,12 @@ describe('Atbash Cipher Unit Tests', () => {
 
   it('throws correct errors for invalid input', () => {
     expect(() => encrypt('')).toThrowError(CipherError)
+    expect(() => encrypt('')).toThrow(/required/)
+
+    // Max length check (> 4096 bytes)
+    const longInput = 'A'.repeat(4097)
+    expect(() => encrypt(longInput)).toThrowError(CipherError)
+    expect(() => encrypt(longInput)).toThrow(/exceeds/)
   })
 
   it('property-based fuzzing: encrypt(encrypt(x)) === x', () => {

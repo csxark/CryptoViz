@@ -8,6 +8,7 @@ import Navbar from "../components/layout/Navbar";
 import Typewriter from "../components/layout/typewriter";
 import SkeletonCard from "../components/ui/SkeletonCard";
 
+import Footer from "../components/layout/footer";
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -238,6 +239,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+       <Footer />
+
+
     </div>
   );
 }

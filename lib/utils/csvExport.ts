@@ -114,4 +114,8 @@ function downloadCSV(content: string, filename: string): void {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+
+  // Revoke the object URL once the download has been triggered,
+  // so the Blob's memory can be reclaimed.
+  setTimeout(() => URL.revokeObjectURL(url), 0)
 }

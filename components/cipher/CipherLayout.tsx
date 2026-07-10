@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { CipherDefinition } from '../../lib/cipher/registry'
 import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
 import StepAnimator from './StepAnimator'
-import PlayfairGrid from './PlayfairGrid'
-import RailFenceViz from './RailFenceViz'
-import DHVisualizer from './DHVisualizer'
+import dynamic from 'next/dynamic'
+
+const PlayfairGrid = dynamic(() => import('./PlayfairGrid'), { ssr: false })
+const RailFenceViz = dynamic(() => import('./RailFenceViz'), { ssr: false })
+const DHVisualizer = dynamic(() => import('./DHVisualizer'), { ssr: false })
 
 interface CipherLayoutProps {
   cipher: CipherDefinition
@@ -45,6 +47,7 @@ const isValidHistoryArray = (data: unknown): data is HistoryEntry[] => {
 
 export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const { runCipher, loading, error: workerError } = useCipherWorker()
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const [input, setInput] = useState(cipher.defaultInput)
   const [key, setKey] = useState(cipher.defaultKey)
@@ -65,6 +68,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
 
   // Reset inputs when cipher changes
   useEffect(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
     setInput(cipher.defaultInput)
     setKey(cipher.defaultKey)
     setResult(null)
@@ -97,14 +103,27 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         if (opt.id === 'bobSecret') setBobSecret(opt.default)
       })
     }
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
   }, [cipher])
 
   const handleRun = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     setError(null)
     try {
       // Gather options
       const options: any = {
         instrument: true, // Always request instrumented steps for visualizer
+        signal: controller.signal,
       }
 
       if (cipher.id === 'des' || cipher.id === '3des' || cipher.id === 'aes') {
@@ -125,35 +144,45 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       const currentAction = cipher.id === 'dh' ? 'encrypt' : action
 
       const res = await runCipher(currentAction, cipher.id, input, key, options)
-      setResult(res)
-      setCurrentStep(0)
+      
+      if (!controller.signal.aborted) {
+        setResult(res)
+        setCurrentStep(0)
 
-      if (res?.output !== undefined) {
-        const entry: HistoryEntry = {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          input,
-          key,
-          action: currentAction,
-          output: String(res.output),
-          timestamp: new Date().toLocaleString(),
-        }
-
-        setHistory((prev) => {
-          const next = [entry, ...prev].slice(0, 5)
-          if (typeof window !== 'undefined') {
-            try {
-              window.localStorage.setItem(getHistoryStorageKey(cipher.id), JSON.stringify(next))
-            } catch (e) {
-              // Silently fail if localStorage is unavailable (quota exceeded, disabled, private mode, etc.)
-              console.warn('Failed to save history:', e)
-            }
+        if (res?.output !== undefined) {
+          const entry: HistoryEntry = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            input,
+            key,
+            action: currentAction,
+            output: String(res.output),
+            timestamp: new Date().toLocaleString(),
           }
-          return next
-        })
+
+          setHistory((prev) => {
+            const next = [entry, ...prev].slice(0, 5)
+            if (typeof window !== 'undefined') {
+              try {
+                window.localStorage.setItem(getHistoryStorageKey(cipher.id), JSON.stringify(next))
+              } catch (e) {
+                // Silently fail if localStorage is unavailable (quota exceeded, disabled, private mode, etc.)
+                console.warn('Failed to save history:', e)
+              }
+            }
+            return next
+          })
+        }
       }
     } catch (err: any) {
+      if (err.name === 'AbortError') {
+        return
+      }
       setError(err.message || 'An error occurred during calculation.')
       setResult(null)
+    } finally {
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null
+      }
     }
   }
 

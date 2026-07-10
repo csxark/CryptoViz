@@ -8,62 +8,130 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type { CipherResult } from '../cipher/types'
+import type { WorkerRequest, WorkerResponse } from '../../types/worker'
 
-interface WorkerRequest {
-  id: string
-  action: 'encrypt' | 'decrypt'
-  cipherId: string
-  input: string
-  key: string
+const MAX_CACHE_SIZE = 200
+const resultCache = new Map<string, CipherResult>()
+
+export function clearCipherWorkerCache() {
+  resultCache.clear()
+}
+
+function sortObjectKeys(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sortObjectKeys)
+  }
+  const sortedKeys = Object.keys(obj).sort()
+  const result: any = {}
+  for (const k of sortedKeys) {
+    result[k] = sortObjectKeys(obj[k])
+  }
+  return result
+}
+
+function getCacheKey(
+  action: 'encrypt' | 'decrypt',
+  cipherId: string,
+  input: string,
+  key: string,
   options?: any
+): string {
+  const { signal: _, bypassCache: __, ...cacheableOptions } = options || {}
+  return JSON.stringify({
+    action,
+    cipherId,
+    input,
+    key,
+    options: sortObjectKeys(cacheableOptions),
+  })
 }
 
-interface WorkerResponse {
-  id: string
-  success: boolean
-  result?: CipherResult
-  error?: string
+function cacheResult(key: string, result: CipherResult) {
+  if (resultCache.has(key)) {
+    resultCache.delete(key)
+  } else if (resultCache.size >= MAX_CACHE_SIZE) {
+    const oldestKey = resultCache.keys().next().value
+    if (oldestKey !== undefined) {
+      resultCache.delete(oldestKey)
+    }
+  }
+  resultCache.set(key, result)
 }
-
-type WorkerResponseMessage = WorkerResponse | Uint8Array;
 
 export function useCipherWorker() {
   const workerRef = useRef<Worker | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Map to track active requests and resolve/reject promises
+  // Map to track active requests, resolve/reject callbacks, abort signals, and timeouts
   const activeRequestsRef = useRef<
     Map<
       string,
       {
         resolve: (value: CipherResult) => void
         reject: (reason: any) => void
+        signal?: AbortSignal
+        onAbort?: () => void
+        timeoutId?: NodeJS.Timeout
+        cacheKey?: string
       }
     >
   >(new Map())
 
-  useEffect(() => {
-    // Web Worker is client-side only
-    if (typeof window === 'undefined') return
+  // Helper to terminate the worker and reject all pending requests
+  const terminateWorkerAndRejectAll = useCallback((reason: Error) => {
+    if (workerRef.current) {
+      workerRef.current.terminate()
+      workerRef.current = null
+    }
+    for (const [, req] of activeRequestsRef.current.entries()) {
+      try {
+        if (req.timeoutId) clearTimeout(req.timeoutId)
+        if (req.signal && req.onAbort) {
+          req.signal.removeEventListener('abort', req.onAbort)
+        }
+        req.reject(reason)
+      } catch {
+        // Ignore secondary errors during teardown
+      }
+    }
+    activeRequestsRef.current.clear()
+    setLoading(false)
+  }, [])
 
-    // Instantiate worker
+  // Helper to create and initialize the web worker
+  const createWorker = useCallback(() => {
+    if (typeof window === 'undefined') return null
+
     const worker = new Worker(
       new URL('../workers/cipher.worker.ts', import.meta.url)
     )
 
     worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
-      const { id, success, result, error: workerError } = event.data
+      const { requestId, success, payload } = event.data
 
-      const request = activeRequestsRef.current.get(id)
+      const request = activeRequestsRef.current.get(requestId)
 
       if (request) {
-        if (success && result) {
-          request.resolve(result)
-        } else {
-          request.reject(new Error(workerError || 'Unknown worker error'))
+        if (request.timeoutId) {
+          clearTimeout(request.timeoutId)
         }
-        activeRequestsRef.current.delete(id)
+        if (request.signal && request.onAbort) {
+          request.signal.removeEventListener('abort', request.onAbort)
+        }
+
+        if (success && payload.result) {
+          if (request.cacheKey) {
+            cacheResult(request.cacheKey, payload.result)
+          }
+          request.resolve(payload.result)
+        } else {
+          request.reject(new Error(payload.error || 'Unknown worker error'))
+        }
+        activeRequestsRef.current.delete(requestId)
       }
 
       if (activeRequestsRef.current.size === 0) {
@@ -73,32 +141,23 @@ export function useCipherWorker() {
 
     worker.onerror = (err) => {
       console.error('Worker error:', err)
-
-      const error = new Error('Web Worker initialization or runtime error.')
-
-      // Reject all pending requests so consumers don't await forever.
-      for (const [, value] of activeRequestsRef.current.entries()) {
-        try {
-          value.reject(error)
-        } catch {
-          // Ignore secondary failures while handling a worker crash.
-        }
-      }
-      activeRequestsRef.current.clear()
-
-      setError(error.message)
-      setLoading(false)
-
+      const errorMsg = 'Web Worker initialization or runtime error.'
+      setError(errorMsg)
+      terminateWorkerAndRejectAll(new Error(errorMsg))
     }
 
+    return worker
+  }, [terminateWorkerAndRejectAll])
 
-
-    workerRef.current = worker
+  useEffect(() => {
+    workerRef.current = createWorker()
 
     return () => {
-      worker.terminate()
+      if (workerRef.current) {
+        workerRef.current.terminate()
+      }
     }
-  }, [])
+  }, [createWorker])
 
   const runCipher = useCallback(
     (
@@ -108,56 +167,83 @@ export function useCipherWorker() {
       key: string,
       options?: any
     ): Promise<CipherResult> => {
+      const cacheKey = getCacheKey(action, cipherId, input, key, options)
+      if (!options?.bypassCache && resultCache.has(cacheKey)) {
+        return Promise.resolve(resultCache.get(cacheKey)!)
+      }
+
       return new Promise<CipherResult>((resolve, reject) => {
+        // Automatically cancel any previous running request to prevent overlap
+        if (activeRequestsRef.current.size > 0) {
+          terminateWorkerAndRejectAll(new DOMException('The user aborted a request.', 'AbortError'))
+        }
+
         if (!workerRef.current) {
-          // Re-instantiate if terminated or not initialized yet
-          if (typeof window !== 'undefined') {
-            const worker = new Worker(
-              new URL('../workers/cipher.worker.ts', import.meta.url)
-            )
-
-            worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
-              const { id, success, result, error: workerError } = event.data
-
-              const req = activeRequestsRef.current.get(id)
-              if (req) {
-                if (success && result) req.resolve(result)
-                else req.reject(new Error(workerError || 'Unknown worker error'))
-                activeRequestsRef.current.delete(id)
-              }
-              if (activeRequestsRef.current.size === 0) setLoading(false)
-            }
-            worker.onerror = (err) => {
-              console.error('Worker error:', err)
-              setError('Web Worker initialization or runtime error.')
-              setLoading(false)
-            }
-            workerRef.current = worker
-          } else {
+          workerRef.current = createWorker()
+          if (!workerRef.current) {
             return reject(new Error('Web Worker is not available on SSR.'))
           }
         }
 
         const id = Math.random().toString(36).substring(2, 11)
-        activeRequestsRef.current.set(id, { resolve, reject })
+        
+        let onAbort: (() => void) | undefined
+        const signal = options?.signal as AbortSignal | undefined
+
+        if (signal) {
+          if (signal.aborted) {
+            return reject(new DOMException('The user aborted a request.', 'AbortError'))
+          }
+
+          onAbort = () => {
+            terminateWorkerAndRejectAll(new DOMException('The user aborted a request.', 'AbortError'))
+          }
+          signal.addEventListener('abort', onAbort)
+        }
+
+        // 10-second timeout budget
+        const timeoutId = setTimeout(() => {
+          setError('WORKER_TIMEOUT')
+          terminateWorkerAndRejectAll(new Error('WORKER_TIMEOUT'))
+        }, 10000)
+
+        activeRequestsRef.current.set(id, {
+          resolve,
+          reject,
+          signal,
+          onAbort,
+          timeoutId,
+          cacheKey,
+        })
 
         setLoading(true)
         setError(null)
 
         try {
-          const payloadStr = JSON.stringify({
-            id,
-            action,
-            cipherId,
-            input,
-            key,
-            options,
-          })
+          // Strip AbortSignal from options since it's not JSON serializable
+          const { signal: _, ...serializableOptions } = options || {}
+          const requestMessage: WorkerRequest = {
+            type: action,
+            requestId: id,
+            payload: {
+              cipherId,
+              input,
+              key,
+              options: serializableOptions,
+            },
+          }
+          const payloadStr = JSON.stringify(requestMessage)
           const encoder = new TextEncoder()
           const payloadBuffer = encoder.encode(payloadStr)
 
           workerRef.current.postMessage(payloadBuffer, [payloadBuffer.buffer])
         } catch (err: unknown) {
+          if (timeoutId) {
+            clearTimeout(timeoutId)
+          }
+          if (signal && onAbort) {
+            signal.removeEventListener('abort', onAbort)
+          }
           activeRequestsRef.current.delete(id)
           if (activeRequestsRef.current.size === 0) setLoading(false)
           const message = err instanceof Error ? err.message : String(err)
@@ -166,7 +252,7 @@ export function useCipherWorker() {
         }
       })
     },
-    []
+    [createWorker, terminateWorkerAndRejectAll]
   )
 
   return {

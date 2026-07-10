@@ -25,38 +25,26 @@ import { encrypt as hmacEncrypt, decrypt as hmacDecrypt } from '../cipher/hash/h
 import { encrypt as bcryptEncrypt, decrypt as bcryptDecrypt } from '../cipher/hash/bcrypt'
 
 
-interface WorkerRequest {
-  id: string
-  action: 'encrypt' | 'decrypt'
-  cipherId: string
-  input: string
-  key: string
-  options?: any
-}
-
-interface WorkerResponse {
-  id: string
-  success: boolean
-  result?: any
-  error?: string
-}
+import type { WorkerRequest, WorkerResponse } from '../../types/worker'
 
 type WorkerRequestMessage = WorkerRequest | Uint8Array
 
 const workerScope = self as unknown as Worker
 
 workerScope.addEventListener('message', (event: MessageEvent<WorkerRequestMessage>) => {
+  const startTime = performance.now()
   let requestData: WorkerRequestMessage = event.data
   if (requestData instanceof Uint8Array) {
     const decoder = new TextDecoder()
-    requestData = JSON.parse(decoder.decode(requestData))
+    requestData = JSON.parse(decoder.decode(requestData)) as WorkerRequest
   }
-  const { id, action, cipherId, input, key, options } = requestData as WorkerRequest
+  const { type, requestId, payload } = requestData as WorkerRequest
+  const { cipherId, input, key, options } = payload
 
   try {
     let result: any
 
-    const encryptMode = action === 'encrypt'
+    const encryptMode = type === 'encrypt'
 
     switch (cipherId) {
       case 'caesar':
@@ -158,16 +146,22 @@ workerScope.addEventListener('message', (event: MessageEvent<WorkerRequestMessag
         throw new Error(`Unsupported cipher ID: ${cipherId}`)
     }
 
-    workerScope.postMessage({
-      id,
+    const durationMs = performance.now() - startTime
+    const response: WorkerResponse = {
+      requestId,
       success: true,
-      result,
-    })
+      payload: { result },
+      timings: { durationMs },
+    }
+    workerScope.postMessage(response)
   } catch (error: unknown) {
-    workerScope.postMessage({
-      id,
+    const durationMs = performance.now() - startTime
+    const response: WorkerResponse = {
+      requestId,
       success: false,
-      error: error instanceof Error ? error.message : String(error),
-    })
+      payload: { error: error instanceof Error ? error.message : String(error) },
+      timings: { durationMs },
+    }
+    workerScope.postMessage(response)
   }
 })

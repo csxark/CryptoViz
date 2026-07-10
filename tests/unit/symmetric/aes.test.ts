@@ -75,3 +75,20 @@ describe('AES Unit Tests', () => {
     })
   })
 })
+it('produces different ciphertext blocks for identical plaintext blocks under CBC', () => {
+  const plaintext = 'AAAAAAAAAAAAAAAA' + 'BBBBBBBBBBBBBBBB' + 'AAAAAAAAAAAAAAAA'
+  const key = '0123456789abcdef0123456789abcdef' // adjust to a valid 32-hex-char key format used elsewhere in the file
+  const result = encrypt(plaintext, key)
+  const ciphertext = result.output.slice(32) // strip IV prefix
+  const block1 = ciphertext.slice(0, 32)
+  const block3 = ciphertext.slice(64, 96)
+  expect(block1).not.toBe(block3)
+})
+
+it('round-trips encrypt/decrypt correctly under CBC', () => {
+  const plaintext = 'Hello, CryptoViz!'
+  const key = '0123456789abcdef0123456789abcdef'
+  const encrypted = encrypt(plaintext, key)
+  const decrypted = decrypt(encrypted.output, key)
+  expect(decrypted.output).toBe(plaintext)
+})

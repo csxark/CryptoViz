@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import type { CipherStep } from '../../lib/cipher/types'
 
 interface StepAnimatorProps {
@@ -9,7 +9,7 @@ interface StepAnimatorProps {
   onStepChange: (index: number) => void
 }
 
-export default function StepAnimator({ steps, currentStep, onStepChange }: StepAnimatorProps) {
+const StepAnimator = memo(function StepAnimator({ steps, currentStep, onStepChange }: StepAnimatorProps) {
   const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
@@ -194,4 +194,6 @@ export default function StepAnimator({ steps, currentStep, onStepChange }: StepA
       </div>
     </div>
   )
-}
+})
+
+export default StepAnimator

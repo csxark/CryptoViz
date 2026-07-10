@@ -542,7 +542,13 @@ function aesInstrumented(
     durationMs: performance.now() - start,
   }
 }
-
+function xorBlocks(a: Uint8Array, b: Uint8Array): Uint8Array {
+  const result = new Uint8Array(16)
+  for (let i = 0; i < 16; i++) {
+    result[i] = a[i] ^ b[i]
+  }
+  return result
+}
 // PKCS7 padding helper
 function padPKCS7(bytes: Uint8Array, blockSize: number): Uint8Array {
   const paddingVal = blockSize - (bytes.length % blockSize)
@@ -573,7 +579,9 @@ function unpadPKCS7(bytes: Uint8Array): Uint8Array {
 function aesFast(
   inputBytes: Uint8Array,
   keyBytes: Uint8Array,
-  decrypt: boolean
+  decrypt: boolean,
+  mode: 'ECB' | 'CBC',
+  iv: Uint8Array | null
 ): CipherResult {
   const start = performance.now()
   const roundKeys = expandKey(keyBytes)
@@ -581,19 +589,58 @@ function aesFast(
   const numBlocks = Math.ceil(inputBytes.length / 16)
   const outputBytes = new Uint8Array(numBlocks * 16)
 
+  let prevBlock = mode === 'CBC' ? iv! : null
+
   for (let b = 0; b < numBlocks; b++) {
     const block = inputBytes.slice(b * 16, (b + 1) * 16)
-    const resultBlock = processBlock(block, roundKeys, decrypt)
-    outputBytes.set(resultBlock, b * 16)
+
+    if (mode === 'ECB') {
+      const resultBlock = processBlock(block, roundKeys, decrypt)
+      outputBytes.set(resultBlock, b * 16)
+    } else if (!decrypt) {
+      // CBC encrypt: XOR plaintext with previous ciphertext (or IV), THEN encrypt
+      const xored = xorBlocks(block, prevBlock!)
+      const resultBlock = processBlock(xored, roundKeys, false)
+      outputBytes.set(resultBlock, b * 16)
+      prevBlock = resultBlock
+    } else {
+      // CBC decrypt: decrypt ciphertext, THEN XOR with previous ciphertext (or IV)
+      const decrypted = processBlock(block, roundKeys, true)
+      const resultBlock = xorBlocks(decrypted, prevBlock!)
+      outputBytes.set(resultBlock, b * 16)
+      prevBlock = block // previous *ciphertext* block, not the decrypted one
+    }
   }
 
   return {
     output: fromByteArray(outputBytes, 'hex'),
     outputEncoding: 'hex',
     steps: [],
-    metadata: METADATA,
+    metadata: { ...METADATA, modeOfOperation: mode },
     durationMs: performance.now() - start,
   }
+}
+function getKeyBytes(key: string): Uint8Array {
+  let keyBytes: Uint8Array
+
+  if (/^[0-9a-fA-F]{32}$/.test(key)) {
+    keyBytes = toByteArray(key, 'hex')
+  } else if (/^[0-9a-fA-F]{48}$/.test(key)) {
+    keyBytes = toByteArray(key, 'hex')
+  } else if (/^[0-9a-fA-F]{64}$/.test(key)) {
+    keyBytes = toByteArray(key, 'hex')
+  } else {
+    keyBytes = toByteArray(key, 'utf8')
+  }
+
+  if (![16, 24, 32].includes(keyBytes.length)) {
+    throw new CipherError(
+      'INVALID_KEY_LENGTH',
+      `AES key must be exactly 16, 24, or 32 bytes (got ${keyBytes.length} bytes).`
+    )
+  }
+
+  return keyBytes
 }
 
 export function encrypt(
@@ -607,16 +654,7 @@ export function encrypt(
   const inEnc = options.encoding || 'utf8'
   const inputBytes = toByteArray(input, inEnc)
 
-  let keyBytes: Uint8Array
-  if (/^[0-9a-fA-F]{32}$/.test(key)) {
-    keyBytes = toByteArray(key, 'hex')
-  } else if (/^[0-9a-fA-F]{48}$/.test(key)) {
-    keyBytes = toByteArray(key, 'hex')
-  } else if (/^[0-9a-fA-F]{64}$/.test(key)) {
-    keyBytes = toByteArray(key, 'hex')
-  } else {
-    keyBytes = toByteArray(key, 'utf8')
-  }
+  const keyBytes = getKeyBytes(key)
 
   if (
     keyBytes.length !== 16 &&
@@ -631,10 +669,35 @@ export function encrypt(
 
   const paddedInput = padPKCS7(inputBytes, 16)
 
+  const mode: 'ECB' | 'CBC' = options.mode === 'ECB' ? 'ECB' : 'CBC'
+
+  let iv: Uint8Array | null = null
+  if (mode === 'CBC') {
+    if (options.iv) {
+      if (!/^[0-9a-fA-F]{32}$/.test(options.iv)) {
+        throw new CipherError('INVALID_IV', 'AES IV must be exactly 32 hex characters (16 bytes).')
+      }
+      iv = toByteArray(options.iv, 'hex')
+    } else {
+      iv = new Uint8Array(16)
+      crypto.getRandomValues(iv)
+    }
+  }
+
   if (options.instrument) {
+    // NOTE: instrumented CBC visualization is a fast-follow — see PR discussion
     return aesInstrumented(paddedInput, keyBytes, false)
   }
-  return aesFast(paddedInput, keyBytes, false)
+
+  const result = aesFast(paddedInput, keyBytes, false, mode, iv)
+
+  if (mode === 'CBC') {
+    // Prepend IV (as hex) to the ciphertext so decrypt() can recover it
+    const ivHex = fromByteArray(iv!, 'hex')
+    return { ...result, output: ivHex + result.output }
+  }
+
+  return result
 }
 
 export function decrypt(
@@ -645,40 +708,43 @@ export function decrypt(
   validateInput(input)
   validateKey(key)
 
-  const inputBytes = toByteArray(input, 'hex')
+ const mode: 'ECB' | 'CBC' = options.mode === 'ECB' ? 'ECB' : 'CBC'
+
+  let iv: Uint8Array | null = null
+  let cipherHex = input
+
+  if (mode === 'CBC') {
+    if (input.length < 32) {
+      throw new CipherError('INVALID_INPUT', 'CBC ciphertext must include a 32-character hex IV prefix.')
+    }
+    iv = toByteArray(input.slice(0, 32), 'hex')
+    cipherHex = input.slice(32)
+  }
+
+  const inputBytes = toByteArray(cipherHex, 'hex')
   if (inputBytes.length % 16 !== 0) {
     throw new CipherError('INVALID_PADDING', 'AES ciphertext must be a multiple of 16 bytes.')
   }
 
-  let keyBytes: Uint8Array
-  if (/^[0-9a-fA-F]{32}$/.test(key)) {
-    keyBytes = toByteArray(key, 'hex')
-  } else if (/^[0-9a-fA-F]{48}$/.test(key)) {
-    keyBytes = toByteArray(key, 'hex')
-  } else if (/^[0-9a-fA-F]{64}$/.test(key)) {
-    keyBytes = toByteArray(key, 'hex')
-  } else {
-    keyBytes = toByteArray(key, 'utf8')
-  }
+  // ...(keep the existing keyBytes detection block unchanged)...
+const keyBytes = getKeyBytes(key)
 
-  if (
-    keyBytes.length !== 16 &&
-    keyBytes.length !== 24 &&
-    keyBytes.length !== 32
-  ) {
-    throw new CipherError(
-      'INVALID_KEY_LENGTH',
-      `AES key must be exactly 16, 24, or 32 bytes (got ${keyBytes.length} bytes).`
-    )
-  }
-
+if (
+  keyBytes.length !== 16 &&
+  keyBytes.length !== 24 &&
+  keyBytes.length !== 32
+) {
+  throw new CipherError(
+    'INVALID_KEY_LENGTH',
+    `AES key must be exactly 16, 24, or 32 bytes (got ${keyBytes.length} bytes).`
+  )
+}
   let result: CipherResult
   if (options.instrument) {
     result = aesInstrumented(inputBytes, keyBytes, true)
   } else {
-    result = aesFast(inputBytes, keyBytes, true)
+    result = aesFast(inputBytes, keyBytes, true, mode, iv)
   }
-
   const rawBytes = toByteArray(result.output, 'hex')
   const unpaddedBytes = unpadPKCS7(rawBytes)
 

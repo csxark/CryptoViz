@@ -47,6 +47,7 @@ export interface CipherMetadata {
   breakingComplexity?: string
   yearDesigned?: number
   standardBody?: string
+  modeOfOperation?: string
 }
 
 export interface CipherOptions {

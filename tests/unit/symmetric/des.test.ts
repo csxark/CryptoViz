@@ -92,6 +92,19 @@ describe('DES & 3DES Unit Tests', () => {
     it('throws errors for invalid key length', () => {
       expect(() => encrypt3des('test', '12345678')).toThrowError(CipherError)
     })
+
+    it('encrypts and decrypts correctly in instrumented mode', () => {
+      const input = 'Triple DES instrumented'
+      const key3 = '12345678abcdef0123456789'
+
+      const enc3 = encrypt3des(input, key3, { instrument: true })
+      const dec3 = decrypt3des(enc3.output, key3, { instrument: true })
+      expect(dec3.output).toBe(input)
+
+      // Verify that instrumented output matches fast output
+      const encFast = encrypt3des(input, key3)
+      expect(enc3.output).toBe(encFast.output)
+    })
   })
 
   describe('DES Property-based Fuzzing', () => {

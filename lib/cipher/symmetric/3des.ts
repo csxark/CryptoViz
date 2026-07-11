@@ -130,7 +130,11 @@ function tdesInstrumented(
 
     if (isFirstBlock) {
       // Step-by-step 3DES flow for the first block
-      const step1 = des.processBlock(block, subkeys1, !decrypt)
+      const step1 = des.processBlock(
+        block,
+        decrypt ? subkeys3 : subkeys1,
+        decrypt ? true : false
+      )
       steps.push({
         index: steps.length,
         label: `Block 1 — Stage 1 (${decrypt ? 'Decrypt K3' : 'Encrypt K1'})`,
@@ -142,7 +146,11 @@ function tdesInstrumented(
         note: `First stage of Triple DES block 1 processing.`,
       })
 
-      const step2 = des.processBlock(step1, subkeys2, decrypt)
+      const step2 = des.processBlock(
+        step1,
+        subkeys2,
+        decrypt ? false : true
+      )
       steps.push({
         index: steps.length,
         label: `Block 1 — Stage 2 (${decrypt ? 'Encrypt K2' : 'Decrypt K2'})`,
@@ -154,7 +162,11 @@ function tdesInstrumented(
         note: `Second stage (middle) of Triple DES block 1 processing.`,
       })
 
-      const finalBlock = des.processBlock(step2, subkeys3, !decrypt)
+      const finalBlock = des.processBlock(
+        step2,
+        decrypt ? subkeys1 : subkeys3,
+        decrypt ? true : false
+      )
       des.blockToBytes(finalBlock, outputBytes, 0)
       steps.push({
         index: steps.length,

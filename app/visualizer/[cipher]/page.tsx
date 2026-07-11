@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Navbar from '../../../components/layout/Navbar'
 import Sidebar from '../../../components/layout/Sidebar'
 import CipherLayout from '../../../components/cipher/CipherLayout'
+import WorkerErrorBoundary from '../../../components/error/WorkerErrorBoundary'
 import { CIPHER_REGISTRY } from '../../../lib/cipher/registry'
 
 // Generate static routes for all ciphers for 'output: export' static build
@@ -37,7 +38,9 @@ export default async function VisualizerPage({
       <div className="mx-auto max-w-7xl flex flex-col md:flex-row">
         <Sidebar ciphers={sidebarCiphers} />
         <main className="flex-1 min-w-0 bg-white dark:bg-zinc-900/10">
-          <CipherLayout cipher={cipher} />
+          <WorkerErrorBoundary>
+            <CipherLayout cipher={cipher} />
+          </WorkerErrorBoundary>
         </main>
       </div>
     </div>

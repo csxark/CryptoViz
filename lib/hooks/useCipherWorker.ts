@@ -65,6 +65,11 @@ export function useCipherWorker() {
   const workerRef = useRef<Worker | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fatalError, setFatalError] = useState<Error | null>(null)
+
+  if (fatalError) {
+    throw fatalError
+  }
 
   // Map to track active requests, resolve/reject callbacks, abort signals, and timeouts
   const activeRequestsRef = useRef<
@@ -142,8 +147,10 @@ export function useCipherWorker() {
     worker.onerror = (err) => {
       console.error('Worker error:', err)
       const errorMsg = 'Web Worker initialization or runtime error.'
+      const errObj = new Error(errorMsg)
       setError(errorMsg)
-      terminateWorkerAndRejectAll(new Error(errorMsg))
+      setFatalError(errObj)
+      terminateWorkerAndRejectAll(errObj)
     }
 
     return worker

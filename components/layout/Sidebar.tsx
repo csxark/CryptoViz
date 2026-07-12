@@ -42,9 +42,12 @@ export default function Sidebar({ ciphers }: SidebarProps) {
 
   return (
     <aside className="w-full shrink-0 border-r border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-950/20 md:w-64 md:min-h-[calc(100vh-4rem)] md:sticky md:top-16">
-      <div className="flex flex-col gap-6">
+      <div className="flex gap-6 overflow-x-auto md:flex-col md:overflow-visible pb-2">
         {categories.map((cat) => (
-          <div key={cat} className="flex flex-col gap-1">
+          <div
+            key={cat}
+            className="min-w-[220px] flex-shrink-0 md:min-w-0 flex flex-col gap-1"
+          >
             <h3 className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
               {CATEGORY_LABELS[cat]}
             </h3>

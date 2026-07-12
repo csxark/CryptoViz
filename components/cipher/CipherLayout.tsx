@@ -257,9 +257,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Controls Column (Left) */}
-        <div className="flex flex-col gap-4 md:col-span-5">
+        <div className="flex flex-col gap-4 lg:col-span-5">
           {/* Action toggle (Encrypt / Decrypt) */}
           {cipher.category !== 'hash' && cipher.id !== 'dh' && (
             <div className="flex rounded-lg bg-zinc-100 p-0.5 dark:bg-zinc-800/80">
@@ -444,7 +444,7 @@ className="h-10 flex-1 flex items-center justify-center rounded-lg bg-teal-600 t
         </div>
 
         {/* Output & Trace Column (Right) */}
-        <div className="flex flex-col gap-4 md:col-span-7">
+        <div className="flex flex-col gap-4 lg:col-span-7">
           <div className="flex rounded-lg bg-zinc-100 p-0.5 dark:bg-zinc-800/80">
             <button
               onClick={() => setActiveTab('result')}

@@ -619,10 +619,10 @@ export default function DocumentationPage() {
         </button>
       </div>
 
-      <div className="flex-1 w-full max-w-[1600px] mx-auto flex flex-col md:flex-row">
+      <div className="flex-1 w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row">
         
         {/* Navigation Sidebar */}
-        <aside className="w-full md:w-64 bg-zinc-50 dark:bg-zinc-900/40 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-850 p-6 md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] overflow-y-auto shrink-0 flex flex-col gap-8 transition-colors">
+        <aside className="w-full lg:w-64 bg-zinc-50 dark:bg-zinc-900/40 border-b lg:border-b-0 lg:border-r border-zinc-200 dark:border-zinc-850 p-6 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] overflow-y-auto shrink-0 flex flex-col gap-8 transition-colors">
           <div>
             <h3 className="text-xs font-mono font-bold text-zinc-450 dark:text-zinc-550 uppercase tracking-widest mb-3 px-2">
               Overview
@@ -681,7 +681,7 @@ export default function DocumentationPage() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-6 md:p-10 max-w-3xl overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-10 w-full max-w-none lg:max-w-3xl overflow-y-auto">
           
           {/* Highlight indicator banner */}
           {activeQuery && (

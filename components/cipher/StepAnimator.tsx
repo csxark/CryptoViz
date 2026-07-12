@@ -226,9 +226,9 @@ const StepAnimator = memo(function StepAnimator({ steps, currentStep, onStepChan
       </div>
 
       {/* Control bar */}
-      <div className="flex flex-col gap-3 border-t border-zinc-100 pt-3 dark:border-zinc-800 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 border-t border-zinc-100 pt-3 dark:border-zinc-800 lg:flex-row lg:items-center">
         {/* Playback Controls */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={restart}
             disabled={currentStep === 0 && !isPlaying}
@@ -321,7 +321,7 @@ const StepAnimator = memo(function StepAnimator({ steps, currentStep, onStepChan
         </div>
 
         {/* Timeline Scrub Slider */}
-        <div className="flex flex-1 items-center gap-3">
+        <div className="min-w-0 flex flex-1 items-center gap-3">
           <input
             type="range"
             min="0"

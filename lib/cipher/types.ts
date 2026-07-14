@@ -66,6 +66,7 @@ export type CipherName =
   | 'atbash'
   | 'playfair'
   | 'railfence'
+  | 'beaufort'
   | 'xor'
   | 'otp'
   | 'des'

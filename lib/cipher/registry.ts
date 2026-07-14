@@ -76,6 +76,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'broken',
     keyPlaceholder: 'Number of rails (e.g. 3)',
   },
+  {
+    id: 'beaufort',
+    name: 'Beaufort Cipher',
+    category: 'classical',
+    description: 'A polyalphabetic substitution cipher that reverses the Vigenère formula (K - P instead of P + K), making it self-inverse.',
+    defaultKey: 'BEAUFORT',
+    defaultInput: 'HELLO WORLD',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Keyword (e.g. BEAUFORT)',
+  },
   // Symmetric
   {
     id: 'xor',

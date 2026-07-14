@@ -204,7 +204,7 @@ All styling uses Tailwind CSS v4 utility classes and CSS custom properties defin
 
 | Security Check | How to Verify | CI Gate Status |
 | :--- | :--- | :--- |
-| **Sanitize Outputs** | Pass raw strings through `sanitize()` before rendering. | Fail build if direct HTML is rendered. |
+| **Sanitize Outputs** | Render all dynamic values (cipher output, step notes, user input) as React text nodes so JSX escapes them automatically. Never pass dynamic content to `dangerouslySetInnerHTML`. | Fail review if dynamic content is rendered as raw HTML. |
 | **Key Clearance** | Ensure sensitive keys are cleared on component unmount. | Validated in manual code review. |
 | **No Unsafe Logic** | Verify zero usage of `eval`, `innerHTML`, and constructor functions. | Checked by static analysis rules. |
 | **CSP Compliance** | Verify `worker-src blob:` and security nonces in `vercel.json`. | Checked by E2E security tests. |

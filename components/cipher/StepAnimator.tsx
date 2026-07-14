@@ -13,6 +13,7 @@ interface StepAnimatorProps {
   onStepChange: (index: number) => void;
   speed?: AnimationSpeed;
   onSpeedChange?: (speed: AnimationSpeed) => void;
+  onCopyStepLink?: () => Promise<void> | void;
 }
 
 const BASE_INTERVAL_MS = 1500;
@@ -23,8 +24,10 @@ const StepAnimator = memo(function StepAnimator({
   onStepChange,
   speed: controlledSpeed,
   onSpeedChange,
+  onCopyStepLink,
 }: StepAnimatorProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [internalSpeed, setInternalSpeed] = useState<AnimationSpeed>(1);
   const speed = controlledSpeed ?? internalSpeed;
   const setSpeed = useCallback(
@@ -37,6 +40,18 @@ const StepAnimator = memo(function StepAnimator({
     },
     [onSpeedChange],
   );
+  const copyStepLink = useCallback(async () => {
+    if (!onCopyStepLink) return;
+
+    try {
+      await onCopyStepLink();
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 1800);
+    } catch {
+      setLinkCopied(false);
+    }
+  }, [onCopyStepLink]);
+
   const [reducedMotion, setReducedMotion] = useState(false);
 
   const hasMultipleSteps = steps.length > 1;
@@ -448,6 +463,19 @@ const StepAnimator = memo(function StepAnimator({
           </span>
         </div>
       </div>
+
+      {onCopyStepLink && (
+        <div className="mt-3 flex justify-end border-t border-zinc-100 pt-3 dark:border-zinc-800">
+          <button
+            type="button"
+            onClick={() => void copyStepLink()}
+            className="rounded-md border border-zinc-200 px-2.5 py-1.5 text-xs font-semibold text-zinc-600 transition-colors hover:border-teal-400 hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-teal-700 dark:hover:text-teal-400"
+            aria-label="Copy link to this visualization step"
+          >
+            {linkCopied ? "Link copied!" : "Copy link to this step"}
+          </button>
+        </div>
+      )}
 
       <p className="mt-2 text-2xs text-zinc-400 dark:text-zinc-600">
         Shortcuts: Space play/pause · ←/→ step · Home/R restart · End jump to

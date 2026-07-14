@@ -1,20 +1,29 @@
-'use client'
+"use client";
 
-import { useEffect, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
-import type { CipherDefinition } from '../../lib/cipher/registry'
-import type { CipherResult } from '../../lib/cipher/types'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
-import TraceTransferControls from './TraceTransferControls'
-import { traceToCipherResult, type CipherTraceFile } from '../../lib/utils/cipherTrace'
-import type { AnimationSpeed } from './StepAnimator'
-import WorkspacePresetManager from './WorkspacePresetManager'
-import type { WorkspacePreset } from '../../lib/utils/workspacePresets'
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import type { CipherDefinition } from "../../lib/cipher/registry";
+import type { CipherResult } from "../../lib/cipher/types";
+import { useCipherWorker } from "../../lib/hooks/useCipherWorker";
+import type { AnimationSpeed } from "./StepAnimator";
+import WorkspacePresetManager from "./WorkspacePresetManager";
+import type { WorkspacePreset } from "../../lib/utils/workspacePresets";
+import {
+  buildVisualizerPermalink,
+  clampStepIndex,
+  parseVisualizerPermalink,
+  updateStepInCurrentUrl,
+} from "../../lib/utils/visualizerPermalink";
+import TraceTransferControls from "./TraceTransferControls";
+import {
+  traceToCipherResult,
+  type CipherTraceFile,
+} from "../../lib/utils/cipherTrace";
 
-const StepAnimator = dynamic(() => import('./StepAnimator'), { ssr: false })
-const PlayfairGrid = dynamic(() => import('./PlayfairGrid'), { ssr: false })
-const RailFenceViz = dynamic(() => import('./RailFenceViz'), { ssr: false })
-const DHVisualizer = dynamic(() => import('./DHVisualizer'), { ssr: false })
+const StepAnimator = dynamic(() => import("./StepAnimator"), { ssr: false });
+const PlayfairGrid = dynamic(() => import("./PlayfairGrid"), { ssr: false });
+const RailFenceViz = dynamic(() => import("./RailFenceViz"), { ssr: false });
+const DHVisualizer = dynamic(() => import("./DHVisualizer"), { ssr: false });
 
 interface CipherLayoutProps {
   cipher: CipherDefinition;
@@ -52,6 +61,7 @@ const isValidHistoryArray = (data: unknown): data is HistoryEntry[] => {
 export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const { runCipher, loading, error: workerError } = useCipherWorker();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const pendingSharedStepRef = useRef<number | null>(null);
 
   const [input, setInput] = useState(cipher.defaultInput);
   const [key, setKey] = useState(cipher.defaultKey);
@@ -71,13 +81,39 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const [activeTab, setActiveTab] = useState<"result" | "history">("result");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
+  // Restore a shared visualizer configuration from the URL.
+  useEffect(() => {
+    const shared = parseVisualizerPermalink(window.location.search);
+
+    if (shared.input !== undefined) setInput(shared.input);
+    if (shared.key !== undefined) setKey(shared.key);
+    if (shared.direction !== undefined && cipher.id !== "dh") {
+      setAction(shared.direction);
+    }
+    if (shared.options.hexInput !== undefined) {
+      setHexInput(shared.options.hexInput);
+    }
+    if (shared.options.rounds !== undefined) {
+      setRounds(shared.options.rounds);
+    }
+    if (shared.options.demoMode !== undefined) {
+      setDemoMode(shared.options.demoMode);
+    }
+    if (shared.options.bobSecret !== undefined) {
+      setBobSecret(shared.options.bobSecret);
+    }
+
+    pendingSharedStepRef.current = shared.step ?? null;
+  }, [cipher.id]);
+
   // Reset inputs when cipher changes
   useEffect(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    setInput(cipher.defaultInput);
-    setKey(cipher.defaultKey);
+    const shared = parseVisualizerPermalink(window.location.search);
+    setInput(shared.input ?? cipher.defaultInput);
+    setKey(shared.key ?? cipher.defaultKey);
     setResult(null);
     setError(null);
     setCurrentStep(0);
@@ -105,10 +141,14 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     // Reset option defaults
     if (cipher.options) {
       cipher.options.forEach((opt) => {
-        if (opt.id === "hexInput") setHexInput(opt.default);
-        if (opt.id === "rounds") setRounds(opt.default);
-        if (opt.id === "demoMode") setDemoMode(opt.default);
-        if (opt.id === "bobSecret") setBobSecret(opt.default);
+        if (opt.id === "hexInput" && shared.options.hexInput === undefined)
+          setHexInput(opt.default);
+        if (opt.id === "rounds" && shared.options.rounds === undefined)
+          setRounds(opt.default);
+        if (opt.id === "demoMode" && shared.options.demoMode === undefined)
+          setDemoMode(opt.default);
+        if (opt.id === "bobSecret" && shared.options.bobSecret === undefined)
+          setBobSecret(opt.default);
       });
     }
 
@@ -161,6 +201,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
   };
 
   const handleRun = async () => {
+    const cleanUrl = updateStepInCurrentUrl(window.location.href, null);
+    window.history.replaceState(window.history.state, "", cleanUrl);
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -202,7 +244,13 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
 
       if (!controller.signal.aborted) {
         setResult(res);
-        setCurrentStep(0);
+        const restoredStep = pendingSharedStepRef.current;
+        setCurrentStep(
+          restoredStep === null
+            ? 0
+            : clampStepIndex(restoredStep, res.steps?.length ?? 0),
+        );
+        pendingSharedStepRef.current = null;
 
         if (res?.output !== undefined) {
           const entry: HistoryEntry = {
@@ -264,8 +312,15 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       setBobSecret(trace.options.bobSecret);
     }
 
-    setResult(traceToCipherResult(trace));
-    setCurrentStep(0);
+    const importedResult = traceToCipherResult(trace);
+    setResult(importedResult);
+    const restoredStep = pendingSharedStepRef.current;
+    setCurrentStep(
+      restoredStep === null
+        ? 0
+        : clampStepIndex(restoredStep, importedResult.steps?.length ?? 0),
+    );
+    pendingSharedStepRef.current = null;
     setActiveTab("result");
     setError(null);
   };
@@ -322,6 +377,33 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     }
 
     return null;
+  };
+
+  const handleStepChange = (nextStep: number) => {
+    const safeStep = clampStepIndex(nextStep, result?.steps?.length ?? 0);
+    setCurrentStep(safeStep);
+
+    if (result?.steps?.length) {
+      const nextUrl = updateStepInCurrentUrl(window.location.href, safeStep);
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+  };
+
+  const handleCopyStepLink = async () => {
+    const permalink = buildVisualizerPermalink(window.location.href, {
+      input,
+      key,
+      direction: cipher.id === "dh" ? "encrypt" : action,
+      step: currentStep,
+      options: {
+        hexInput,
+        rounds,
+        demoMode,
+        bobSecret,
+      },
+    });
+
+    await navigator.clipboard.writeText(permalink);
   };
 
   const traceOptions: Record<string, unknown> = {
@@ -665,9 +747,10 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                   <StepAnimator
                     steps={result.steps}
                     currentStep={currentStep}
-                    onStepChange={setCurrentStep}
+                    onStepChange={handleStepChange}
                     speed={animationSpeed}
                     onSpeedChange={setAnimationSpeed}
+                    onCopyStepLink={handleCopyStepLink}
                   />
                 </div>
               )}

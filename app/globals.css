@@ -90,12 +90,14 @@
 }
 
 @keyframes ambientGlow {
-  0%,100%{
-    transform:translateY(-50%) scale(1);
+  0%,100% {
+    transform: translateY(-50%) scale(1);
   }
 
-  50%{
-    transform:translateY(-50%) scale(1.12);
+  50% {
+    transform: translateY(-50%) scale(1.12);
+  }
+}
 
 /* Smooth, consistent transitions for every interactive element */
 a,

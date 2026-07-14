@@ -8,6 +8,7 @@ import {
   type OracleMode,
   BLOCK_SIZE,
 } from "@/lib/attacks/paddingOracle";
+import { useAttackWorker } from "@/lib/hooks/useAttackWorker";
 import { toByteArray, fromByteArray } from "@/lib/utils";
 
 // Ciphertext/IV fields are always hex here (that's the format the AES/CBC
@@ -51,6 +52,8 @@ export default function PaddingOracleSimulator() {
 
   const allSteps = useMemo(() => [] as AttackStep[], []); // populated per-run below
 
+  const { recoverPlaintextConcurrently, cancel, loading } = useAttackWorker();
+
   async function runAttack() {
     setError(null);
     setVisibleSteps([]);
@@ -81,48 +84,54 @@ export default function PaddingOracleSimulator() {
 
     setRunState("running");
 
-    // Run the REAL attack against the REAL decrypt() synchronously first —
-    // this is fast (no network, no artificial delay) and gives us a
-    // complete, genuine log of every oracle query. We then play that log
-    // back at a friendly pace so the UI is watchable instead of freezing
-    // the browser or the person's patience for ~4000+ awaited calls.
-    const oracle = new PaddingOracle(key, mode);
     const steps: AttackStep[] = [];
-    let plaintext: Uint8Array;
 
     try {
-      plaintext = recoverPlaintext(oracle, iv, ciphertext, (step) => {
-        steps.push(step);
-      });
+      const { plaintext, queryCount: totalQueries } = await recoverPlaintextConcurrently(
+        key,
+        iv,
+        ciphertext,
+        mode,
+        (step) => {
+          if (!cancelRef.current) {
+            steps.push(step);
+            // Throttle updates or just add to array. Realtime updates for all blocks in parallel!
+            // To keep React from choking, we can update visible steps periodically.
+          }
+        }
+      );
+
+      setQueryCount(totalQueries);
+      await playback(steps, cancelRef);
+      setRecoveredHex(bytesToHex(plaintext));
+      setRunState("done");
     } catch (e) {
-      // Expected outcome in "fixed" mode: the attack can't distinguish
-      // valid from invalid padding within a reasonable number of guesses.
       setError((e as Error).message);
       setRunState("error");
-      setQueryCount(oracle.queryCount);
       await playback(steps, cancelRef);
       return;
     }
 
-    setQueryCount(oracle.queryCount);
-    await playback(steps, cancelRef);
-    setRecoveredHex(bytesToHex(plaintext));
-    setRunState("done");
-
     async function playback(stepsToShow: AttackStep[], cancelled: { current: boolean }) {
-      const chunkSize = Math.max(1, Math.floor(stepsToShow.length / 400)); // cap animation frames
-      for (let i = 0; i < stepsToShow.length; i += chunkSize) {
+      const sortedSteps = [...stepsToShow].sort((a, b) => {
+        if (a.blockIndex !== b.blockIndex) return a.blockIndex - b.blockIndex;
+        // Inner blocks logic (wait, the steps are from parallel workers, so we just sort them roughly by progress)
+        return 0;
+      });
+      const chunkSize = Math.max(1, Math.floor(sortedSteps.length / 400)); // cap animation frames
+      for (let i = 0; i < sortedSteps.length; i += chunkSize) {
         if (cancelled.current) return;
-        const next = stepsToShow.slice(0, i + chunkSize);
+        const next = sortedSteps.slice(0, i + chunkSize);
         setVisibleSteps(next);
         await new Promise((r) => setTimeout(r, PLAYBACK_MS));
       }
-      setVisibleSteps(stepsToShow);
+      setVisibleSteps(sortedSteps);
     }
   }
 
   function stop() {
     cancelRef.current = true;
+    cancel();
   }
 
   const lastStep = visibleSteps[visibleSteps.length - 1];

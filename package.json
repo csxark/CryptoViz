@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:a11y": "vitest run tests/unit/a11y",
     "test:security": "vitest run tests/security"
   },
   "dependencies": {
@@ -35,6 +36,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "fast-check": "^4.9.0",
+    "jest-axe": "^10.0.0",
+    "@types/jest-axe": "^3.5.9",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^5",

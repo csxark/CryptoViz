@@ -17,6 +17,8 @@ export type CipherErrorCode =
   | 'ALGORITHM_UNSUPPORTED'
   | 'WEBCRYPTO_UNAVAILABLE'
   | 'WORKER_TIMEOUT'
+  | 'KDF_ERROR'
+  | 'UNSUPPORTED_KDF'
 
 export class CipherError extends Error {
   public readonly code: CipherErrorCode

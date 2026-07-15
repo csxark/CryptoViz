@@ -10,6 +10,8 @@ import { encrypt as vigenereEncrypt, decrypt as vigenereDecrypt } from '../ciphe
 import { encrypt as atbashEncrypt, decrypt as atbashDecrypt } from '../cipher/classical/atbash'
 import { encrypt as playfairEncrypt, decrypt as playfairDecrypt } from '../cipher/classical/playfair'
 import { encrypt as railfenceEncrypt, decrypt as railfenceDecrypt } from '../cipher/classical/railfence'
+import { encrypt as beaufortEncrypt, decrypt as beaufortDecrypt } from '../cipher/classical/beaufort'
+import { encrypt as hillEncrypt, decrypt as hillDecrypt } from '../cipher/classical/hill'
 import { encrypt as xorEncrypt, decrypt as xorDecrypt } from '../cipher/symmetric/xor'
 import { encrypt as otpEncrypt, decrypt as otpDecrypt } from '../cipher/symmetric/otp'
 import { encrypt as desEncrypt, decrypt as desDecrypt } from '../cipher/symmetric/des'
@@ -18,12 +20,15 @@ import { encrypt as aesEncrypt, decrypt as aesDecrypt } from '../cipher/symmetri
 import { encrypt as rsaEncrypt, decrypt as rsaDecrypt } from '../cipher/asymmetric/rsa'
 import { encrypt as dhEncrypt, decrypt as dhDecrypt } from '../cipher/asymmetric/dh'
 import { encrypt as eccEncrypt, decrypt as eccDecrypt } from '../cipher/asymmetric/ecc'
+import { encrypt as elgamalEncrypt, decrypt as elgamalDecrypt } from '../cipher/asymmetric/elgamal'
 import { encrypt as sha256Encrypt, decrypt as sha256Decrypt } from '../cipher/hash/sha256'
 import { encrypt as sha512Encrypt, decrypt as sha512Decrypt } from '../cipher/hash/sha512'
 import { encrypt as md5Encrypt, decrypt as md5Decrypt } from '../cipher/hash/md5'
 import { encrypt as hmacEncrypt, decrypt as hmacDecrypt } from '../cipher/hash/hmac'
 import { encrypt as bcryptEncrypt, decrypt as bcryptDecrypt } from '../cipher/hash/bcrypt'
+import { encrypt as sha3Encrypt, decrypt as sha3Decrypt } from '../cipher/hash/sha3'
 
+import { deriveKey } from '../kdf/pbkdf2'
 
 import type { WorkerRequest, WorkerResponse } from '../../types/worker'
 
@@ -77,6 +82,16 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
           ? railfenceEncrypt(input, key, options)
           : railfenceDecrypt(input, key, options)
         break
+      case 'beaufort':
+        result = encryptMode
+          ? beaufortEncrypt(input, key, options)
+          : beaufortDecrypt(input, key, options)
+        break
+      case 'hill':
+        result = encryptMode
+          ? hillEncrypt(input, key, options)
+          : hillDecrypt(input, key, options)
+        break
       case 'xor':
         result = encryptMode
           ? xorEncrypt(input, key, options)
@@ -117,6 +132,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
           ? eccEncrypt(input, key, options)
           : eccDecrypt(input, key, options)
         break
+      case 'elgamal':
+        result = encryptMode
+          ? elgamalEncrypt(input, key, options)
+          : elgamalDecrypt(input, key, options)
+        break
       case 'sha256':
         result = encryptMode
           ? sha256Encrypt(input, key, options)
@@ -141,6 +161,22 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? bcryptEncrypt(input, key, options)
           : bcryptDecrypt(input, key, options)
+        break
+      case 'sha3':
+        result = encryptMode
+          ? sha3Encrypt(input, key, options)
+          : sha3Decrypt()
+        break
+      case 'pbkdf2':
+        // KDF derivation doesn't fit the encrypt/decrypt(input, key, options)
+        // shape everything else uses — password arrives as `input`, KDF
+        // params are packed into `options` since they aren't a cipher key.
+        result = await deriveKey(input, {
+          iterations: options.iterations,
+          hash: options.hash,
+          keyLength: options.keyLength,
+          salt: options.salt,
+        })
         break
       default:
         throw new Error(`Unsupported cipher ID: ${cipherId}`)

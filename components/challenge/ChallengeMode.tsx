@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useCipherWorker } from "../../lib/hooks/useCipherWorker";
-import { generateChallengeData, type ChallengeData } from "../../lib/challenge/generator";
+import { generateChallengeData, type ChallengeData, type ChallengeDifficulty } from "../../lib/challenge/generator";
 import { CIPHER_REGISTRY } from "../../lib/cipher/registry";
 
 const TOTAL_QUESTIONS = 10;
@@ -19,6 +19,9 @@ export default function ChallengeMode() {
   const [bestScore, setBestScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [difficulty, setDifficulty] = useState<ChallengeDifficulty>('medium');
+  const [started, setStarted] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   
   const { runCipher, loading, error } = useCipherWorker();
   const successTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -37,9 +40,10 @@ export default function ChallengeMode() {
       if (isMounted()) {
         setExpectedCiphertext("");
         setTimeLeft(TIME_LIMIT);
+        setShowHint(false);
       }
       
-      const newChallenge = generateChallengeData();
+      const newChallenge = generateChallengeData(difficulty);
       if (isMounted()) setChallenge(newChallenge);
       
       const result = await runCipher('encrypt', newChallenge.cipherId, newChallenge.plaintext, newChallenge.key);
@@ -49,10 +53,11 @@ export default function ChallengeMode() {
     } catch (err) {
       console.error("Worker failed to generate challenge:", err);
     }
-  }, [runCipher]);
+  }, [runCipher, difficulty]);
 
-  // Initial load
+  // Initial load - only once the player has picked a difficulty and started
   useEffect(() => {
+    if (!started) return;
     let mounted = true;
     generateNextChallenge(() => mounted);
     
@@ -60,7 +65,7 @@ export default function ChallengeMode() {
       mounted = false;
       if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
     };
-  }, [generateNextChallenge]);
+  }, [generateNextChallenge, started]);
 
   // Save best score when session completes
   useEffect(() => {
@@ -116,11 +121,70 @@ export default function ChallengeMode() {
     generateNextChallenge(() => true);
   };
 
-  if (!challenge || !isHydrated) {
+  if (!isHydrated) {
     return (
       <div className="max-w-3xl mx-auto flex justify-center items-center h-64">
         <span className="text-zinc-500 dark:text-zinc-400 animate-pulse font-medium text-sm">
           Initializing Challenge Engine…
+        </span>
+      </div>
+    );
+  }
+
+  if (!started) {
+    const options: { value: ChallengeDifficulty; label: string; desc: string }[] = [
+      { value: 'easy', label: 'Easy', desc: 'Short words, simple ciphers, no key needed.' },
+      { value: 'medium', label: 'Medium', desc: 'Word-length input with keyword ciphers.' },
+      { value: 'hard', label: 'Hard', desc: 'Short phrases, multi-word keys, Playfair included.' },
+    ];
+
+    return (
+      <div className="max-w-3xl mx-auto">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/40">
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Choose Your Difficulty</h2>
+          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            Pick a difficulty to start the challenge.
+          </p>
+          <div
+            role="radiogroup"
+            aria-label="Challenge difficulty"
+            className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3"
+          >
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                role="radio"
+                aria-checked={difficulty === opt.value}
+                onClick={() => setDifficulty(opt.value)}
+                className={`rounded-xl border p-4 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                  difficulty === opt.value
+                    ? 'border-teal-500 bg-teal-50 dark:border-teal-400 dark:bg-teal-950/30'
+                    : 'border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-zinc-700'
+                }`}
+              >
+                <div className="text-sm font-bold text-zinc-900 dark:text-white">{opt.label}</div>
+                <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{opt.desc}</div>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setStarted(true)}
+            className="mt-8 inline-flex items-center gap-2 rounded-lg bg-teal-600 px-8 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 active:scale-[0.98] dark:bg-teal-500 dark:hover:bg-teal-400 dark:focus:ring-offset-zinc-900"
+          >
+            Start Challenge
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!challenge) {
+    return (
+      <div className="max-w-3xl mx-auto flex justify-center items-center h-64">
+        <span className="text-zinc-500 dark:text-zinc-400 animate-pulse font-medium text-sm">
+          Generating challenge…
         </span>
       </div>
     );
@@ -226,7 +290,7 @@ export default function ChallengeMode() {
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-8 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 active:scale-[0.98] dark:bg-teal-500 dark:hover:bg-teal-400 dark:focus:ring-offset-zinc-900"
-              onClick={resetSession}
+              onClick={() => { setStarted(false); resetSession(); }}
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -343,8 +407,14 @@ export default function ChallengeMode() {
             <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
               {cipherName}
             </span>
-            <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400">
-              Medium
+            <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${
+              challenge.difficulty === 'easy'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400'
+                : challenge.difficulty === 'hard'
+                ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400'
+                : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400'
+            }`}>
+              {challenge.difficulty}
             </span>
           </div>
         </div>
@@ -572,11 +642,22 @@ export default function ChallengeMode() {
                 </svg>
               </div>
             </div>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-              Stuck on a tough cipher? Hints and educational tips are coming soon to help you learn.
-            </p>
-            <button disabled className="w-full rounded-lg bg-zinc-100 px-4 py-2.5 text-sm font-semibold text-zinc-400 cursor-not-allowed dark:bg-zinc-800/50 dark:text-zinc-600">
-              Show Hint
+            {showHint && challenge.hints[0] ? (
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4" aria-live="polite">
+                {challenge.hints[0]}
+              </p>
+            ) : (
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                Stuck on this cipher? Reveal a hint to help you learn.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowHint(true)}
+              disabled={showHint || !challenge.hints[0]}
+              className="w-full rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 dark:bg-teal-500 dark:hover:bg-teal-400 dark:disabled:bg-zinc-800/50 dark:disabled:text-zinc-600"
+            >
+              {showHint ? 'Hint Revealed' : 'Show Hint'}
             </button>
           </div>
 

@@ -66,6 +66,8 @@ export type CipherName =
   | 'atbash'
   | 'playfair'
   | 'railfence'
+  | 'beaufort'
+  | 'hill'
   | 'xor'
   | 'otp'
   | 'des'
@@ -74,10 +76,12 @@ export type CipherName =
   | 'rsa'
   | 'dh'
   | 'ecc'
+  | 'elgamal'
   | 'sha256'
   | 'sha512'
   | 'md5'
   | 'bcrypt'
+  | 'sha3'
   | 'hmac'
 
 export interface TestVector {

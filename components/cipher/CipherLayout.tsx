@@ -112,6 +112,31 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     pendingSharedStepRef.current = shared.step ?? null
   }, [cipher.id])
 
+  // Restore a shared visualizer configuration from the URL.
+  useEffect(() => {
+    const shared = parseVisualizerPermalink(window.location.search);
+
+    if (shared.input !== undefined) setInput(shared.input);
+    if (shared.key !== undefined) setKey(shared.key);
+    if (shared.direction !== undefined && cipher.id !== "dh") {
+      setAction(shared.direction);
+    }
+    if (shared.options.hexInput !== undefined) {
+      setHexInput(shared.options.hexInput);
+    }
+    if (shared.options.rounds !== undefined) {
+      setRounds(shared.options.rounds);
+    }
+    if (shared.options.demoMode !== undefined) {
+      setDemoMode(shared.options.demoMode);
+    }
+    if (shared.options.bobSecret !== undefined) {
+      setBobSecret(shared.options.bobSecret);
+    }
+
+    pendingSharedStepRef.current = shared.step ?? null;
+  }, [cipher.id]);
+
   // Reset inputs when cipher changes
   useEffect(() => {
     if (abortControllerRef.current) {

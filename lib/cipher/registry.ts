@@ -76,6 +76,26 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'broken',
     keyPlaceholder: 'Number of rails (e.g. 3)',
   },
+  {
+    id: 'beaufort',
+    name: 'Beaufort Cipher',
+    category: 'classical',
+    description: 'A polyalphabetic substitution cipher that reverses the Vigenère formula (K - P instead of P + K), making it self-inverse.',
+    defaultKey: 'BEAUFORT',
+    defaultInput: 'HELLO WORLD',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Keyword (e.g. BEAUFORT)',
+  },
+  {
+    id: 'hill',
+    name: 'Hill Cipher',
+    category: 'classical',
+    description: 'A polygraphic substitution cipher that encrypts pairs of letters using 2x2 matrix multiplication modulo 26.',
+    defaultKey: 'HILL',
+    defaultInput: 'HELP',
+    securityStatus: 'broken',
+    keyPlaceholder: '4-letter key (e.g. HILL)',
+  },
   // Symmetric
   {
     id: 'xor',
@@ -206,6 +226,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
       },
     ],
   },
+  {
+    id: 'sha3',
+    name: 'SHA3-256',
+    category: 'hash',
+    description: 'NIST FIPS 202 hash function using the Keccak sponge construction — 24-round permutation over a 1600-bit state.',
+    defaultKey: '',
+    defaultInput: 'abc',
+    securityStatus: 'secure',
+  },
   // Asymmetric
   {
     id: 'rsa',
@@ -252,5 +281,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: 'hello',
     securityStatus: 'secure',
     keyPlaceholder: '32-byte private key hex (64 chars)',
+  },
+  {
+    id: 'elgamal',
+    name: 'ElGamal',
+    category: 'asymmetric',
+    description: 'A public-key encryption scheme based on the discrete logarithm problem, using ephemeral-key modular exponentiation.',
+    defaultKey: '23,5,8',
+    defaultInput: '4',
+    securityStatus: 'secure',
+    keyPlaceholder: 'p,g,y (prime, generator, public key)',
   },
 ]

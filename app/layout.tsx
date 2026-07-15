@@ -37,10 +37,11 @@ export default function RootLayout({
     >
       <head>
         {/* Loaded as an external same-origin script (not inline) so CSP
-            script-src can stay 'self' only, with no 'unsafe-inline'. Mirrors
-            the exact logic in Navbar's theme-init effect (same 'theme'
-            localStorage key, same system-preference fallback) so the class
-            it sets is never wrong or out of sync with what Navbar computes. */}
+            can allow the same-origin bootstrap script while keeping the rest
+            of the policy restrictive. Mirrors the exact logic in Navbar's
+            theme-init effect (same 'theme' localStorage key, same system-
+            preference fallback) so the class it sets is never wrong or out
+            of sync with what Navbar computes. */}
         <script src="/theme-init.js" />
       </head>
       <body className="min-h-full flex flex-col bg-[#060816] relative">

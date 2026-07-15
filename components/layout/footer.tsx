@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MessagesSquare } from "lucide-react";
 
 const learnLinks = [
   { name: "Classical Ciphers", href: "/visualizer" },
@@ -8,33 +9,23 @@ const learnLinks = [
 ];
 
 const projectLinks = [
-  {
-    name: "Contributing",
-    href: "https://github.com/csxark/CryptoViz/blob/main/CONTRIBUTING.md",
-  },
-  {
-    name: "Guidelines",
-    href: "https://github.com/csxark/CryptoViz/blob/main/GUIDELINES.md",
-  },
+  { name: "Documentation", href: "/docs" },
+  { name: "API Reference", href: "/docs/api" },
+  { name: "Roadmap", href: "https://github.com/csxark/CryptoViz/issues" },
 ];
 
 const resourceLinks = [
-  {
-    name: "GitHub Repository",
-    href: "https://github.com/csxark/CryptoViz",
-  },
+  { name: "Resources", href: "/resources" },
+  { name: "Blog", href: "/blog" },
+  { name: "GitHub Repository", href: "https://github.com/csxark/CryptoViz" },
+  { name: "Contribution Guide", href: "https://github.com/csxark/CryptoViz/blob/main/CONTRIBUTING.md" },
+  { name: "Discord", href: "#" },
 ];
 
-function FooterColumn({
-  title,
-  links,
-}: {
-  title: string;
-  links: { name: string; href: string }[];
-}) {
+function FooterColumn({ title, links }: { title: string; links: { name: string; href: string }[] }) {
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-[#F5F5F5]">
         {title}
       </h3>
       <ul className="mt-4 space-y-3">
@@ -43,12 +34,9 @@ function FooterColumn({
             <Link
               href={link.href}
               target={link.href.startsWith("http") ? "_blank" : undefined}
-              rel={
-                link.href.startsWith("http")
-                  ? "noopener noreferrer"
-                  : undefined
-              }
-className="inline-block text-sm text-zinc-600 transition-all duration-200 hover:translate-x-1 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400"            >
+              rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
+              className="inline-block text-sm text-zinc-500 dark:text-[#8A8A94] transition-all duration-200 hover:translate-x-1 hover:text-teal-600 dark:hover:text-[#00C2AE]"
+            >
               {link.name}
             </Link>
           </li>
@@ -60,14 +48,14 @@ className="inline-block text-sm text-zinc-600 transition-all duration-200 hover:
 
 export default function Footer() {
   return (
-    <footer className="border-t border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+    <footer className="border-t border-zinc-200/50 dark:border-[#2A2A31]/50 bg-zinc-100/80 dark:bg-black/40 transition-colors duration-300">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-12 lg:grid-cols-5">
           {/* Brand */}
-          <div className="col-span-2 sm:col-span-1">
+          <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-2">
               <svg
-                className="h-6 w-6 text-teal-500"
+                className="h-7 w-7 text-teal-600 dark:text-[#00C2AE]"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -77,14 +65,23 @@ export default function Footer() {
                 <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z" />
                 <path d="m9 12 2 2 4-4" />
               </svg>
-              <span className="text-base font-bold text-zinc-900 dark:text-white">
-                Crypto<span className="text-teal-500">Viz</span>
+              <span className="text-xl font-bold text-zinc-900 dark:text-[#F5F5F5]">
+                Crypto<span className="text-teal-600 dark:text-[#00C2AE]">Viz</span>
               </span>
             </div>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-              An open-source, interactive platform for learning cryptography
-              through visualization.
+            <p className="mt-6 max-w-sm text-sm leading-relaxed text-zinc-500 dark:text-[#8A8A94]">
+              An open-source, interactive platform for learning cryptography through modern visualization and experimentation.
             </p>
+            <div className="mt-8">
+              <Link
+                href="https://github.com/csxark/CryptoViz/blob/main/CONTRIBUTING.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2A31] bg-white dark:bg-[#101013] px-4 py-2 text-sm font-semibold text-zinc-900 dark:text-[#F5F5F5] shadow-sm transition-all duration-250 hover:-translate-y-0.5 hover:border-teal-500/50 dark:hover:border-[#008A7C]/50 hover:bg-zinc-50 dark:hover:bg-[#16161A] hover:text-teal-600 dark:hover:text-[#00C2AE]"
+              >
+                Become a Contributor
+              </Link>
+            </div>
           </div>
 
           <FooterColumn title="Learn" links={learnLinks} />
@@ -93,27 +90,31 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-zinc-200 pt-8 dark:border-zinc-800 sm:flex-row">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            © {new Date().getFullYear()} CryptoViz. Released under the MIT
-            License.
+        <div className="mt-16 flex flex-col items-center justify-between gap-6 border-t border-zinc-200 dark:border-[#2A2A31] pt-8 md:flex-row">
+          <p className="text-sm text-zinc-500 dark:text-[#8A8A94]">
+            © {new Date().getFullYear()} CryptoViz. Released under the MIT License.
           </p>
 
-          <Link
-            href="https://github.com/csxark/CryptoViz"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg p-2 text-zinc-600 transition-all duration-200 hover:scale-110 hover:bg-zinc-100 hover:text-teal-600 active:scale-95 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-teal-400"
-          >
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              aria-hidden="true"
+          <div className="flex space-x-4">
+            <Link
+              href="https://github.com/csxark/CryptoViz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-500 dark:text-[#8A8A94] transition-all duration-200 hover:text-teal-600 dark:hover:text-[#00C2AE] hover:-translate-y-1"
+              aria-label="GitHub Repository"
             >
-              <path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 008 10.94c.58.1.79-.25.79-.56v-2.17c-3.25.71-3.94-1.39-3.94-1.39-.53-1.35-1.3-1.7-1.3-1.7-1.07-.73.08-.72.08-.72 1.18.08 1.8 1.21 1.8 1.21 1.05 1.8 2.75 1.28 3.42.98.11-.76.41-1.28.74-1.57-2.6-.3-5.34-1.3-5.34-5.8 0-1.28.46-2.33 1.2-3.15-.12-.3-.52-1.52.11-3.17 0 0 .98-.31 3.2 1.2a11.1 11.1 0 015.82 0c2.22-1.51 3.2-1.2 3.2-1.2.63 1.65.23 2.87.11 3.17.75.82 1.2 1.87 1.2 3.15 0 4.51-2.74 5.49-5.35 5.79.42.36.8 1.08.8 2.18v3.23c0 .31.21.67.8.56A11.5 11.5 0 0023.5 12C23.5 5.65 18.35.5 12 .5z" />
-            </svg>
-          </Link>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+            </Link>
+            <Link
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-500 dark:text-[#8A8A94] transition-all duration-200 hover:text-teal-600 dark:hover:text-[#00C2AE] hover:-translate-y-1"
+              aria-label="Discord Server"
+            >
+              <MessagesSquare size={20} />
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

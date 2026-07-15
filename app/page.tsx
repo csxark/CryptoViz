@@ -90,7 +90,7 @@ export default function Home() {
           className="absolute inset-0 opacity-[0.02] pointer-events-none"
           style={{
             backgroundImage: `
-              linear-gradient(var(--card-border) 1px, transparent 1px)
+              linear-gradient(var(--card-border) 1px, transparent 1px),
               linear-gradient(90deg, var(--card-border) 1px, transparent 1px)
             `,
             backgroundSize: "50px 50px",
@@ -168,7 +168,7 @@ export default function Home() {
       </section>
 
       {/* Grid Platform Items */}
-      <section className="mx-auto max-w-5xl py-12 px-4 sm:px-6 lg:px-8 <section ... bg-[var(--background) overflow-hidden">
+      <section className="mx-auto max-w-5xl py-12 px-4 sm:px-6 lg:px-8bg-[var(--background) overflow-hidden">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {isLoading
             ? Array.from({ length: 4 }).map((_, idx) => <SkeletonCard key={idx} />)

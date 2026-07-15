@@ -161,11 +161,6 @@ export default function BenchmarkHistory({
                   (s: BenchmarkSession) =>
                     `${average(s.results.map((r) => r.renderTime))?.toFixed(4) ?? "—"} ms`,
                 ],
-                [
-                  "Mean memory",
-                  (s: BenchmarkSession) =>
-                    formatBytes(average(s.results.map((r) => r.memoryUsage))),
-                ],
               ].map(([label, getter]) => (
                 <tr key={label as string}>
                   <th className="px-4 py-3 text-left font-medium">

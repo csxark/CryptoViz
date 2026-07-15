@@ -19,8 +19,6 @@ export interface BenchmarkResult {
   workerExecutionTime?: number;
   /** Time required for React/browser to commit the result UI. */
   renderTime?: number;
-  /** Average positive JS heap growth per iteration, in bytes, when supported. */
-  memoryUsage?: number;
 }
 
 export interface BenchmarkComparison {

@@ -273,4 +273,14 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: '32-byte private key hex (64 chars)',
   },
+  {
+    id: 'elgamal',
+    name: 'ElGamal',
+    category: 'asymmetric',
+    description: 'A public-key encryption scheme based on the discrete logarithm problem, using ephemeral-key modular exponentiation.',
+    defaultKey: '23,5,8',
+    defaultInput: '4',
+    securityStatus: 'secure',
+    keyPlaceholder: 'p,g,y (prime, generator, public key)',
+  },
 ]

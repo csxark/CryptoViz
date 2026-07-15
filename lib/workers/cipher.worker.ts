@@ -20,6 +20,7 @@ import { encrypt as aesEncrypt, decrypt as aesDecrypt } from '../cipher/symmetri
 import { encrypt as rsaEncrypt, decrypt as rsaDecrypt } from '../cipher/asymmetric/rsa'
 import { encrypt as dhEncrypt, decrypt as dhDecrypt } from '../cipher/asymmetric/dh'
 import { encrypt as eccEncrypt, decrypt as eccDecrypt } from '../cipher/asymmetric/ecc'
+import { encrypt as elgamalEncrypt, decrypt as elgamalDecrypt } from '../cipher/asymmetric/elgamal'
 import { encrypt as sha256Encrypt, decrypt as sha256Decrypt } from '../cipher/hash/sha256'
 import { encrypt as sha512Encrypt, decrypt as sha512Decrypt } from '../cipher/hash/sha512'
 import { encrypt as md5Encrypt, decrypt as md5Decrypt } from '../cipher/hash/md5'
@@ -128,6 +129,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? eccEncrypt(input, key, options)
           : eccDecrypt(input, key, options)
+        break
+      case 'elgamal':
+        result = encryptMode
+          ? elgamalEncrypt(input, key, options)
+          : elgamalDecrypt(input, key, options)
         break
       case 'sha256':
         result = encryptMode

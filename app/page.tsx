@@ -128,12 +128,12 @@ export default function Home() {
                   Open Playground &rarr;
                 </Link>
 
-                <a
+                <Link
                   href="/docs"
                   className="rounded-lg border border-[var(--card-border)] bg-[var(--card)] hover:bg-[#16161A] hover:border-[#8A8A94]/30 px-6 py-3.5 text-sm font-semibold text-[var(--foreground)] transition-all duration-200"
                 >
                   Documentation
-                </a>
+                </Link>
               </div>
 
               {/* Minimal Core Cards */}
@@ -189,7 +189,7 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <div className="mt-4 border-t border-[var(--card-border)]pt-3">
+                  <div className="mt-4 border-t border-[var(--card-border)] pt-3">
                     <Link
                       href={cat.link}
                       className="inline-flex items-center text-xs font-semibold tracking-wider text-[var(--primary)] hover:text-[#14D8C2]"

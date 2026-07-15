@@ -76,16 +76,15 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`relative text-sm font-medium transition-all duration-300 ease-out
+                  className={`relative incline block text-sm font-medium transition-all duration-300 ease-out
                   hover:-translate-y-0.5 hover:scale-105
-                  hover:text-zinc-950 dark:hover:text-white
                   after:absolute after:-bottom-1 after:left-0
                   after:h-[2px] after:w-0 after:bg-teal-500
                   after:content-[''] after:transition-all after:duration-300
                   hover:after:w-full ${
                     isActive
                     ? 'text-teal-600 dark:text-teal-400'
-                    : 'text-zinc-600 dark:text-zinc-400'
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"}
                     }`}
                 >
                   {link.name}

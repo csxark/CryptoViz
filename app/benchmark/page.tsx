@@ -30,21 +30,10 @@ import Navbar from "@/components/layout/Navbar";
 import { CIPHER_REGISTRY } from "@/lib/cipher/registry";
 
 type Category = "all" | "classical" | "symmetric" | "asymmetric" | "hash";
-type PerformanceWithMemory = Performance & {
-  memory?: {
-    usedJSHeapSize: number;
-  };
-};
-
 const average = (values: number[]) =>
   values.length
     ? values.reduce((sum, value) => sum + value, 0) / values.length
     : 0;
-
-const getUsedHeap = () =>
-  typeof performance !== "undefined"
-    ? (performance as PerformanceWithMemory).memory?.usedJSHeapSize
-    : undefined;
 
 const getBenchmarkParams = (
   cipherId: string,
@@ -162,7 +151,6 @@ export default function BenchmarkPage() {
 
         const cipherMeasurements: number[] = [];
         const workerMeasurements: number[] = [];
-        const memoryMeasurements: number[] = [];
         const { input, key, options } = getBenchmarkParams(
           cipherId,
           cipherDef.category,
@@ -180,7 +168,6 @@ export default function BenchmarkPage() {
         }
 
         for (let iteration = 0; iteration < iterations; iteration += 1) {
-          const heapBefore = getUsedHeap();
           const workerStart = performance.now();
 
           try {
@@ -189,14 +176,9 @@ export default function BenchmarkPage() {
               bypassCache: true,
             });
             const workerDuration = performance.now() - workerStart;
-            const heapAfter = getUsedHeap();
 
             cipherMeasurements.push(BenchmarkEngine.measureCipherTime(result));
             workerMeasurements.push(workerDuration);
-
-            if (heapBefore !== undefined && heapAfter !== undefined) {
-              memoryMeasurements.push(Math.max(0, heapAfter - heapBefore));
-            }
           } catch (iterationError) {
             console.error(
               `Iteration ${iteration + 1} failed for ${cipherId}:`,
@@ -214,9 +196,6 @@ export default function BenchmarkPage() {
               cipherMeasurements.length,
             ),
             workerExecutionTime: average(workerMeasurements),
-            memoryUsage: memoryMeasurements.length
-              ? average(memoryMeasurements)
-              : undefined,
           });
         } else {
           setError(
@@ -280,8 +259,8 @@ export default function BenchmarkPage() {
             Performance Benchmark Dashboard
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400">
-            Compare cipher time, worker round-trip time, rendering cost, memory
-            usage, and historical sessions.
+            Compare cipher time, worker round-trip time, rendering cost, and
+            historical sessions.
           </p>
         </header>
 
@@ -389,8 +368,7 @@ export default function BenchmarkPage() {
               Ready to benchmark?
             </h2>
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              Select algorithms and start a run. Browser memory reporting is
-              shown only where the Performance Memory API is supported.
+              Select algorithms and start a run.
             </p>
           </div>
         )}

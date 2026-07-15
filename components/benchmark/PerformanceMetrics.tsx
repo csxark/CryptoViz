@@ -3,7 +3,6 @@
 import React from 'react';
 import type { BenchmarkResult } from "@/types/benchmark";
 import { calculateComparison } from "@/lib/utils/benchmark";
-import { formatBytes } from "@/lib/utils/benchmarkHistory";
 
 interface PerformanceMetricsProps {
   results: BenchmarkResult[];
@@ -23,12 +22,6 @@ export default React.memo(function PerformanceMetrics({
   }
 
   const comparison = calculateComparison(results);
-  const averageMemory =
-    results.reduce((sum, result) => sum + (result.memoryUsage ?? 0), 0) /
-    Math.max(
-      results.filter((result) => result.memoryUsage !== undefined).length,
-      1,
-    );
 
   const summary = [
     {
@@ -45,11 +38,6 @@ export default React.memo(function PerformanceMetrics({
       label: "Speed Ratio",
       value: `${comparison.speedupRatio.toFixed(2)}x`,
       detail: "fastest compared with slowest",
-    },
-    {
-      label: "Average Memory",
-      value: formatBytes(averageMemory),
-      detail: "positive JS heap growth per operation",
     },
   ];
 
@@ -83,7 +71,6 @@ export default React.memo(function PerformanceMetrics({
                 "Avg Time",
                 "Worker Time",
                 "Render Time",
-                "Memory",
                 "Min / Max",
                 "Std Dev",
                 "Ops/Sec",
@@ -118,9 +105,6 @@ export default React.memo(function PerformanceMetrics({
                   </td>
                   <td className="px-4 py-3 font-mono">
                     {result.renderTime?.toFixed(4) ?? "—"} ms
-                  </td>
-                  <td className="px-4 py-3 font-mono">
-                    {formatBytes(result.memoryUsage)}
                   </td>
                   <td className="px-4 py-3 font-mono">
                     {result.minTime.toFixed(4)} / {result.maxTime.toFixed(4)}

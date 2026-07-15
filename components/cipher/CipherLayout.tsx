@@ -493,7 +493,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     )
   }
 
-  const handleClearStepAnnotations = () => {
+  const handleClearStepAnnotations = async () => {
     if (
       !window.confirm(
         'Clear all notes and bookmarks for this cipher and direction?',

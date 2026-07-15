@@ -92,7 +92,7 @@ export default function PlayfairGrid({ matrix, highlights = [] }: PlayfairGridPr
                     cellRefs.current[flatIdx] = el
                   }}
                   role="gridcell"
-                  aria-label={`Row ${rIdx + 1}, column ${cIdx + 1}: ${char}, ${isHighlighted ? 'highlighted' : 'not highlighted'}`}
+                  aria-label={`Row ${rIdx + 1}, column ${cIdx + 1}: ${char}${isHighlighted ? ', highlighted' : ''}`}
                   aria-selected={isHighlighted}
                   tabIndex={isTabbable ? 0 : -1}
                   onFocus={() => setFocusedIndex(flatIdx)}

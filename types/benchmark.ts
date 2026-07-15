@@ -19,6 +19,8 @@ export interface BenchmarkResult {
   workerExecutionTime?: number;
   /** Time required for React/browser to commit the result UI. */
   renderTime?: number;
+  /** Optional memory growth metric captured during benchmark execution. */
+  memoryUsage?: number;
 }
 
 export interface BenchmarkComparison {

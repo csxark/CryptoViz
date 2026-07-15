@@ -273,7 +273,9 @@ export function processBlock(
 function aesInstrumented(
   inputBytes: Uint8Array,
   keyBytes: Uint8Array,
-  decrypt: boolean
+  decrypt: boolean,
+  mode: 'ECB' | 'CBC' = 'ECB',
+  iv: Uint8Array | null = null
 ): CipherResult {
   const start = performance.now()
   const roundKeys = expandKey(keyBytes)
@@ -282,6 +284,8 @@ function aesInstrumented(
   const steps: CipherStep[] = []
   const numBlocks = Math.ceil(inputBytes.length / 16)
   const outputBytes = new Uint8Array(numBlocks * 16)
+  const useCbc = mode === 'CBC'
+  let prevBlock = useCbc ? iv : null
 
   // Step 0: Key schedule expansion (Milestone)
   steps.push({
@@ -298,16 +302,31 @@ function aesInstrumented(
     const isFirstBlock = b === 0
 
     if (isFirstBlock) {
-      const state = new Uint8Array(blockBytes)
+      const cbcInputBlock = useCbc && !decrypt
+        ? xorBlocks(blockBytes, prevBlock ?? new Uint8Array(16))
+        : blockBytes
+      const state = new Uint8Array(cbcInputBlock)
+
+      if (useCbc && !decrypt) {
+        steps.push({
+          index: steps.length,
+          label: 'Block 1 — CBC Mode XOR',
+          inputState: fromByteArray(blockBytes, 'hex'),
+          outputState: fromByteArray(state, 'hex'),
+          note: 'XORed the plaintext block with the previous ciphertext block (or IV) before AES encryption.',
+        })
+      }
 
       // Step 1: Loading plaintext
-      steps.push({
-        index: steps.length,
-        label: 'Block 1 — Plaintext Loading',
-        inputState: fromByteArray(blockBytes, 'hex'),
-        outputState: fromByteArray(state, 'hex'),
-        note: 'Loaded 16-byte input block into 4x4 state matrix.',
-      })
+      if (!useCbc) {
+        steps.push({
+          index: steps.length,
+          label: 'Block 1 — Plaintext Loading',
+          inputState: fromByteArray(blockBytes, 'hex'),
+          outputState: fromByteArray(state, 'hex'),
+          note: 'Loaded 16-byte input block into 4x4 state matrix.',
+        })
+      }
 
       if (!decrypt) {
         // Step 2: Initial round AddRoundKey
@@ -369,7 +388,6 @@ function aesInstrumented(
         }
 
         // Final round
-        // SubBytes
         const stateBeforeSubFinal = new Uint8Array(state)
         subBytes(state)
         steps.push({
@@ -380,7 +398,6 @@ function aesInstrumented(
           note: 'Substituted final state bytes using Rijndael S-box.',
         })
 
-        // ShiftRows
         const stateBeforeShiftFinal = new Uint8Array(state)
         shiftRows(state)
         steps.push({
@@ -391,7 +408,6 @@ function aesInstrumented(
           note: 'Cyclically shifted final state rows.',
         })
 
-        // AddRoundKey
         const stateBeforeARKFinal = new Uint8Array(state)
         addRoundKey(state, roundKeys[nRounds])
         steps.push({
@@ -403,9 +419,8 @@ function aesInstrumented(
         })
 
         outputBytes.set(state, 0)
+        prevBlock = new Uint8Array(state)
       } else {
-        // Decrypt
-        // Initial Round: AddRoundKey, InvShiftRows, InvSubBytes
         const stateBeforeARKDec = new Uint8Array(state)
         addRoundKey(state, roundKeys[nRounds])
         steps.push({
@@ -436,11 +451,8 @@ function aesInstrumented(
           note: 'Substituted state bytes using Rijndael Inverse S-box.',
         })
 
-        // Main rounds nRounds - 1 down to 1
         for (let r = nRounds - 1; r >= 1; r--) {
           const roundNum = nRounds - r
-
-          // AddRoundKey
           const stateBeforeARKDecRound = new Uint8Array(state)
           addRoundKey(state, roundKeys[r])
           steps.push({
@@ -451,7 +463,6 @@ function aesInstrumented(
             note: `XORed state with round key K${r}.`,
           })
 
-          // InvMixColumns
           const stateBeforeMixDecRound = new Uint8Array(state)
           invMixColumns(state)
           steps.push({
@@ -462,7 +473,6 @@ function aesInstrumented(
             note: 'Multiplied state columns by inverse fixed polynomial.',
           })
 
-          // InvShiftRows
           const stateBeforeShiftDecRound = new Uint8Array(state)
           invShiftRows(state)
           steps.push({
@@ -473,7 +483,6 @@ function aesInstrumented(
             note: 'Performed inverse row shifting.',
           })
 
-          // InvSubBytes
           const stateBeforeSubDecRound = new Uint8Array(state)
           invSubBytes(state)
           steps.push({
@@ -486,7 +495,6 @@ function aesInstrumented(
           })
         }
 
-        // Final round: AddRoundKey
         const stateBeforeARKDecFinal = new Uint8Array(state)
         addRoundKey(state, roundKeys[0])
         steps.push({
@@ -497,20 +505,46 @@ function aesInstrumented(
           note: 'XORed state with initial round key K0.',
         })
 
-        outputBytes.set(state, 0)
+        const plaintextBlock = useCbc
+          ? xorBlocks(state, prevBlock ?? new Uint8Array(16))
+          : state
+
+        if (useCbc) {
+          steps.push({
+            index: steps.length,
+            label: 'Block 1 — CBC Mode XOR',
+            inputState: fromByteArray(state, 'hex'),
+            outputState: fromByteArray(plaintextBlock, 'hex'),
+            note: 'XORed the decrypted block with the previous ciphertext block (or IV) to recover the plaintext block.',
+          })
+        }
+
+        outputBytes.set(plaintextBlock, b * 16)
+        prevBlock = new Uint8Array(blockBytes)
       }
 
-      // Block 1 Complete Output
       steps.push({
         index: steps.length,
         label: 'Block 1 — Complete Output',
         inputState: fromByteArray(blockBytes, 'hex'),
-        outputState: fromByteArray(state, 'hex'),
+        outputState: fromByteArray(outputBytes.slice(0, 16), 'hex'),
         note: 'Completed processing block 1.',
         isMilestone: true,
       })
     } else {
-      const resultBlock = processBlock(blockBytes, roundKeys, decrypt)
+      const inputBlock = useCbc && !decrypt
+        ? xorBlocks(blockBytes, prevBlock ?? new Uint8Array(16))
+        : blockBytes
+      const resultBlock = useCbc && decrypt
+        ? xorBlocks(processBlock(blockBytes, roundKeys, true), prevBlock ?? new Uint8Array(16))
+        : processBlock(inputBlock, roundKeys, decrypt)
+
+      if (useCbc && !decrypt) {
+        prevBlock = new Uint8Array(resultBlock)
+      } else if (useCbc && decrypt) {
+        prevBlock = new Uint8Array(blockBytes)
+      }
+
       outputBytes.set(resultBlock, b * 16)
 
       steps.push({
@@ -524,7 +558,6 @@ function aesInstrumented(
     }
   }
 
-  // Final Output
   steps.push({
     index: steps.length,
     label: 'AES Encryption Output',
@@ -669,7 +702,7 @@ export function encrypt(
 
   const paddedInput = padPKCS7(inputBytes, 16)
 
-  const mode: 'ECB' | 'CBC' = options.mode === 'ECB' ? 'ECB' : 'CBC'
+  const mode: 'ECB' | 'CBC' = options.mode === 'CBC' ? 'CBC' : 'ECB'
 
   let iv: Uint8Array | null = null
   if (mode === 'CBC') {
@@ -684,12 +717,12 @@ export function encrypt(
     }
   }
 
+  let result: CipherResult
   if (options.instrument) {
-    // NOTE: instrumented CBC visualization is a fast-follow — see PR discussion
-    return aesInstrumented(paddedInput, keyBytes, false)
+    result = aesInstrumented(paddedInput, keyBytes, false, mode, iv)
+  } else {
+    result = aesFast(paddedInput, keyBytes, false, mode, iv)
   }
-
-  const result = aesFast(paddedInput, keyBytes, false, mode, iv)
 
   if (mode === 'CBC') {
     // Prepend IV (as hex) to the ciphertext so decrypt() can recover it
@@ -708,7 +741,7 @@ export function decrypt(
   validateInput(input)
   validateKey(key)
 
- const mode: 'ECB' | 'CBC' = options.mode === 'ECB' ? 'ECB' : 'CBC'
+ const mode: 'ECB' | 'CBC' = options.mode === 'CBC' ? 'CBC' : 'ECB'
 
   let iv: Uint8Array | null = null
   let cipherHex = input
@@ -741,7 +774,7 @@ if (
 }
   let result: CipherResult
   if (options.instrument) {
-    result = aesInstrumented(inputBytes, keyBytes, true)
+    result = aesInstrumented(inputBytes, keyBytes, true, mode, iv)
   } else {
     result = aesFast(inputBytes, keyBytes, true, mode, iv)
   }

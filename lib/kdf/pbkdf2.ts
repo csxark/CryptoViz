@@ -41,6 +41,8 @@ export async function deriveKey(
     ? hexToBytes(params.salt)
     : crypto.getRandomValues(new Uint8Array(16))
 
+  const saltBuffer = salt instanceof Uint8Array ? salt.buffer.slice(salt.byteOffset, salt.byteOffset + salt.byteLength) as ArrayBuffer : salt
+
   const passwordKey = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(password),
@@ -52,7 +54,7 @@ export async function deriveKey(
   const derivedBits = await crypto.subtle.deriveBits(
     {
       name: 'PBKDF2',
-      salt,
+      salt: saltBuffer,
       iterations: params.iterations,
       hash: params.hash,
     },

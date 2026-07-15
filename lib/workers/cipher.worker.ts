@@ -166,6 +166,7 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? sha3Encrypt(input, key, options)
           : sha3Decrypt()
+        break
       case 'pbkdf2':
         // KDF derivation doesn't fit the encrypt/decrypt(input, key, options)
         // shape everything else uses — password arrives as `input`, KDF

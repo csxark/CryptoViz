@@ -86,6 +86,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'broken',
     keyPlaceholder: 'Keyword (e.g. BEAUFORT)',
   },
+  {
+    id: 'hill',
+    name: 'Hill Cipher',
+    category: 'classical',
+    description: 'A polygraphic substitution cipher that encrypts pairs of letters using 2x2 matrix multiplication modulo 26.',
+    defaultKey: 'HILL',
+    defaultInput: 'HELP',
+    securityStatus: 'broken',
+    keyPlaceholder: '4-letter key (e.g. HILL)',
+  },
   // Symmetric
   {
     id: 'xor',

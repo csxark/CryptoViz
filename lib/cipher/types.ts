@@ -67,6 +67,7 @@ export type CipherName =
   | 'playfair'
   | 'railfence'
   | 'beaufort'
+  | 'hill'
   | 'xor'
   | 'otp'
   | 'des'

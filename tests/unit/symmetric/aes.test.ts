@@ -91,6 +91,19 @@ describe('AES Unit Tests', () => {
       expect(decrypted.steps.some(s => s.label.includes('CBC Mode XOR'))).toBe(true)
       expect(decrypted.output).toBe(plaintext)
     })
+
+    it('round-trips multi-block instrumented CBC', () => {
+      const plaintext = 'A'.repeat(17)
+      const key = '000102030405060708090a0b0c0d0e0f'
+      const iv = '00000000000000000000000000000000'
+
+      const encrypted = encrypt(plaintext, key, { instrument: true, mode: 'CBC', iv })
+      const decrypted = decrypt(encrypted.output, key, { instrument: true, mode: 'CBC' })
+
+      expect(encrypted.steps.filter(s => s.label.includes('CBC Mode XOR'))).toHaveLength(2)
+      expect(decrypted.steps.filter(s => s.label.includes('CBC Mode XOR'))).toHaveLength(2)
+      expect(decrypted.output).toBe(plaintext)
+    })
   })
 
   describe('AES Property-based Fuzzing', () => {

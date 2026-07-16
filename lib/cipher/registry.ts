@@ -96,6 +96,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'broken',
     keyPlaceholder: '4-letter key (e.g. HILL)',
   },
+  {
+    id: 'adfgvx',
+    name: 'ADFGVX Cipher',
+    category: 'classical',
+    description: 'A WWI-era cipher combining a keyed 6x6 Polybius-square substitution with a keyed columnar transposition.',
+    defaultKey: 'PICTURE,GERMAN',
+    defaultInput: 'ATTACKAT1200AM',
+    securityStatus: 'broken',
+    keyPlaceholder: 'gridKey,transpositionKey (e.g. PICTURE,GERMAN)',
+  },
   // Symmetric
   {
     id: 'xor',

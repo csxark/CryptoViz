@@ -12,6 +12,7 @@ import { encrypt as playfairEncrypt, decrypt as playfairDecrypt } from '../ciphe
 import { encrypt as railfenceEncrypt, decrypt as railfenceDecrypt } from '../cipher/classical/railfence'
 import { encrypt as beaufortEncrypt, decrypt as beaufortDecrypt } from '../cipher/classical/beaufort'
 import { encrypt as hillEncrypt, decrypt as hillDecrypt } from '../cipher/classical/hill'
+import { encrypt as adfgvxEncrypt, decrypt as adfgvxDecrypt } from '../cipher/classical/adfgvx'
 import { encrypt as xorEncrypt, decrypt as xorDecrypt } from '../cipher/symmetric/xor'
 import { encrypt as otpEncrypt, decrypt as otpDecrypt } from '../cipher/symmetric/otp'
 import { encrypt as desEncrypt, decrypt as desDecrypt } from '../cipher/symmetric/des'
@@ -93,6 +94,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? hillEncrypt(input, key, options)
           : hillDecrypt(input, key, options)
+        break
+      case 'adfgvx':
+        result = encryptMode
+          ? adfgvxEncrypt(input, key, options)
+          : adfgvxDecrypt(input, key, options)
         break
       case 'xor':
         result = encryptMode

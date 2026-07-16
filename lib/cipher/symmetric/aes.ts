@@ -275,7 +275,8 @@ function aesInstrumented(
   keyBytes: Uint8Array,
   decrypt: boolean,
   mode: 'ECB' | 'CBC' = 'ECB',
-  iv: Uint8Array | null = null
+  iv: Uint8Array | null = null,
+  ivProvided = false
 ): CipherResult {
   const start = performance.now()
   const roundKeys = expandKey(keyBytes)
@@ -297,9 +298,26 @@ function aesInstrumented(
     isMilestone: true,
   })
 
+  if (useCbc && iv) {
+    steps.push({
+      index: steps.length,
+      label: 'CBC Initialization Vector (IV)',
+      inputState: decrypt
+        ? 'Extracted from ciphertext prefix'
+        : ivProvided
+          ? 'Caller-provided 16-byte IV'
+          : 'Random 16-byte IV',
+      outputState: fromByteArray(iv, 'hex'),
+      note: 'The IV is XORed with the first block during encryption, and with the decrypted first block during decryption.',
+      isMilestone: true,
+    })
+  }
+
   for (let b = 0; b < numBlocks; b++) {
     const blockBytes = inputBytes.slice(b * 16, (b + 1) * 16)
+    const blockNum = b + 1
     const isFirstBlock = b === 0
+    const chainLabel = b === 0 ? 'IV' : 'previous ciphertext block'
 
     if (isFirstBlock) {
       const cbcInputBlock = useCbc && !decrypt
@@ -532,17 +550,32 @@ function aesInstrumented(
         isMilestone: true,
       })
     } else {
-      const inputBlock = useCbc && !decrypt
-        ? xorBlocks(blockBytes, prevBlock ?? new Uint8Array(16))
-        : blockBytes
-      const resultBlock = useCbc && decrypt
-        ? xorBlocks(processBlock(blockBytes, roundKeys, true), prevBlock ?? new Uint8Array(16))
-        : processBlock(inputBlock, roundKeys, decrypt)
+      let resultBlock: Uint8Array
 
       if (useCbc && !decrypt) {
+        const xored = xorBlocks(blockBytes, prevBlock ?? new Uint8Array(16))
+        steps.push({
+          index: steps.length,
+          label: `Block ${blockNum} — CBC Mode XOR (with ${chainLabel})`,
+          inputState: fromByteArray(blockBytes, 'hex'),
+          outputState: fromByteArray(xored, 'hex'),
+          note: `XORed plaintext block with ${chainLabel} before AES encryption.`,
+        })
+        resultBlock = processBlock(xored, roundKeys, false)
         prevBlock = new Uint8Array(resultBlock)
       } else if (useCbc && decrypt) {
+        const decrypted = processBlock(blockBytes, roundKeys, true)
+        resultBlock = xorBlocks(decrypted, prevBlock ?? new Uint8Array(16))
+        steps.push({
+          index: steps.length,
+          label: `Block ${blockNum} — CBC Mode XOR (with ${chainLabel})`,
+          inputState: fromByteArray(decrypted, 'hex'),
+          outputState: fromByteArray(resultBlock, 'hex'),
+          note: `XORed decrypted block with ${chainLabel} to recover plaintext.`,
+        })
         prevBlock = new Uint8Array(blockBytes)
+      } else {
+        resultBlock = processBlock(blockBytes, roundKeys, decrypt)
       }
 
       outputBytes.set(resultBlock, b * 16)
@@ -571,7 +604,7 @@ function aesInstrumented(
     output: fromByteArray(outputBytes, 'hex'),
     outputEncoding: 'hex',
     steps,
-    metadata: METADATA,
+    metadata: { ...METADATA, modeOfOperation: mode },
     durationMs: performance.now() - start,
   }
 }
@@ -719,7 +752,7 @@ export function encrypt(
 
   let result: CipherResult
   if (options.instrument) {
-    result = aesInstrumented(paddedInput, keyBytes, false, mode, iv)
+    result = aesInstrumented(paddedInput, keyBytes, false, mode, iv, !!options.iv)
   } else {
     result = aesFast(paddedInput, keyBytes, false, mode, iv)
   }

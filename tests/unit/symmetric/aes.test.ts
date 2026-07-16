@@ -33,7 +33,7 @@ describe('AES Unit Tests', () => {
     it('generates correct step count in instrumented mode (AES-128)', () => {
       const input = 'HELLO' // 5 bytes -> padded to 16 bytes (1 block)
       const key = '000102030405060708090a0b0c0d0e0f' // 16 bytes
-      const result = encrypt(input, key, { instrument: true })
+      const result = encrypt(input, key, { instrument: true, mode: 'ECB' })
       // AES-128 instrumented steps = 44
       expect(result.steps.length).toBe(44)
     })
@@ -41,7 +41,7 @@ describe('AES Unit Tests', () => {
     it('generates correct step count in instrumented mode (AES-256)', () => {
       const input = 'HELLO'
       const key = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f' // 32 bytes (AES-256)
-      const result = encrypt(input, key, { instrument: true })
+      const result = encrypt(input, key, { instrument: true, mode: 'ECB' })
       // AES-256 instrumented steps = 60
       expect(result.steps.length).toBe(60)
     })
@@ -49,6 +49,60 @@ describe('AES Unit Tests', () => {
     it('throws errors for invalid key sizes', () => {
       expect(() => encrypt('test', '12345678')).toThrowError(CipherError)
       expect(() => encrypt('test', '12345678')).toThrow(/must be exactly 16, 24, or 32 bytes/)
+    })
+
+    it('produces different ciphertext blocks for identical plaintext blocks under CBC', () => {
+      const plaintext = 'AAAAAAAAAAAAAAAA' + 'BBBBBBBBBBBBBBBB' + 'AAAAAAAAAAAAAAAA'
+      const key = '0123456789abcdef0123456789abcdef'
+      const result = encrypt(plaintext, key, { mode: 'CBC' })
+      const ciphertext = result.output.slice(32)
+      const block1 = ciphertext.slice(0, 32)
+      const block3 = ciphertext.slice(64, 96)
+      expect(block1).not.toBe(block3)
+    })
+
+    it('round-trips encrypt/decrypt correctly under CBC', () => {
+      const plaintext = 'Hello, CryptoViz!'
+      const key = '0123456789abcdef0123456789abcdef'
+      const encrypted = encrypt(plaintext, key, { mode: 'CBC' })
+      const decrypted = decrypt(encrypted.output, key, { mode: 'CBC' })
+      expect(decrypted.output).toBe(plaintext)
+    })
+
+    it('includes CBC chaining steps in instrumented encrypt mode', () => {
+      const input = 'HELLO'
+      const key = '000102030405060708090a0b0c0d0e0f'
+      const iv = '00000000000000000000000000000000'
+      const result = encrypt(input, key, { instrument: true, mode: 'CBC', iv })
+
+      expect(result.steps.some(s => s.label === 'CBC Initialization Vector (IV)')).toBe(true)
+      expect(result.steps.some(s => s.label.includes('CBC Mode XOR'))).toBe(true)
+      expect(result.steps.length).toBe(45)
+    })
+
+    it('includes CBC chaining steps in instrumented decrypt mode', () => {
+      const plaintext = 'HELLO'
+      const key = '000102030405060708090a0b0c0d0e0f'
+      const iv = '00000000000000000000000000000000'
+      const encrypted = encrypt(plaintext, key, { mode: 'CBC', iv })
+      const decrypted = decrypt(encrypted.output, key, { instrument: true, mode: 'CBC' })
+
+      expect(decrypted.steps.some(s => s.label === 'CBC Initialization Vector (IV)')).toBe(true)
+      expect(decrypted.steps.some(s => s.label.includes('CBC Mode XOR'))).toBe(true)
+      expect(decrypted.output).toBe(plaintext)
+    })
+
+    it('round-trips multi-block instrumented CBC', () => {
+      const plaintext = 'A'.repeat(17)
+      const key = '000102030405060708090a0b0c0d0e0f'
+      const iv = '00000000000000000000000000000000'
+
+      const encrypted = encrypt(plaintext, key, { instrument: true, mode: 'CBC', iv })
+      const decrypted = decrypt(encrypted.output, key, { instrument: true, mode: 'CBC' })
+
+      expect(encrypted.steps.filter(s => s.label.includes('CBC Mode XOR'))).toHaveLength(2)
+      expect(decrypted.steps.filter(s => s.label.includes('CBC Mode XOR'))).toHaveLength(2)
+      expect(decrypted.output).toBe(plaintext)
     })
   })
 
@@ -83,30 +137,15 @@ describe('AES Unit Tests', () => {
 
       const encrypted = encrypt(plaintext, key, { instrument: true, mode: 'CBC', iv })
       // Verify that encryption works and has steps
-      expect(encrypted.steps.length).toBe(45) // 44 standard + 1 CBC Mode XOR
+      expect(encrypted.steps.length).toBe(47) // 2 blocks: full block 1 trace + IV + block 2 CBC XOR
+      expect(encrypted.steps.some(s => s.label === 'CBC Initialization Vector (IV)')).toBe(true)
       expect(encrypted.steps.some(s => s.label === 'Block 1 — CBC Mode XOR')).toBe(true)
 
       const decrypted = decrypt(encrypted.output, key, { instrument: true, mode: 'CBC' })
       expect(decrypted.output).toBe(plaintext)
-      expect(decrypted.steps.length).toBe(45) // 44 standard + 1 CBC Mode XOR
+      expect(decrypted.steps.length).toBe(47)
+      expect(decrypted.steps.some(s => s.label === 'CBC Initialization Vector (IV)')).toBe(true)
       expect(decrypted.steps.some(s => s.label === 'Block 1 — CBC Mode XOR')).toBe(true)
     })
   })
-})
-it('produces different ciphertext blocks for identical plaintext blocks under CBC', () => {
-  const plaintext = 'AAAAAAAAAAAAAAAA' + 'BBBBBBBBBBBBBBBB' + 'AAAAAAAAAAAAAAAA'
-  const key = '0123456789abcdef0123456789abcdef' // adjust to a valid 32-hex-char key format used elsewhere in the file
-  const result = encrypt(plaintext, key)
-  const ciphertext = result.output.slice(32) // strip IV prefix
-  const block1 = ciphertext.slice(0, 32)
-  const block3 = ciphertext.slice(64, 96)
-  expect(block1).not.toBe(block3)
-})
-
-it('round-trips encrypt/decrypt correctly under CBC', () => {
-  const plaintext = 'Hello, CryptoViz!'
-  const key = '0123456789abcdef0123456789abcdef'
-  const encrypted = encrypt(plaintext, key)
-  const decrypted = decrypt(encrypted.output, key)
-  expect(decrypted.output).toBe(plaintext)
 })

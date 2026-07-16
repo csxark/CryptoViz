@@ -28,6 +28,7 @@ import { encrypt as md5Encrypt, decrypt as md5Decrypt } from '../cipher/hash/md5
 import { encrypt as hmacEncrypt, decrypt as hmacDecrypt } from '../cipher/hash/hmac'
 import { encrypt as bcryptEncrypt, decrypt as bcryptDecrypt } from '../cipher/hash/bcrypt'
 import { encrypt as sha3Encrypt, decrypt as sha3Decrypt } from '../cipher/hash/sha3'
+import { encrypt as ripemd160Encrypt, decrypt as ripemd160Decrypt } from '../cipher/hash/ripemd160'
 
 import { deriveKey } from '../kdf/pbkdf2'
 
@@ -172,6 +173,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? sha3Encrypt(input, key, options)
           : sha3Decrypt()
+        break
+      case 'ripemd160':
+        result = encryptMode
+          ? ripemd160Encrypt(input, key, options)
+          : ripemd160Decrypt()
         break
       case 'pbkdf2':
         // KDF derivation doesn't fit the encrypt/decrypt(input, key, options)

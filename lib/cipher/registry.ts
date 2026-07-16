@@ -245,6 +245,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: 'abc',
     securityStatus: 'secure',
   },
+  {
+    id: 'ripemd160',
+    name: 'RIPEMD-160',
+    category: 'hash',
+    description: 'A 160-bit hash function using two independent, parallel compression lines whose final states are combined by modular addition.',
+    defaultKey: '',
+    defaultInput: 'abc',
+    securityStatus: 'deprecated',
+  },
   // Asymmetric
   {
     id: 'rsa',

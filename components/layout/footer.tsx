@@ -11,6 +11,7 @@ const learnLinks = [
 const projectLinks = [
   { name: "Documentation", href: "/docs" },
   { name: "API Reference", href: "/docs/api" },
+  { name: "Glossary & Quiz", href: "/glossary" },
   { name: "Roadmap", href: "https://github.com/csxark/CryptoViz/issues" },
 ];
 

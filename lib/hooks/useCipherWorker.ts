@@ -32,6 +32,30 @@ function sortObjectKeys(obj: any): any {
   return result
 }
 
+// Fast deterministic 64-bit hash (sync). Not cryptographic; used only for cache keys.
+// Based on splitmix64-style mixing; returned as unsigned hex string.
+function hash64(input: string): string {
+  // FNV-1a seed + splitmix-like finalizer
+  let h1 = 0xcbf29ce484222325n
+  const prime = 0x100000001b3n
+
+  for (let i = 0; i < input.length; i++) {
+    h1 ^= BigInt(input.charCodeAt(i))
+    h1 = (h1 * prime) & 0xffffffffffffffffn
+  }
+
+  // Finalize (mix)
+  h1 ^= h1 >> 30n
+  h1 = (h1 * 0xbf58476d1ce4e5b9n) & 0xffffffffffffffffn
+  h1 ^= h1 >> 27n
+  h1 = (h1 * 0x94d049bb133111ebn) & 0xffffffffffffffffn
+  h1 ^= h1 >> 31n
+
+  // 16 hex chars for 64-bit
+  const hex = h1.toString(16).padStart(16, '0')
+  return hex
+}
+
 function getCacheKey(
   action: 'encrypt' | 'decrypt',
   cipherId: string,
@@ -40,14 +64,14 @@ function getCacheKey(
   options?: any
 ): string {
   const { signal: _, bypassCache: __, ...cacheableOptions } = options || {}
-  return JSON.stringify({
-    action,
-    cipherId,
-    input,
-    key,
-    options: sortObjectKeys(cacheableOptions),
-  })
+  // Stable serialization for options to avoid key-order issues.
+  const stableOptions = JSON.stringify(sortObjectKeys(cacheableOptions))
+
+  // Hash the full tuple, but do not store the huge JSON/plaintext as the map key.
+  // This dramatically reduces memory usage from large JSON.stringify results.
+  return hash64(`${action}|${cipherId}|${input}|${key}|${stableOptions}`)
 }
+
 
 function cacheResult(key: string, result: CipherResult) {
   if (resultCache.has(key)) {

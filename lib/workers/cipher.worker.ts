@@ -20,6 +20,7 @@ import { encrypt as otpEncrypt, decrypt as otpDecrypt } from '../cipher/symmetri
 import { encrypt as desEncrypt, decrypt as desDecrypt } from '../cipher/symmetric/des'
 import { encrypt as des3Encrypt, decrypt as des3Decrypt } from '../cipher/symmetric/3des'
 import { encrypt as aesEncrypt, decrypt as aesDecrypt } from '../cipher/symmetric/aes'
+import { encrypt as aesGcmEncrypt, decrypt as aesGcmDecrypt } from '../cipher/symmetric/aes-gcm'
 import { encrypt as rc4Encrypt, decrypt as rc4Decrypt } from '../cipher/symmetric/rc4'
 import { encrypt as chacha20Encrypt, decrypt as chacha20Decrypt } from '../cipher/symmetric/chacha20'
 import { encrypt as rsaEncrypt, decrypt as rsaDecrypt } from '../cipher/asymmetric/rsa'
@@ -139,6 +140,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? aesEncrypt(input, key, options)
           : aesDecrypt(input, key, options)
+        break
+      case 'aes-gcm':
+        result = encryptMode
+          ? aesGcmEncrypt(input, key, options)
+          : aesGcmDecrypt(input, key, options)
         break
       case 'rc4':
         result = encryptMode

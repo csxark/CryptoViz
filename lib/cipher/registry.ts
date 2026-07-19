@@ -215,6 +215,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     ],
   },
   {
+    id: 'aes-gcm',
+    name: 'AES-GCM (AEAD)',
+    category: 'symmetric',
+    description: 'Authenticated encryption (AEAD): AES in counter mode for confidentiality plus a GHASH authentication tag for integrity. Used by TLS 1.3 and WireGuard — flipping a single ciphertext byte makes tag verification fail.',
+    defaultKey: '000102030405060708090a0b0c0d0e0f',
+    defaultInput: 'Integrity + confidentiality!',
+    securityStatus: 'secure',
+    keyPlaceholder: '32/48/64-char hex key (AES-128/192/256)',
+  },
+  {
     id: 'rc4',
     name: 'RC4',
     category: 'symmetric',

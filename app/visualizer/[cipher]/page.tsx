@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Navbar from "../../../components/layout/Navbar";
 import Sidebar from "../../../components/layout/Sidebar";
 import CipherLayout from "../../../components/cipher/CipherLayout";
+import GcmTamperDemo from "../../../components/cipher/GcmTamperDemo";
 import WorkerErrorBoundary from "../../../components/error/WorkerErrorBoundary";
 import RecentCipherTracker from "../../../components/cipher/RecentCipherTracker";
 import { CIPHER_REGISTRY } from "../../../lib/cipher/registry";
@@ -48,6 +49,12 @@ export default async function VisualizerPage({
             <WorkerErrorBoundary>
               <CipherLayout cipher={cipher} />
             </WorkerErrorBoundary>
+
+            {cipher.id === "aes-gcm" && (
+              <div className="mx-auto max-w-5xl px-4 pb-8 md:px-6 lg:px-8">
+                <GcmTamperDemo />
+              </div>
+            )}
           </main>
         </div>
       </div>

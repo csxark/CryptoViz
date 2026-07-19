@@ -23,6 +23,7 @@ export interface BenchmarkResult {
   memoryUsage?: number;
 }
 
+
 export interface BenchmarkComparison {
   inputSize: number;
   results: BenchmarkResult[];

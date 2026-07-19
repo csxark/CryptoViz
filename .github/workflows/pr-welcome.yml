@@ -1,0 +1,76 @@
+name: PR Welcome
+
+# ==========================================================================
+# Posts a welcome comment whenever a Pull Request is opened on CryptoViz.
+# Uses pull_request_target so the comment step works even for PRs from
+# forks (note: no fork code is checked out or executed here).
+# ==========================================================================
+
+on:
+  pull_request_target:
+    types:
+      - opened
+
+permissions:
+  pull-requests: write
+
+jobs:
+  welcome:
+    name: Welcome PR author
+    runs-on: ubuntu-latest
+
+    # ------------------------------------------------------------------
+    # CONFIG BLOCK — edit these to update socials/links across the message.
+    # ------------------------------------------------------------------
+    env:
+      MAINTAINER_NAME: Ark
+      GITHUB_PROFILE_URL: https://github.com/csxark
+      LINKEDIN_URL: https://www.linkedin.com/in/csxark
+      PORTFOLIO_URL: https://csxark.xyz
+
+    steps:
+      - name: Post PR welcome comment
+        uses: actions/github-script@v9
+        env:
+          MAINTAINER_NAME: ${{ env.MAINTAINER_NAME }}
+          GITHUB_PROFILE_URL: ${{ env.GITHUB_PROFILE_URL }}
+          LINKEDIN_URL: ${{ env.LINKEDIN_URL }}
+          PORTFOLIO_URL: ${{ env.PORTFOLIO_URL }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+
+            const supportSection = [
+              "### ❤️ Support CryptoViz",
+              "",
+              "⭐ Star the repository",
+              `👤 Follow [${process.env.MAINTAINER_NAME}](${process.env.GITHUB_PROFILE_URL}) on GitHub`,
+              `💼 [LinkedIn](${process.env.LINKEDIN_URL})`,
+              `🌐 [Portfolio](${process.env.PORTFOLIO_URL})`,
+            ].join("\n");
+
+            const body = [
+              "## 🎉 Thank you for contributing to CryptoViz!",
+              "",
+              `Your Pull Request has been received successfully, @${author}. Our maintainers will review it shortly.`,
+              "",
+              "### 📋 Checklist",
+              "",
+              "- ✅ Linked related issue",
+              "- ✅ No merge conflicts",
+              "- ✅ Latest `main` merged in",
+              "- ✅ Build passes",
+              "- ✅ Tests pass",
+              "",
+              supportSection,
+              "",
+              "Thank you for contributing to CryptoViz 💙"
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body
+            });

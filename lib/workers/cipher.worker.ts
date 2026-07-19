@@ -12,12 +12,15 @@ import { encrypt as playfairEncrypt, decrypt as playfairDecrypt } from '../ciphe
 import { encrypt as railfenceEncrypt, decrypt as railfenceDecrypt } from '../cipher/classical/railfence'
 import { encrypt as beaufortEncrypt, decrypt as beaufortDecrypt } from '../cipher/classical/beaufort'
 import { encrypt as hillEncrypt, decrypt as hillDecrypt } from '../cipher/classical/hill'
+import { encrypt as columnarEncrypt, decrypt as columnarDecrypt } from '../cipher/classical/columnar-transposition'
 import { encrypt as adfgvxEncrypt, decrypt as adfgvxDecrypt } from '../cipher/classical/adfgvx'
+import { encrypt as polybiusEncrypt, decrypt as polybiusDecrypt } from '../cipher/classical/polybius'
 import { encrypt as xorEncrypt, decrypt as xorDecrypt } from '../cipher/symmetric/xor'
 import { encrypt as otpEncrypt, decrypt as otpDecrypt } from '../cipher/symmetric/otp'
 import { encrypt as desEncrypt, decrypt as desDecrypt } from '../cipher/symmetric/des'
 import { encrypt as des3Encrypt, decrypt as des3Decrypt } from '../cipher/symmetric/3des'
 import { encrypt as aesEncrypt, decrypt as aesDecrypt } from '../cipher/symmetric/aes'
+import { encrypt as aesGcmEncrypt, decrypt as aesGcmDecrypt } from '../cipher/symmetric/aes-gcm'
 import { encrypt as rc4Encrypt, decrypt as rc4Decrypt } from '../cipher/symmetric/rc4'
 import { encrypt as chacha20Encrypt, decrypt as chacha20Decrypt } from '../cipher/symmetric/chacha20'
 import { encrypt as rsaEncrypt, decrypt as rsaDecrypt } from '../cipher/asymmetric/rsa'
@@ -32,6 +35,7 @@ import { encrypt as hmacEncrypt, decrypt as hmacDecrypt } from '../cipher/hash/h
 import { encrypt as bcryptEncrypt, decrypt as bcryptDecrypt } from '../cipher/hash/bcrypt'
 import { encrypt as sha3Encrypt, decrypt as sha3Decrypt } from '../cipher/hash/sha3'
 import { encrypt as ripemd160Encrypt, decrypt as ripemd160Decrypt } from '../cipher/hash/ripemd160'
+import { encrypt as sha1Encrypt, decrypt as sha1Decrypt } from '../cipher/hash/sha1'
 
 import { deriveKey } from '../kdf/pbkdf2'
 
@@ -97,10 +101,20 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
           ? hillEncrypt(input, key, options)
           : hillDecrypt(input, key, options)
         break
+      case 'columnar-transposition':
+        result = encryptMode
+          ? columnarEncrypt(input, key, options)
+          : columnarDecrypt(input, key, options)
+        break
       case 'adfgvx':
         result = encryptMode
           ? adfgvxEncrypt(input, key, options)
           : adfgvxDecrypt(input, key, options)
+        break
+      case 'polybius':
+        result = encryptMode
+          ? polybiusEncrypt(input, key, options)
+          : polybiusDecrypt(input, key, options)
         break
       case 'xor':
         result = encryptMode
@@ -126,6 +140,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? aesEncrypt(input, key, options)
           : aesDecrypt(input, key, options)
+        break
+      case 'aes-gcm':
+        result = encryptMode
+          ? aesGcmEncrypt(input, key, options)
+          : aesGcmDecrypt(input, key, options)
         break
       case 'rc4':
         result = encryptMode
@@ -196,6 +215,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? ripemd160Encrypt(input, key, options)
           : ripemd160Decrypt()
+        break
+      case 'sha1':
+        result = encryptMode
+          ? sha1Encrypt(input, key, options)
+          : sha1Decrypt()
         break
       case 'pbkdf2':
         // KDF derivation doesn't fit the encrypt/decrypt(input, key, options)

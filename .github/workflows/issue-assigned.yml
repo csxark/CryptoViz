@@ -1,0 +1,66 @@
+name: Issue Assigned
+
+# ==========================================================================
+# Posts a comment whenever an issue is assigned to a contributor, welcoming
+# them onto that specific task and giving them a pre-flight checklist so
+# their eventual PR merges cleanly.
+# ==========================================================================
+
+on:
+  issues:
+    types:
+      - assigned
+
+permissions:
+  issues: write
+
+jobs:
+  notify-assignee:
+    name: Notify assigned contributor
+    runs-on: ubuntu-latest
+
+    # ------------------------------------------------------------------
+    # CONFIG BLOCK — edit these to update socials/links across the message.
+    # ------------------------------------------------------------------
+    env:
+      MAINTAINER_NAME: Ark
+      GITHUB_PROFILE_URL: https://github.com/csxark
+      LINKEDIN_URL: https://www.linkedin.com/in/csxark
+      PORTFOLIO_URL: https://csxark.xyz
+
+    steps:
+      - name: Post assignment comment
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const assignee = context.payload.assignee.login;
+
+            const body = [
+              "## 🎉 Issue Assigned",
+              "",
+              `Hi @${assignee}, I'm assigning this initiative to you.`,
+              "",
+              "A warm welcome to the CryptoViz project! We're excited to have you on board and truly appreciate your willingness to contribute. Looking forward to your creativity and meaningful contributions, especially from the branding perspective. 🚀",
+              "",
+              "### ✅ Before you start coding",
+              "",
+              "- ✅ Sync your fork with the latest `main`",
+              "- ✅ Pull the latest changes",
+              "- ✅ Create a new feature branch",
+              "- ✅ Implement the requested changes",
+              "- ✅ Test thoroughly",
+              "- ✅ Ensure lint/build passes",
+              "- ✅ Reference this issue in your Pull Request",
+              "",
+              "Syncing with `main` before you branch keeps your work conflict-free and makes review much faster on both sides.",
+              "",
+              "Wishing you the very best, and happy contributing! 🚀"
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body
+            });

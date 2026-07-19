@@ -74,9 +74,11 @@ export type CipherName =
   | 'des'
   | '3des'
   | 'aes'
+  | 'aes-gcm'
   | 'rc4'
   | 'chacha20'
   | 'rsa'
+  | 'columnar-transposition'
   | 'dh'
   | 'ecc'
   | 'elgamal'
@@ -85,9 +87,11 @@ export type CipherName =
   | 'sha512'
   | 'md5'
   | 'bcrypt'
+  | 'polybius'
   | 'sha3'
   | 'ripemd160'
   | 'hmac'
+  | 'sha1'
 
 export interface TestVector {
   input: string

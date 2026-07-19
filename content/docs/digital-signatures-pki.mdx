@@ -1,0 +1,247 @@
+---
+title: "Understanding Digital Signatures and Certificate Trust Chains"
+description: "How ECDSA and RSA signatures combine with X.509 certificates to build the PKI infrastructure securing every TLS connection."
+difficulty: intermediate
+readingTime: 10
+tags: ["asymmetric", "signatures", "pki", "tls", "certificates"]
+prerequisites: ["what-is-asymmetric-encryption"]
+publishedAt: 2026-07-17
+updatedAt: 2026-07-17
+---
+
+Digital signatures are the cryptographic primitive that makes the internet's trust
+infrastructure possible. Every time your browser shows a padlock icon, a digital
+signature was verified. This article walks through the mathematics, the X.509
+certificate format, and the chain-of-trust model that ties it all together.
+
+---
+
+## What is a Digital Signature?
+
+A digital signature proves two things simultaneously:
+
+- **Authenticity** — the message was produced by the owner of a specific private key
+- **Integrity** — the message has not been altered since it was signed
+
+This is distinct from encryption. Encryption hides content. Signatures prove origin
+and integrity, but the signed message remains readable by anyone.
+
+The core pattern is **hash-then-sign**:
+
+$$
+\text{sig} = \text{Sign}(d,\; H(m))
+$$
+
+$$
+\text{Verify}(Q,\; \text{sig},\; H(m)) \;\in\; \{\text{valid},\; \text{invalid}\}
+$$
+
+Where $d$ is the signer's private key, $Q$ is the corresponding public key, $m$ is
+the message, and $H$ is a collision-resistant hash function. The hash compresses
+the arbitrary-length message into a fixed-size digest that the signing algorithm
+can process.
+
+> [!NOTE]
+> Only the *hash* of the message is signed — not the message itself. This means
+> signing a 10 MB file and signing a 10-byte file cost the same cryptographic
+> work.
+
+---
+
+## Two Signature Algorithms in CryptoViz
+
+### RSA Signatures
+
+In RSA signature schemes, signing is modular exponentiation with the private key:
+
+$$
+\text{sig} = H(m)^d \bmod n
+$$
+
+Verification raises the signature with the public exponent:
+
+$$
+H(m) \stackrel{?}{=} \text{sig}^e \bmod n
+$$
+
+The `[rsa-oaep]` visualizer shows the underlying RSA modular arithmetic. For
+signatures specifically, the PKCS#1 v1.5 and PSS padding schemes add structure
+before exponentiation to prevent malleability attacks.
+
+### ECDSA
+
+The Elliptic Curve Digital Signature Algorithm uses a random per-signature nonce
+$k$ and the curve's generator point $G$:
+
+$$
+r = (k \cdot G)_x \bmod n
+$$
+
+$$
+s = k^{-1}\bigl(H(m) + r \cdot d\bigr) \bmod n
+$$
+
+The signature is the pair $(r, s)$. Verification:
+
+$$
+u_1 = s^{-1} \cdot H(m) \bmod n, \quad u_2 = s^{-1} \cdot r \bmod n
+$$
+
+$$
+(u_1 \cdot G + u_2 \cdot Q)_x \stackrel{?}{\equiv} r \pmod{n}
+$$
+
+Explore the full ECDSA step-by-step trace in the `[ecdsa]` visualizer.
+
+> [!WARNING]
+> The nonce $k$ in ECDSA **must be unique and cryptographically random** for every
+> signature. Reusing $k$ for two different messages allows an attacker to extract
+> your private key $d$ algebraically. The PlayStation 3 private key was extracted
+> this way in 2010 due to a fixed nonce.
+
+---
+
+## X.509 Certificates
+
+A digital signature proves that *someone* holds a private key. But which private
+key should you trust? This is the job of a **certificate**.
+
+An X.509 certificate is a structured data object that binds a public key to an
+identity. Key fields:
+
+| Field | Purpose |
+|---|---|
+| **Subject** | Identity the cert represents (domain, organization) |
+| **Issuer** | Identity that signed and vouches for this cert |
+| **Subject Public Key Info** | The public key being certified |
+| **Validity Period** | `notBefore` and `notAfter` timestamps |
+| **Subject Alternative Names** | Domains this cert is valid for (e.g. `*.example.com`) |
+| **Signature Algorithm** | Algorithm used to sign the cert (e.g. `ecdsa-with-SHA256`) |
+| **Signature** | The Issuer's signature over all fields above |
+
+A certificate is itself digitally signed — using the Issuer's private key and a hash
+of the certificate's contents:
+
+$$
+\text{cert.sig} = \text{Sign}(d_{\text{issuer}},\; \text{SHA-256}(\text{cert.tbsCertificate}))
+$$
+
+You can explore how the `[sha-256]` hash function works in the visualizer, then
+see how ECDSA uses that digest in `[ecdsa]`.
+
+---
+
+## Certificate Trust Chains (PKI)
+
+A single certificate tells you "this public key belongs to example.com, signed by
+Issuer X." But how do you know Issuer X is trustworthy?
+
+The answer is a **chain of trust**:
+
+```
+Root CA (self-signed, pre-installed in OS/browser)
+  └── Intermediate CA (signed by Root CA)
+        └── Leaf Certificate (signed by Intermediate CA, used by your server)
+```
+
+**Root Certificate Authorities** are self-signed certificates whose public keys are
+pre-installed in operating systems and browsers. There are roughly 100–150 trusted
+Root CAs globally. Your browser ships with this list.
+
+**Intermediate CAs** exist because Root CA private keys are kept offline (physically
+air-gapped) for security. Intermediates are signed by the Root and used for
+day-to-day issuance.
+
+**Leaf certificates** are the certs your server presents. They are signed by an
+Intermediate CA.
+
+### Verification algorithm
+
+When your browser connects to `https://example.com`:
+
+1. Server sends its leaf certificate + the Intermediate CA certificate
+2. Browser verifies: **Intermediate CA signature on leaf cert** — uses Intermediate CA public key
+3. Browser finds Intermediate CA's own cert and verifies: **Root CA signature on Intermediate** — uses Root CA public key  
+4. Browser checks its **trusted root store**: is this Root CA public key pre-installed?
+5. If yes → chain is valid → connection is trusted
+
+At each step, the verification is exactly:
+$$
+\text{Verify}(Q_{\text{issuer}},\; \text{cert.sig},\; \text{SHA-256}(\text{cert.tbsCertificate})) = \text{valid}
+$$
+
+> [!NOTE]
+> A **self-signed certificate** is one where Subject = Issuer and the cert is signed
+> with its own private key. Browsers do not trust arbitrary self-signed certs — only
+> ones pre-installed as trusted roots.
+
+---
+
+## TLS 1.3 Context
+
+TLS 1.3 (RFC 8446) uses certificates and signatures in its handshake. The simplified
+flow:
+
+```
+Client                              Server
+  |── ClientHello (supported algos) ──→|
+  |←── ServerHello (chosen algo) ──────|
+  |←── Certificate (leaf + chain) ─────|
+  |←── CertificateVerify (sig) ─────── |  ← ECDSA/RSA sig over handshake transcript
+  |←── Finished ───────────────────────|
+  |── Finished ──────────────────────→ |
+  |═══════════ Encrypted Data ═════════|
+```
+
+The `CertificateVerify` message is a digital signature over the *entire handshake
+transcript* (all messages up to that point). This proves the server actually holds
+the private key corresponding to the public key in its certificate.
+
+The key exchange itself (how the symmetric session key is agreed) uses Diffie-Hellman
+— explore that in the `[dh]` visualizer.
+
+---
+
+## Common Mistakes and Vulnerabilities
+
+### Expired Certificates
+
+Certificates have a `notAfter` date. Browsers reject expired certs. TLS connections
+fail. Organizations set up automated renewal (e.g. Let's Encrypt with ACME protocol)
+to prevent outages.
+
+### Hostname Mismatch
+
+A cert for `api.example.com` does not cover `www.example.com` unless a wildcard
+(`*.example.com`) or Subject Alternative Name entry covers both.
+
+### Weak Signature Algorithms
+
+Early certificates used MD5 or SHA-1 as the hash function in the signature.
+
+- **MD5-signed certs**: Completely broken. Flame malware (2012) forged a Microsoft
+  code-signing certificate using an MD5 collision.
+- **SHA-1-signed certs**: Browsers have rejected SHA-1 TLS certificates since 2017
+  (aligned with the SHAttered collision attack).
+
+> [!WARNING]
+> Always use SHA-256 or stronger in certificate signature algorithms.
+> `sha256WithRSAEncryption` and `ecdsa-with-SHA256` are the current baseline.
+> The `[sha-256]` visualizer shows why SHA-256's 256-bit output makes collision
+> attacks computationally infeasible (2^128 work).
+
+### Certificate Pinning
+
+Mobile apps sometimes embed a specific certificate's public key hash and reject any
+other cert even if it chains to a trusted root. This prevents
+CA-compromise-based MITM attacks but breaks on cert rotation without an app update.
+
+---
+
+## References
+
+- **RFC 5280** — Internet X.509 PKI Certificate and CRL Profile (IETF)
+- **RFC 8446** — The Transport Layer Security (TLS) Protocol Version 1.3 (IETF)
+- **NIST SP 800-57** — Recommendation for Key Management
+- **NIST FIPS 186-5** — Digital Signature Standard (DSS)
+- **SHAttered Attack Paper** — Stevens et al., CWI/Google (2017)

@@ -1,0 +1,115 @@
+name: Issue Welcome
+
+# ==========================================================================
+# Posts a welcome comment whenever a new issue is opened on CryptoViz.
+# First-time contributors get an extended welcome + contribution guide.
+# Returning contributors get a shorter "welcome back" note.
+# Also labels the issue "needs-review" so maintainers can triage it.
+# ==========================================================================
+
+on:
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+
+jobs:
+  welcome:
+    name: Welcome issue author
+    runs-on: ubuntu-latest
+
+    # ------------------------------------------------------------------
+    # CONFIG BLOCK — edit these to update socials/links across the message.
+    # Nothing below this needs to change when a link or handle changes.
+    # ------------------------------------------------------------------
+    env:
+      MAINTAINER_NAME: Ark
+      GITHUB_PROFILE_URL: https://github.com/csxark
+      LINKEDIN_URL: https://www.linkedin.com/in/csxark
+      PORTFOLIO_URL: https://csxark.xyz
+
+    steps:
+      - name: Post welcome comment
+        uses: actions/github-script@v9
+        env:
+          MAINTAINER_NAME: ${{ env.MAINTAINER_NAME }}
+          GITHUB_PROFILE_URL: ${{ env.GITHUB_PROFILE_URL }}
+          LINKEDIN_URL: ${{ env.LINKEDIN_URL }}
+          PORTFOLIO_URL: ${{ env.PORTFOLIO_URL }}
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const author = issue.user.login;
+            const association = issue.author_association;
+
+            // GitHub reports either FIRST_TIME_CONTRIBUTOR (first issue/PR to
+            // repo) or FIRST_TIMER (first contribution to GitHub at all).
+            const isFirstTime =
+              association === "FIRST_TIME_CONTRIBUTOR" ||
+              association === "FIRST_TIMER";
+
+            // Shared "support us" block used in both message variants.
+            const supportSection = [
+              "### ❤️ Support CryptoViz",
+              "",
+              "⭐ Star the repository",
+              "🍴 Fork the repository",
+              `👤 Follow [${process.env.MAINTAINER_NAME}](${process.env.GITHUB_PROFILE_URL}) on GitHub`,
+              `💼 [LinkedIn](${process.env.LINKEDIN_URL})`,
+              `🌐 [Portfolio](${process.env.PORTFOLIO_URL})`,
+            ].join("\n");
+
+            let body;
+
+            if (isFirstTime) {
+              body = [
+                "## 🎉 Welcome to CryptoViz!",
+                "",
+                `Thank you for opening your **first issue**, @${author}!`,
+                "",
+                "We're excited to have you in our community. Your issue has been received and will be reviewed shortly.",
+                "",
+                supportSection,
+                "",
+                "### 🚀 Contribution Workflow",
+                "",
+                "1. ⭐ Star the repository",
+                "2. 🍴 Fork the repository",
+                "3. ⏳ Wait until this issue is assigned to you",
+                "4. 🔄 Sync your fork with the latest `main`",
+                "5. 🌿 Create a feature branch",
+                "6. 🛠️ Implement your changes",
+                "7. ✅ Test your changes",
+                "8. 📬 Raise a Pull Request referencing this issue",
+                "",
+                "Happy Coding 💙"
+              ].join("\n");
+            } else {
+              body = [
+                "## 💙 Welcome Back!",
+                "",
+                `Thank you for opening another issue and continuing to contribute to CryptoViz, @${author}!`,
+                "",
+                "We appreciate your continued support.",
+                "",
+                supportSection,
+                "",
+                "We'll review your issue shortly."
+              ].join("\n");
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body
+            });
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: ["needs-review"]
+            });

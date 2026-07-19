@@ -10,6 +10,7 @@ export class BenchmarkEngine {
    * Generates random input data
    */
   static generateInput(sizeInBytes: number): string {
+
     const chars =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
 
@@ -22,13 +23,33 @@ for (let i = 0; i < sizeInBytes; i++) {
   result += chars[randomValues[i] % chars.length]
 }
 
+    if (sizeInBytes <= 0) {
+      throw new Error('sizeInBytes must be greater than 0')
+    }
+
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
+    let result = ''
+
+    for (let i = 0; i < sizeInBytes; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+
+    return result
+  }
+
+
 return result
   }
   /**
    * Generates random key for cipher
    */
   static generateKey(lengthInBytes: number): string {
+    if (lengthInBytes <= 0) {
+      throw new Error('lengthInBytes must be greater than 0')
+    }
+
     const hex = '0123456789abcdef'
+
 
 const randomValues = new Uint8Array(lengthInBytes)
 crypto.getRandomValues(randomValues)
@@ -40,6 +61,14 @@ for (let i = 0; i < lengthInBytes; i++) {
 }
 
 return result
+
+    let result = ''
+
+    for (let i = 0; i < lengthInBytes; i++) {
+      result += hex.charAt(Math.floor(Math.random() * hex.length))
+    }
+
+
     return result
   }
 
@@ -60,11 +89,24 @@ return result
     max: number
     stdDev: number
   } {
-    const average = measurements.reduce((a, b) => a + b, 0) / measurements.length
+    if (!measurements || measurements.length === 0) {
+      throw new Error('Measurement array cannot be empty')
+    }
+
+    if (measurements.some((m) => !Number.isFinite(m) || m < 0)) {
+      throw new Error('Measurement values must be valid non-negative numbers')
+    }
+
+    const average =
+      measurements.reduce((a, b) => a + b, 0) / measurements.length
+
     const min = Math.min(...measurements)
     const max = Math.max(...measurements)
-    
-    const variance = measurements.reduce((sum, m) => sum + Math.pow(m - average, 2), 0) / measurements.length
+
+    const variance =
+      measurements.reduce((sum, m) => sum + Math.pow(m - average, 2), 0) /
+      measurements.length
+
     const stdDev = Math.sqrt(variance)
 
     return { average, min, max, stdDev }
@@ -79,14 +121,30 @@ return result
     inputSize: number,
     iterations: number,
   ): BenchmarkResult {
+    if (inputSize <= 0) {
+      throw new Error('inputSize must be greater than 0')
+    }
+
+    if (iterations <= 0) {
+      throw new Error('iterations must be greater than 0')
+    }
+
+    if (!measurements || measurements.length === 0) {
+      throw new Error('Measurement array cannot be empty')
+    }
+
     const cipherDef = CIPHER_REGISTRY.find((c) => c.id === cipherId)
+
     if (!cipherDef) {
       throw new Error(`Cipher not found: ${cipherId}`)
     }
 
     const stats = this.calculateStats(measurements)
+
     const totalTime = measurements.reduce((a, b) => a + b, 0)
-    const operationsPerSecond = 1000 / stats.average
+
+    const operationsPerSecond =
+      stats.average > 0 ? 1000 / stats.average : 0
 
     return {
       cipherId,
@@ -114,14 +172,22 @@ export function calculateComparison(results: BenchmarkResult[]): {
   slowest: BenchmarkResult
   speedupRatio: number
 } {
+  if (!results || results.length === 0) {
+    throw new Error('Benchmark results cannot be empty')
+  }
+
   const fastest = results.reduce((prev, current) =>
     current.averageTime < prev.averageTime ? current : prev,
   )
+
   const slowest = results.reduce((prev, current) =>
     current.averageTime > prev.averageTime ? current : prev,
   )
 
-  const speedupRatio = slowest.averageTime / fastest.averageTime
+  const speedupRatio =
+    fastest.averageTime > 0
+      ? slowest.averageTime / fastest.averageTime
+      : 0
 
   return { fastest, slowest, speedupRatio }
 }

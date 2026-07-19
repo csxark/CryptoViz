@@ -1,0 +1,77 @@
+name: PR Merged
+
+# ==========================================================================
+# Posts a thank-you comment (with support/socials section) whenever a Pull
+# Request is merged into CryptoViz. Nothing else — no approval gating,
+# no maintainer-only restriction.
+#
+# WHY pull_request_target (not pull_request or pull_request_review):
+# pull_request_target always runs with the base repo's workflow file and
+# a full read/write GITHUB_TOKEN, even for PRs opened from a fork. That
+# sidesteps the fork-triggered read-only-token restriction that applied
+# to the old pull_request_review approach — so this needs no PAT/secret.
+# Safe here because the job never checks out the PR's code, it only
+# reads the payload and posts a comment.
+# ==========================================================================
+
+on:
+  pull_request_target:
+    types:
+      - closed
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  thank-contributor:
+    name: Thank contributor on merge
+    runs-on: ubuntu-latest
+
+    # Only run when the PR was actually merged (a closed-without-merge PR
+    # should get no comment at all).
+    if: github.event.pull_request.merged == true
+
+    
+    env:
+      MAINTAINER_NAME: Ark
+      GITHUB_PROFILE_URL: https://github.com/csxark
+      LINKEDIN_URL: https://www.linkedin.com/in/csxark
+      PORTFOLIO_URL: https://csxark.xyz
+
+    steps:
+      - name: Post merge thank-you comment
+        uses: actions/github-script@v9
+        env:
+          MAINTAINER_NAME: ${{ env.MAINTAINER_NAME }}
+          GITHUB_PROFILE_URL: ${{ env.GITHUB_PROFILE_URL }}
+          LINKEDIN_URL: ${{ env.LINKEDIN_URL }}
+          PORTFOLIO_URL: ${{ env.PORTFOLIO_URL }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+
+            const supportSection = [
+              "### ❤️ Support CryptoViz",
+              "",
+              "⭐ Star the repository",
+              `👤 Follow [${process.env.MAINTAINER_NAME}](${process.env.GITHUB_PROFILE_URL}) on GitHub`,
+              `💼 [LinkedIn](${process.env.LINKEDIN_URL})`,
+              `🌐 [Portfolio](${process.env.PORTFOLIO_URL})`
+            ].join("\n");
+
+            const body = [
+              `Great work @${author}, and thank you for your contribution! 🎉`,
+              "",
+              "This Pull Request has been merged. Looking forward to your future contributions!",
+              "",
+              supportSection
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body
+            });

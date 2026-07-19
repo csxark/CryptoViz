@@ -34,6 +34,30 @@ function sortObjectKeys(obj: any): any {
   return result
 }
 
+// Fast deterministic 64-bit hash (sync). Not cryptographic; used only for cache keys.
+// Based on splitmix64-style mixing; returned as unsigned hex string.
+function hash64(input: string): string {
+  // FNV-1a seed + splitmix-like finalizer
+  let h1 = 0xcbf29ce484222325n
+  const prime = 0x100000001b3n
+
+  for (let i = 0; i < input.length; i++) {
+    h1 ^= BigInt(input.charCodeAt(i))
+    h1 = (h1 * prime) & 0xffffffffffffffffn
+  }
+
+  // Finalize (mix)
+  h1 ^= h1 >> 30n
+  h1 = (h1 * 0xbf58476d1ce4e5b9n) & 0xffffffffffffffffn
+  h1 ^= h1 >> 27n
+  h1 = (h1 * 0x94d049bb133111ebn) & 0xffffffffffffffffn
+  h1 ^= h1 >> 31n
+
+  // 16 hex chars for 64-bit
+  const hex = h1.toString(16).padStart(16, '0')
+  return hex
+}
+
 function getCacheKey(
   action: 'encrypt' | 'decrypt',
   cipherId: string,
@@ -42,14 +66,14 @@ function getCacheKey(
   options?: any
 ): string {
   const { signal: _, bypassCache: __, ...cacheableOptions } = options || {}
-  return JSON.stringify({
-    action,
-    cipherId,
-    input,
-    key,
-    options: sortObjectKeys(cacheableOptions),
-  })
+  // Stable serialization for options to avoid key-order issues.
+  const stableOptions = JSON.stringify(sortObjectKeys(cacheableOptions))
+
+  // Hash the full tuple, but do not store the huge JSON/plaintext as the map key.
+  // This dramatically reduces memory usage from large JSON.stringify results.
+  return hash64(`${action}|${cipherId}|${input}|${key}|${stableOptions}`)
 }
+
 
 function cacheResult(key: string, result: CipherResult) {
   if (resultCache.has(key)) {
@@ -83,13 +107,13 @@ export function useCipherWorker() {
         reject: (reason: any) => void
         signal?: AbortSignal
         onAbort?: () => void
-        timeoutId?: NodeJS.Timeout
+        timeoutId?: ReturnType<typeof setTimeout>
         cacheKey?: string
       }
     >
   >(new Map())
 
-  // Helper to terminate the worker and reject all pending requests
+  // Helper to terminate the worker and reject all pending requests (fatal errors only)
   const terminateWorkerAndRejectAll = useCallback((reason: Error) => {
     if (workerRef.current) {
       workerRef.current.terminate()
@@ -110,6 +134,10 @@ export function useCipherWorker() {
     setLoading(false)
   }, [])
 
+  // Tracks the most recent (latest) request started by this hook instance.
+  // Any worker response that doesn't match will be ignored to prevent stale UI updates.
+  const latestRequestIdRef = useRef<string | null>(null)
+
   // Helper to create and initialize the web worker
   const createWorker = useCallback(() => {
     if (typeof window === 'undefined') return null
@@ -122,6 +150,16 @@ export function useCipherWorker() {
 
     worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       const { requestId, success, payload } = event.data
+
+      // Latest-request semantics: ignore any response that doesn't match the most recent request.
+      if (latestRequestIdRef.current && requestId !== latestRequestIdRef.current) {
+        // Still cleanup (if the request was not already removed from the map)
+        activeRequestsRef.current.delete(requestId)
+        if (activeRequestsRef.current.size === 0) {
+          setLoading(false)
+        }
+        return
+      }
 
       const request = activeRequestsRef.current.get(requestId)
 
@@ -193,9 +231,27 @@ export function useCipherWorker() {
       }
 
       return new Promise<CipherResult>((resolve, reject) => {
-        // Automatically cancel any previous running request to prevent overlap
-        if (activeRequestsRef.current.size > 0) {
-          terminateWorkerAndRejectAll(new DOMException('The user aborted a request.', 'AbortError'))
+        const id = Math.random().toString(36).substring(2, 11)
+        
+        // Mark this as the latest request. Any older in-flight requests will be considered stale
+        // and their eventual worker responses will be ignored.
+        latestRequestIdRef.current = id
+
+        // Cancel only superseded requests (do not terminate the whole worker).
+        for (const [existingId, req] of activeRequestsRef.current.entries()) {
+          if (existingId === id) continue
+          try {
+            if (req.timeoutId) clearTimeout(req.timeoutId)
+            if (req.signal && req.onAbort) {
+              req.signal.removeEventListener('abort', req.onAbort)
+            }
+            // Reject only the superseded promise to avoid hanging callers.
+            req.reject(new DOMException('The user aborted a request.', 'AbortError'))
+          } catch {
+            // Ignore secondary errors during cancellation
+          } finally {
+            activeRequestsRef.current.delete(existingId)
+          }
         }
 
         if (!workerRef.current) {
@@ -205,9 +261,6 @@ export function useCipherWorker() {
           }
         }
 
-        const id = Math.random().toString(36).substring(2, 11)
-
-        
         let onAbort: (() => void) | undefined
         const signal = options?.signal as AbortSignal | undefined
 

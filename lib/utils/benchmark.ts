@@ -10,6 +10,19 @@ export class BenchmarkEngine {
    * Generates random input data
    */
   static generateInput(sizeInBytes: number): string {
+
+    const chars =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
+
+const randomValues = new Uint32Array(sizeInBytes)
+crypto.getRandomValues(randomValues)
+
+let result = ''
+
+for (let i = 0; i < sizeInBytes; i++) {
+  result += chars[randomValues[i] % chars.length]
+}
+
     if (sizeInBytes <= 0) {
       throw new Error('sizeInBytes must be greater than 0')
     }
@@ -24,6 +37,9 @@ export class BenchmarkEngine {
     return result
   }
 
+
+return result
+  }
   /**
    * Generates random key for cipher
    */
@@ -33,11 +49,25 @@ export class BenchmarkEngine {
     }
 
     const hex = '0123456789abcdef'
+
+
+const randomValues = new Uint8Array(lengthInBytes)
+crypto.getRandomValues(randomValues)
+
+let result = ''
+
+for (let i = 0; i < lengthInBytes; i++) {
+  result += hex[randomValues[i] % hex.length]
+}
+
+return result
+
     let result = ''
 
     for (let i = 0; i < lengthInBytes; i++) {
       result += hex.charAt(Math.floor(Math.random() * hex.length))
     }
+
 
     return result
   }

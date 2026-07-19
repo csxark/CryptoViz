@@ -99,8 +99,8 @@ jobs:
                 "",
                 `Hi @${assignee}, I'm assigning this initiative to you.`,
                 "",
-                `Looking forward to your contributions!`,
-                ""''
+                "Looking forward to your contributions!",
+                "",
                 "Please do the following before coding:",
                 "",
                 "- ✅ Sync your fork with the latest `main`",

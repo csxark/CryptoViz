@@ -784,8 +784,26 @@ export default function ChallengeMode() {
                 <div className="relative overflow-hidden rounded-xl border border-zinc-200 bg-zinc-950 shadow-inner dark:border-zinc-800">
                   <div className="absolute inset-y-0 left-0 w-1 bg-teal-500 dark:bg-teal-400" />
                   <div className="px-5 py-6 sm:px-8">
-                    {error ? (
-                      <span className="font-mono text-sm text-red-400">{String(error)}</span>
+{error ? (
+                      <span className="font-mono text-sm text-red-400">
+                        {(() => {
+                          switch (error.code) {
+                            case 'WORKER_TIMEOUT':
+                              return 'Encryption timed out. Please try again.'
+                            case 'INPUT_REQUIRED':
+                              return 'Please enter a plaintext.'
+                            case 'INPUT_TOO_LONG':
+                              return 'Input is too long. Please shorten it.'
+                            case 'INVALID_KEY':
+                            case 'INVALID_KEY_LENGTH':
+                              return 'Invalid key. Please check the key format/length.'
+                            case 'INVALID_INPUT':
+                              return 'Invalid input. Please check your ciphertext/plaintext.'
+                            default:
+                              return 'Something went wrong while encrypting. Please try again.'
+                          }
+                        })()}
+                      </span>
                     ) : loading || !expectedCiphertext ? (
                       <div className="flex items-center gap-3">
                         <span className="flex h-3 w-3">

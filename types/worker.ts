@@ -17,8 +17,15 @@ export interface WorkerRequest {
 
 export interface WorkerResponsePayload {
   result?: CipherResult
+  /** Legacy error message (string) */
   error?: string
+
+  /** Standardized error code for typed UI feedback */
+  errorCode?: import('@/lib/utils/errors').CipherErrorCode
+  /** Optional human readable error message */
+  errorMessage?: string
 }
+
 
 export interface WorkerResponseTimings {
   durationMs: number

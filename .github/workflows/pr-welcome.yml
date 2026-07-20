@@ -1,7 +1,8 @@
 name: PR Welcome
 
 # ==========================================================================
-# Posts a welcome comment whenever a Pull Request is opened on CryptoViz.
+# Posts a welcome comment whenever a Pull Request is opened on CryptoViz,
+# and labels it "needs review" so it's immediately visible in triage.
 # Uses pull_request_target so the comment step works even for PRs from
 # forks (note: no fork code is checked out or executed here).
 # ==========================================================================
@@ -13,6 +14,7 @@ on:
 
 permissions:
   pull-requests: write
+  issues: write
 
 jobs:
   welcome:
@@ -27,6 +29,7 @@ jobs:
       GITHUB_PROFILE_URL: https://github.com/csxark
       LINKEDIN_URL: https://www.linkedin.com/in/csxark
       PORTFOLIO_URL: https://csxark.xyz
+      REVIEW_LABEL: "needs review"
 
     steps:
       - name: Post PR welcome comment
@@ -36,36 +39,49 @@ jobs:
           GITHUB_PROFILE_URL: ${{ env.GITHUB_PROFILE_URL }}
           LINKEDIN_URL: ${{ env.LINKEDIN_URL }}
           PORTFOLIO_URL: ${{ env.PORTFOLIO_URL }}
+          REVIEW_LABEL: ${{ env.REVIEW_LABEL }}
         with:
           script: |
             const pr = context.payload.pull_request;
             const author = pr.user.login;
+            const reviewLabel = process.env.REVIEW_LABEL;
 
             const supportSection = [
               "### ❤️ Support CryptoViz",
               "",
-              "⭐ Star the repository",
-              `👤 Follow [${process.env.MAINTAINER_NAME}](${process.env.GITHUB_PROFILE_URL}) on GitHub`,
-              `💼 [LinkedIn](${process.env.LINKEDIN_URL})`,
-              `🌐 [Portfolio](${process.env.PORTFOLIO_URL})`,
+              "If you find CryptoViz helpful, consider supporting the project by:",
+              "",
+              "- ⭐ Starring the repository",
+              "- 🍴 Forking the repository",
+              `- 👤 Following [${process.env.MAINTAINER_NAME}](${process.env.GITHUB_PROFILE_URL}) on GitHub`,
+              `- 💼 Connecting on [LinkedIn](${process.env.LINKEDIN_URL})`,
+              `- 🌐 Visiting the [Portfolio](${process.env.PORTFOLIO_URL})`,
+              "",
+              "Your support helps increase the project's visibility and encourages continued development. Thank you for being a part of the CryptoViz community!",
             ].join("\n");
 
             const body = [
-              "## 🎉 Thank you for contributing to CryptoViz!",
+              "## 🎉 Thank You for Your Contribution",
               "",
-              `Your Pull Request has been received successfully, @${author}. Our maintainers will review it shortly.`,
+              `Hello @${author},`,
               "",
-              "### 📋 Checklist",
+              "Thank you for submitting a Pull Request to CryptoViz. We appreciate the time and effort you've invested in contributing to the project.",
               "",
-              "- ✅ Linked related issue",
+              "Your Pull Request has been received successfully and will be reviewed by the maintainers as soon as possible.",
+              "",
+              "### 📋 Pull Request Checklist",
+              "",
+              "- ✅ Linked the related issue",
               "- ✅ No merge conflicts",
-              "- ✅ Latest `main` merged in",
-              "- ✅ Build passes",
-              "- ✅ Tests pass",
+              "- ✅ Synced with the latest `main` branch",
+              "- ✅ Build passes successfully",
+              "- ✅ All tests pass",
+              "",
+              "Ensuring these requirements are met helps streamline the review process and enables maintainers to review your contribution more efficiently.",
               "",
               supportSection,
               "",
-              "Thank you for contributing to CryptoViz 💙"
+              "Thank you once again for contributing to CryptoViz. We appreciate your support and look forward to reviewing your contribution.",
             ].join("\n");
 
             await github.rest.issues.createComment({
@@ -73,4 +89,11 @@ jobs:
               repo: context.repo.repo,
               issue_number: pr.number,
               body
+            });
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: [reviewLabel],
             });

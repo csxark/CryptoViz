@@ -54,51 +54,63 @@ jobs:
             const supportSection = [
               "### ❤️ Support CryptoViz",
               "",
-              "⭐ Star the repository",
-              "🍴 Fork the repository",
-              `👤 Follow [${process.env.MAINTAINER_NAME}](${process.env.GITHUB_PROFILE_URL}) on GitHub`,
-              `💼 [LinkedIn](${process.env.LINKEDIN_URL})`,
-              `🌐 [Portfolio](${process.env.PORTFOLIO_URL})`,
+              "If you find CryptoViz helpful, consider supporting the project by:",
+              "",
+              "- ⭐ Starring the repository",
+              "- 🍴 Forking the repository",
+              `- 👤 Following [${process.env.MAINTAINER_NAME}](${process.env.GITHUB_PROFILE_URL}) on GitHub`,
+              `- 💼 Connecting on [LinkedIn](${process.env.LINKEDIN_URL})`,
+              `- 🌐 Visiting the [Portfolio](${process.env.PORTFOLIO_URL})`,
+              "",
+              "Your support helps increase the project's visibility and encourages continued development. Thank you for being a part of the CryptoViz community!",
             ].join("\n");
 
             let body;
 
             if (isFirstTime) {
               body = [
-                "## 🎉 Welcome to CryptoViz!",
+                "## 🎉 Welcome to CryptoViz",
                 "",
-                `Thank you for opening your **first issue**, @${author}!`,
+                `Hello @${author},`,
                 "",
-                "We're excited to have you in our community. Your issue has been received and will be reviewed shortly.",
+                "Thank you for opening your first issue in the CryptoViz repository. We appreciate your interest in contributing to the project and are pleased to welcome you to our community.",
+                "",
+                "Your issue has been received successfully and will be reviewed by the maintainers as soon as possible.",
                 "",
                 supportSection,
                 "",
-                "### 🚀 Contribution Workflow",
+                "### 📋 Contribution Workflow",
                 "",
                 "1. ⭐ Star the repository",
                 "2. 🍴 Fork the repository",
-                "3. ⏳ Wait until this issue is assigned to you",
-                "4. 🔄 Sync your fork with the latest `main`",
-                "5. 🌿 Create a feature branch",
-                "6. 🛠️ Implement your changes",
-                "7. ✅ Test your changes",
-                "8. 📬 Raise a Pull Request referencing this issue",
+                "3. ⏳ Wait for a maintainer to assign the issue to you",
+                "4. 🔄 Sync your fork with the latest `main` branch",
+                "5. 🌿 Create a new feature branch",
+                "6. 🛠️ Implement the requested changes",
+                "7. ✅ Test your implementation thoroughly",
+                "8. 📬 Open a Pull Request and reference this issue",
                 "",
-                "Happy Coding 💙"
+                "Following this workflow helps ensure a smooth review process and minimizes merge conflicts.",
+                "",
+                "We look forward to your contribution. Thank you for choosing to contribute to CryptoViz.",
               ].join("\n");
-            } else {
-              body = [
-                "## 💙 Welcome Back!",
-                "",
-                `Thank you for opening another issue and continuing to contribute to CryptoViz, @${author}!`,
-                "",
-                "We appreciate your continued support.",
-                "",
-                supportSection,
-                "",
-                "We'll review your issue shortly."
-              ].join("\n");
-            }
+                } else {
+                  body = [
+                    "## 💙 Welcome Back",
+                    "",
+                    `Hello @${author},`,
+                    "",
+                    "Thank you for opening another issue and for your continued interest in contributing to CryptoViz.",
+                    "",
+                    "We greatly appreciate your ongoing support and the time you invest in helping improve the project.",
+                    "",
+                    "Your issue has been received and will be reviewed by the maintainers as soon as possible.",
+                    "",
+                    supportSection,
+                    "",
+                    "Thank you for being a valued member of the CryptoViz community. We look forward to collaborating with you again.",
+                  ].join("\n");
+                }
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,

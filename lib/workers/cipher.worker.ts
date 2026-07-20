@@ -38,6 +38,7 @@ import { encrypt as ripemd160Encrypt, decrypt as ripemd160Decrypt } from '../cip
 import { encrypt as sha1Encrypt, decrypt as sha1Decrypt } from '../cipher/hash/sha1'
 
 import { deriveKey } from '../kdf/pbkdf2'
+import { CipherError } from '../utils/errors'
 
 import type { WorkerRequest, WorkerResponse } from '../../types/worker'
 
@@ -250,12 +251,33 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
     workerScope.postMessage(response)
   } catch (error: unknown) {
     const durationMs = performance.now() - startTime
+
+    // If cipher code throws CipherError, preserve its stable error code.
+    let errorCode: import('@/lib/utils/errors').CipherErrorCode | undefined
+    let errorMessage: string
+
+    if (error instanceof Error) {
+      errorMessage = error.message
+    } else {
+      errorMessage = String(error)
+    }
+
+    if (error instanceof CipherError) {
+      errorCode = error.code
+      errorMessage = error.message
+    }
+
     const response: WorkerResponse = {
       requestId,
       success: false,
-      payload: { error: error instanceof Error ? error.message : String(error) },
+      payload: {
+        error: errorMessage, // legacy
+        errorCode,
+        errorMessage,
+      },
       timings: { durationMs },
     }
     workerScope.postMessage(response)
   }
 })
+

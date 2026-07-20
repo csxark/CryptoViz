@@ -1,0 +1,140 @@
+name: Stale Assignment Sweep
+
+# ==========================================================================
+# Daily sweep: if an issue has been assigned to a contributor for 3+ days
+# and no Pull Request referencing that issue has ever been opened, the
+# contributor is automatically unassigned and the "help wanted" label is
+# added so the issue becomes visible to other contributors again.
+#
+# If a PR referencing the issue DOES exist (open, merged, or closed — any
+# state), the assignee is left alone even past the 3-day mark, since they
+# clearly did the work; narrow the STILL_COUNTS_PR_STATES check below if
+# you want closed-and-unmerged PRs to not count as "in progress".
+#
+# No comment is posted — this runs silently (unassign + label only).
+# ==========================================================================
+
+on:
+  schedule:
+    # Runs once a day at 06:00 UTC. Adjust the cron expression for a
+    # different time — GitHub Actions cron always runs in UTC.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+    # Lets you trigger this manually from the Actions tab to test it
+    # without waiting for the schedule.
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  sweep-stale-assignments:
+    name: Unassign stale issues
+    runs-on: ubuntu-latest
+
+    # ------------------------------------------------------------------
+    # CONFIG BLOCK — tweak these without touching the script below.
+    # ------------------------------------------------------------------
+    env:
+      STALE_AFTER_DAYS: "3"
+      STALE_LABEL: "help wanted"
+
+    steps:
+      - name: Unassign stale issues without a linked PR
+        uses: actions/github-script@v9
+        env:
+          STALE_AFTER_DAYS: ${{ env.STALE_AFTER_DAYS }}
+          STALE_LABEL: ${{ env.STALE_LABEL }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const staleAfterMs =
+              Number(process.env.STALE_AFTER_DAYS) * 24 * 60 * 60 * 1000;
+            const staleLabel = process.env.STALE_LABEL;
+
+            // Every open issue in the repo. listForRepo() also returns PRs
+            // (GitHub models a PR as an issue under the hood), so those
+            // are filtered out below.
+            const allOpenIssues = await github.paginate(
+              github.rest.issues.listForRepo,
+              { owner, repo, state: "open", per_page: 100 }
+            );
+
+            const assignedIssues = allOpenIssues.filter(
+              (item) => !item.pull_request && item.assignees.length > 0
+            );
+
+            for (const issue of assignedIssues) {
+              const timeline = await github.paginate(
+                github.rest.issues.listEventsForTimeline,
+                { owner, repo, issue_number: issue.number, per_page: 100 }
+              );
+
+              // Find the most recent "assigned" timestamp for each
+              // currently-assigned user. Using the LATEST such event per
+              // user means a re-assignment resets their 3-day clock.
+              const currentLogins = issue.assignees.map((a) => a.login);
+              let mostRecentAssignedAt = null;
+
+              for (const event of timeline) {
+                if (
+                  event.event === "assigned" &&
+                  event.assignee &&
+                  currentLogins.includes(event.assignee.login)
+                ) {
+                  const eventTime = new Date(event.created_at).getTime();
+                  if (
+                    mostRecentAssignedAt === null ||
+                    eventTime > mostRecentAssignedAt
+                  ) {
+                    mostRecentAssignedAt = eventTime;
+                  }
+                }
+              }
+
+              // Safety net: if we couldn't find an "assigned" event (e.g.
+              // assigned at issue creation, before events existed), skip
+              // rather than guessing.
+              if (mostRecentAssignedAt === null) {
+                continue;
+              }
+
+              const elapsed = Date.now() - mostRecentAssignedAt;
+              if (elapsed < staleAfterMs) {
+                continue;
+              }
+
+              // Does any PR reference this issue? A "cross-referenced"
+              // timeline event fires when a PR's title/body/commits
+              // mention this issue (e.g. "Fixes #123" or a plain "#123").
+              const hasLinkedPR = timeline.some(
+                (event) =>
+                  event.event === "cross-referenced" &&
+                  event.source &&
+                  event.source.issue &&
+                  event.source.issue.pull_request
+              );
+
+              if (hasLinkedPR) {
+                continue;
+              }
+
+              await github.rest.issues.removeAssignees({
+                owner,
+                repo,
+                issue_number: issue.number,
+                assignees: currentLogins,
+              });
+
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: issue.number,
+                labels: [staleLabel],
+              });
+
+              console.log(
+                `Unassigned ${currentLogins.join(", ")} from #${issue.number} (stale, no linked PR).`
+              );
+            }

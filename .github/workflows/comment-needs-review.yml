@@ -1,0 +1,82 @@
+name: Comment Needs Review
+
+# ==========================================================================
+# Whenever a contributor adds a follow-up comment on an ISSUE or a PR's
+# conversation tab, this adds the "needs review" label so it surfaces
+# back onto the maintainer's radar.
+#
+# Skipped for:
+#   - Comments from the maintainer themselves (see the hardcoded username
+#     in the job's `if:` below — see note there for why it can't just
+#     read from the env: config block)
+#   - Comments from bots (type == "Bot", or a login ending in "[bot]" as
+#     a belt-and-suspenders check)
+#   - Comments on already-closed issues/merged PRs (nothing to review)
+#
+# NOTE ON SCOPE: issue_comment fires for comments on the general
+# conversation tab of BOTH issues and PRs (GitHub treats a PR as an
+# issue under the hood for this event). It does NOT cover inline
+# code-review comments (pull_request_review_comment) or a review body
+# submitted via "Review changes" (pull_request_review) — say if you
+# want those covered too and this can be extended.
+# ==========================================================================
+
+on:
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  issues: write
+
+jobs:
+  label-needs-review:
+    name: Label needs-review on contributor follow-up
+    runs-on: ubuntu-latest
+
+    # ------------------------------------------------------------------
+    # NOTE: job-level `if:` conditions can't read this job's own `env:`
+    # block (env isn't resolved yet at that point in the workflow), so
+    # the maintainer username is hardcoded here rather than pulled from
+    # the config block below. Update BOTH if your username ever changes.
+    # ------------------------------------------------------------------
+    if: |
+      github.event.comment.user.login != 'csxark' &&
+      github.event.comment.user.type != 'Bot' &&
+      !endsWith(github.event.comment.user.login, '[bot]')
+
+    # ------------------------------------------------------------------
+    # CONFIG BLOCK — edit these without touching the script below.
+    # ------------------------------------------------------------------
+    env:
+      MAINTAINER_USERNAME: csxark
+      REVIEW_LABEL: "needs review"
+
+    steps:
+      - name: Add needs-review label
+        uses: actions/github-script@v9
+        env:
+          REVIEW_LABEL: ${{ env.REVIEW_LABEL }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue = context.payload.issue;
+            const reviewLabel = process.env.REVIEW_LABEL;
+
+            // Don't bother labeling something that's already closed/merged.
+            if (issue.state !== "open") {
+              console.log(`#${issue.number} is not open — skipping.`);
+              return;
+            }
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issue.number,
+              labels: [reviewLabel],
+            });
+
+            console.log(
+              `Added "${reviewLabel}" to #${issue.number} after a follow-up comment from ${context.payload.comment.user.login}.`
+            );

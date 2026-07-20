@@ -19,12 +19,19 @@ export class BenchmarkEngine {
       throw new Error('sizeInBytes must be greater than 0')
     }
 
+
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
+
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
+    const randomValues = new Uint32Array(sizeInBytes)
+    crypto.getRandomValues(randomValues)
+
 
     let result = ''
 
-    for (let i = 0; i < sizeInBytes; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    for (let i = 0; i < sizeInBytes; i += 1) {
+      result += chars[randomValues[i] % chars.length]
     }
 
     return result
@@ -40,10 +47,14 @@ export class BenchmarkEngine {
 
     const hex = '0123456789abcdef'
 
+    const randomValues = new Uint8Array(lengthInBytes)
+    crypto.getRandomValues(randomValues)
+
+
     let result = ''
 
-    for (let i = 0; i < lengthInBytes; i++) {
-      result += hex.charAt(Math.floor(Math.random() * hex.length))
+    for (let i = 0; i < lengthInBytes; i += 1) {
+      result += hex[randomValues[i] % hex.length]
     }
 
     return result

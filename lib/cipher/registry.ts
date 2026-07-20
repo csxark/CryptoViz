@@ -5,7 +5,7 @@ export interface CipherDefinition {
   description: string
   defaultKey: string
   defaultInput: string
-  securityStatus: 'secure' | 'deprecated' | 'broken'
+  securityStatus: 'secure' | 'legacy' | 'deprecated' | 'broken'
   keyPlaceholder?: string
   options?: {
     name: string
@@ -83,7 +83,7 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     description: 'Ancient Greek grid cipher encoding each letter as a (row, col) coordinate pair in a 5×5 grid. J is merged into I.',
     defaultKey: '',
     defaultInput: 'HELLO WORLD',
-    securityStatus: 'broken',
+    securityStatus: 'legacy',
     keyPlaceholder: 'Optional keyword to key the grid (e.g. POLYBIUS)',
   },
   {
@@ -103,7 +103,7 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     description: 'Keyed transposition cipher — plaintext is written in rows then columns are read in alphabetical key order.',
     defaultKey: 'ZEBRAS',
     defaultInput: 'WEAREDISCOVEREDFLEEAATONCE',
-    securityStatus: 'broken',
+    securityStatus: 'legacy',
     keyPlaceholder: 'Alphabetic key (e.g. ZEBRAS)',
   },
   {
@@ -172,7 +172,7 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     description: 'Applies the DES algorithm three times to each data block with two or three keys to increase security.',
     defaultKey: '0123456789ABCDEF0123456789ABCDEF',
     defaultInput: 'Hello, World!',
-    securityStatus: 'deprecated',
+    securityStatus: 'legacy',
     keyPlaceholder: '32-character hex key (2-Key) or 48-character (3-Key)',
     options: [
       {
@@ -324,7 +324,7 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     description: 'A 160-bit hash function using two independent, parallel compression lines whose final states are combined by modular addition.',
     defaultKey: '',
     defaultInput: 'abc',
-    securityStatus: 'deprecated',
+    securityStatus: 'legacy',
   },
   // Asymmetric
   {

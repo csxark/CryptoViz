@@ -235,6 +235,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: 'Secret key string (1-256 bytes)',
   },
   {
+    id: 'salsa20',
+    name: 'Salsa20',
+    category: 'symmetric',
+    description: 'A modern ARX-based stream cipher (Bernstein, 2005) built from add-rotate-XOR quarter-rounds — the direct predecessor to ChaCha20.',
+    defaultKey: '0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000|0000000000000000',
+    defaultInput: '48656c6c6f2c2053616c73613230',
+    securityStatus: 'secure',
+    keyPlaceholder: '64-char hex key | 16-char hex nonce',
+  },
+  {
     id: 'chacha20',
     name: 'ChaCha20',
     category: 'symmetric',

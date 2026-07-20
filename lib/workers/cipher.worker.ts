@@ -22,6 +22,7 @@ import { encrypt as des3Encrypt, decrypt as des3Decrypt } from '../cipher/symmet
 import { encrypt as aesEncrypt, decrypt as aesDecrypt } from '../cipher/symmetric/aes'
 import { encrypt as aesGcmEncrypt, decrypt as aesGcmDecrypt } from '../cipher/symmetric/aes-gcm'
 import { encrypt as rc4Encrypt, decrypt as rc4Decrypt } from '../cipher/symmetric/rc4'
+import { encrypt as salsa20Encrypt, decrypt as salsa20Decrypt } from '../cipher/symmetric/salsa20'
 import { encrypt as chacha20Encrypt, decrypt as chacha20Decrypt } from '../cipher/symmetric/chacha20'
 import { encrypt as rsaEncrypt, decrypt as rsaDecrypt } from '../cipher/asymmetric/rsa'
 import { encrypt as dhEncrypt, decrypt as dhDecrypt } from '../cipher/asymmetric/dh'
@@ -151,6 +152,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? rc4Encrypt(input, key, options)
           : rc4Decrypt(input, key, options)
+        break
+      case 'salsa20':
+        result = encryptMode
+          ? salsa20Encrypt(input, key, options)
+          : salsa20Decrypt(input, key, options)
         break
       case 'chacha20':
         result = encryptMode

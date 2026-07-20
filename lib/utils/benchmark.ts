@@ -10,23 +10,14 @@ export class BenchmarkEngine {
    * Generates random input data
    */
   static generateInput(sizeInBytes: number): string {
-
-    const chars =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
-
-
     if (sizeInBytes <= 0) {
       throw new Error('sizeInBytes must be greater than 0')
     }
-
-
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
 
     const chars =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
     const randomValues = new Uint32Array(sizeInBytes)
     crypto.getRandomValues(randomValues)
-
 
     let result = ''
 
@@ -46,10 +37,8 @@ export class BenchmarkEngine {
     }
 
     const hex = '0123456789abcdef'
-
     const randomValues = new Uint8Array(lengthInBytes)
     crypto.getRandomValues(randomValues)
-
 
     let result = ''
 
@@ -80,9 +69,6 @@ export class BenchmarkEngine {
     variance: number
     stdDev: number
   } {
-
-    const sorted = [...measurements].sort((a, b) => a - b)
-
     if (!measurements || measurements.length === 0) {
       throw new Error('Measurement array cannot be empty')
     }
@@ -91,16 +77,13 @@ export class BenchmarkEngine {
       throw new Error('Measurement values must be valid non-negative numbers')
     }
 
-
+    const sorted = [...measurements].sort((a, b) => a - b)
     const average =
       measurements.reduce((a, b) => a + b, 0) / measurements.length
-
-
     const min = sorted[0]
     const max = sorted[sorted.length - 1]
 
     const middle = Math.floor(sorted.length / 2)
-
     const median =
       sorted.length % 2 === 0
         ? (sorted[middle - 1] + sorted[middle]) / 2
@@ -108,24 +91,13 @@ export class BenchmarkEngine {
 
     const p95 =
       sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))]
-
     const p99 =
       sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.99))]
-
     const variance =
       measurements.reduce(
         (sum, value) => sum + Math.pow(value - average, 2),
         0,
       ) / measurements.length
-
-    const min = Math.min(...measurements)
-    const max = Math.max(...measurements)
-
-    const variance =
-      measurements.reduce((sum, m) => sum + Math.pow(m - average, 2), 0) /
-      measurements.length
-
-
     const stdDev = Math.sqrt(variance)
 
     return {
@@ -168,15 +140,9 @@ export class BenchmarkEngine {
     }
 
     const stats = this.calculateStats(measurements)
-
     const totalTime = measurements.reduce((a, b) => a + b, 0)
-
-
-    const operationsPerSecond = 1000 / stats.average
-
     const operationsPerSecond =
       stats.average > 0 ? 1000 / stats.average : 0
-
 
     return {
       cipherId,
@@ -188,14 +154,9 @@ export class BenchmarkEngine {
       averageTime: stats.average,
       minTime: stats.min,
       maxTime: stats.max,
-      medianTime: stats.median,
-      p95Time: stats.p95,
-      p99Time: stats.p99,
-      variance: stats.variance,
       stdDev: stats.stdDev,
       totalTime,
       operationsPerSecond,
-      throughput: operationsPerSecond,
       timestamp: new Date(),
     }
   }

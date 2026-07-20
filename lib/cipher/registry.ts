@@ -117,6 +117,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '4-letter key (e.g. HILL)',
   },
   {
+    id: 'autokey',
+    name: 'Autokey Vigenère',
+    category: 'classical',
+    description: 'A stronger variant of Vigenère where the keystream extends using the plaintext itself instead of repeating the key, removing Kasiski-style periodicity.',
+    defaultKey: 'QUEENLY',
+    defaultInput: 'ATTACKATDAWN',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Keyword (e.g. QUEENLY)',
+  },
+  {
     id: 'adfgvx',
     name: 'ADFGVX Cipher',
     category: 'classical',

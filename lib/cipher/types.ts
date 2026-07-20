@@ -68,6 +68,7 @@ export type CipherName =
   | 'railfence'
   | 'beaufort'
   | 'hill'
+  | 'autokey'
   | 'adfgvx'
   | 'foursquare'
   | 'xor'

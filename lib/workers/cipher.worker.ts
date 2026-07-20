@@ -13,6 +13,7 @@ import { encrypt as railfenceEncrypt, decrypt as railfenceDecrypt } from '../cip
 import { encrypt as beaufortEncrypt, decrypt as beaufortDecrypt } from '../cipher/classical/beaufort'
 import { encrypt as hillEncrypt, decrypt as hillDecrypt } from '../cipher/classical/hill'
 import { encrypt as columnarEncrypt, decrypt as columnarDecrypt } from '../cipher/classical/columnar-transposition'
+import { encrypt as autokeyEncrypt, decrypt as autokeyDecrypt } from '../cipher/classical/autokey'
 import { encrypt as adfgvxEncrypt, decrypt as adfgvxDecrypt } from '../cipher/classical/adfgvx'
 import { encrypt as foursquareEncrypt, decrypt as foursquareDecrypt } from '../cipher/classical/four-square'
 import { encrypt as polybiusEncrypt, decrypt as polybiusDecrypt } from '../cipher/classical/polybius'
@@ -109,6 +110,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? columnarEncrypt(input, key, options)
           : columnarDecrypt(input, key, options)
+        break
+      case 'autokey':
+        result = encryptMode
+          ? autokeyEncrypt(input, key, options)
+          : autokeyDecrypt(input, key, options)
         break
       case 'adfgvx':
         result = encryptMode

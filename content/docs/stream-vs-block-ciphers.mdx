@@ -1,0 +1,33 @@
+---
+title: "Stream Ciphers vs Block Ciphers"
+description: "How stream and block cipher constructions differ, and why real protocols choose one over the other."
+difficulty: intermediate
+readingTime: 6
+tags: ["symmetric", "stream-cipher", "block-cipher"]
+prerequisites: []
+publishedAt: 2026-07-19
+updatedAt: 2026-07-19
+---
+
+Every symmetric cipher in this visualizer falls into one of two families: **block ciphers**, which transform fixed-size chunks of data at once, and **stream ciphers**, which generate a keystream and XOR it against data one bit or byte at a time.
+
+## Block ciphers
+
+`[aes]` and `[des]` both operate on fixed blocks — 128 bits for AES, 64 bits for DES. Input that doesn't divide evenly into blocks needs padding, and the *mode of operation* (ECB, CBC, CTR...) determines how blocks relate to each other. Get the mode wrong — ECB is the classic example — and identical plaintext blocks produce identical ciphertext blocks, leaking structure.
+
+Block ciphers also propagate errors differently depending on mode: in CBC, a single flipped ciphertext bit corrupts its whole block plus one bit of the next block.
+
+> [!NOTE]
+> `[chacha20]`, despite generating a stream, is technically built from an internal block-permutation run in counter mode — the line between the two families blurs in modern designs.
+
+## Stream ciphers
+
+`[chacha20]` generates a keystream from the key and a nonce, then XORs it against data one byte at a time. No padding needed, no mode-of-operation complexity — but nonce reuse is catastrophic: XOR two ciphertexts encrypted under the same keystream and the keystream cancels out entirely, exposing the XOR of the two plaintexts.
+
+## Which do real protocols use?
+
+TLS 1.3 cipher suites illustrate the tradeoff directly: `TLS_AES_128_GCM_SHA256` pairs a block cipher (AES) in an authenticated counter mode with a MAC, while `TLS_CHACHA20_POLY1305_SHA256` uses a stream cipher for the same authenticated-encryption role — chosen on platforms without AES hardware acceleration, since ChaCha20 is fast in pure software.
+
+## Explore further
+
+Try `[aes]` and `[chacha20]` side by side in the visualizer: encrypt the same input under both, then flip one bit of ciphertext and decrypt — notice how differently the corruption propagates.

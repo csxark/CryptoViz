@@ -9,6 +9,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type { CipherResult } from '../cipher/types'
 import type { WorkerRequest, WorkerResponse } from '../../types/worker'
+import type { CipherErrorCode } from '../utils/errors'
+
 
 const MAX_CACHE_SIZE = 200
 const resultCache = new Map<string, CipherResult>()
@@ -88,7 +90,8 @@ function cacheResult(key: string, result: CipherResult) {
 export function useCipherWorker() {
   const workerRef = useRef<Worker | null>(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{ code: CipherErrorCode; message?: string } | null>(null)
+
   const [fatalError, setFatalError] = useState<Error | null>(null)
 
   if (fatalError) {
@@ -139,9 +142,11 @@ export function useCipherWorker() {
   const createWorker = useCallback(() => {
     if (typeof window === 'undefined') return null
 
+
     const worker = new Worker(
       new URL('../workers/cipher.worker.ts', import.meta.url)
     )
+
 
     worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       const { requestId, success, payload } = event.data
@@ -158,6 +163,7 @@ export function useCipherWorker() {
 
       const request = activeRequestsRef.current.get(requestId)
 
+
       if (request) {
         if (request.timeoutId) {
           clearTimeout(request.timeoutId)
@@ -172,8 +178,14 @@ export function useCipherWorker() {
           }
           request.resolve(payload.result)
         } else {
-          request.reject(new Error(payload.error || 'Unknown worker error'))
+          const code = payload.errorCode
+          if (code) {
+            request.reject(Object.assign(new Error(payload.errorMessage || payload.error || 'Worker error'), { code }))
+          } else {
+            request.reject(new Error(payload.error || 'Worker error'))
+          }
         }
+
         activeRequestsRef.current.delete(requestId)
       }
 
@@ -185,11 +197,12 @@ export function useCipherWorker() {
     worker.onerror = (err) => {
       console.error('Worker error:', err)
       const errorMsg = 'Web Worker initialization or runtime error.'
-      const errObj = new Error(errorMsg)
-      setError(errorMsg)
+      const errObj = Object.assign(new Error(errorMsg), { code: 'INVALID_INPUT' })
+      setError({ code: 'INVALID_INPUT', message: errorMsg })
       setFatalError(errObj)
       terminateWorkerAndRejectAll(errObj)
     }
+
 
     return worker
   }, [terminateWorkerAndRejectAll])
@@ -264,9 +277,10 @@ export function useCipherWorker() {
 
         // 10-second timeout budget
         const timeoutId = setTimeout(() => {
-          setError('WORKER_TIMEOUT')
-          terminateWorkerAndRejectAll(new Error('WORKER_TIMEOUT'))
+          setError({ code: 'WORKER_TIMEOUT' })
+          terminateWorkerAndRejectAll(Object.assign(new Error('WORKER_TIMEOUT'), { code: 'WORKER_TIMEOUT' }))
         }, 10000)
+
 
         activeRequestsRef.current.set(id, {
           resolve,
@@ -308,8 +322,16 @@ export function useCipherWorker() {
           activeRequestsRef.current.delete(id)
           if (activeRequestsRef.current.size === 0) setLoading(false)
           const message = err instanceof Error ? err.message : String(err)
-          setError(message)
+          const maybeCode = (err as any)?.code as CipherErrorCode | undefined
+          if (maybeCode) {
+            setError({ code: maybeCode, message })
+          } else {
+            // Preserve legacy behavior without a code.
+            setError({ code: 'INVALID_INPUT', message })
+          }
           reject(new Error(message))
+
+
         }
       })
     },

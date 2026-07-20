@@ -14,6 +14,7 @@ import { encrypt as beaufortEncrypt, decrypt as beaufortDecrypt } from '../ciphe
 import { encrypt as hillEncrypt, decrypt as hillDecrypt } from '../cipher/classical/hill'
 import { encrypt as columnarEncrypt, decrypt as columnarDecrypt } from '../cipher/classical/columnar-transposition'
 import { encrypt as adfgvxEncrypt, decrypt as adfgvxDecrypt } from '../cipher/classical/adfgvx'
+import { encrypt as foursquareEncrypt, decrypt as foursquareDecrypt } from '../cipher/classical/four-square'
 import { encrypt as polybiusEncrypt, decrypt as polybiusDecrypt } from '../cipher/classical/polybius'
 import { encrypt as xorEncrypt, decrypt as xorDecrypt } from '../cipher/symmetric/xor'
 import { encrypt as otpEncrypt, decrypt as otpDecrypt } from '../cipher/symmetric/otp'
@@ -113,6 +114,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? adfgvxEncrypt(input, key, options)
           : adfgvxDecrypt(input, key, options)
+        break
+      case 'foursquare':
+        result = encryptMode
+          ? foursquareEncrypt(input, key, options)
+          : foursquareDecrypt(input, key, options)
         break
       case 'polybius':
         result = encryptMode

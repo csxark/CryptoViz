@@ -69,6 +69,7 @@ export type CipherName =
   | 'beaufort'
   | 'hill'
   | 'adfgvx'
+  | 'foursquare'
   | 'xor'
   | 'otp'
   | 'des'

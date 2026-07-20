@@ -126,6 +126,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'broken',
     keyPlaceholder: 'gridKey,transpositionKey (e.g. PICTURE,GERMAN)',
   },
+  {
+    id: 'foursquare',
+    name: 'Four-Square Cipher',
+    category: 'classical',
+    description: 'A polygraphic substitution cipher (Delastelle) that encrypts letter pairs using two keyed 5x5 grids alongside two standard alphabet grids.',
+    defaultKey: 'EXAMPLE,KEYWORD',
+    defaultInput: 'HELP ME OBI WAN KENOBI',
+    securityStatus: 'broken',
+    keyPlaceholder: 'key1,key2 (e.g. EXAMPLE,KEYWORD)',
+  },
   // Symmetric
   {
     id: 'xor',

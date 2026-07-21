@@ -146,6 +146,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'broken',
     keyPlaceholder: 'key1,key2 (e.g. EXAMPLE,KEYWORD)',
   },
+  {
+    id: 'nihilist',
+    name: 'Nihilist Cipher',
+    category: 'classical',
+    description: '19th-century Russian cipher combining a keyed Polybius square with additive (non-modular) numeric key stream addition — outputs numbers, not letters.',
+    defaultKey: 'RUSSIAN,KEY',
+    defaultInput: 'HELLO WORLD',
+    securityStatus: 'broken',
+    keyPlaceholder: 'squareKeyword,numericKeyword (e.g. RUSSIAN,KEY)',
+  },
   // Symmetric
   {
     id: 'xor',

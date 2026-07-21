@@ -71,6 +71,7 @@ export type CipherName =
   | 'autokey'
   | 'adfgvx'
   | 'foursquare'
+  | 'nihilist'
   | 'xor'
   | 'otp'
   | 'des'

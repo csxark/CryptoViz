@@ -1,0 +1,153 @@
+
+=== Audited 2026-07-21 16:58 UTC (151 new) ===
+[#290] (open) by @Aditya8369: [BUG] Challenge generator HINTS type assertion hides missing cipher entries — latent runtime bug
+[#289] (open) by @Aditya8369: [BUG] SHA-1 decrypt() returns fake success response instead of throwing like all other hash implementations
+[#288] (open) by @Aditya8369: [BUG] ChallengeMode — Session completion effect can double-persist XP/streak on re-renders
+[#287] (open) by @Aditya8369: [BUG] ChallengeMode — wrongAttempts reset to 0 on timer timeout causes data loss
+[#285] (open) by @Aakif-Kohari: [FEATURE]: add BLAKE2b-256 hash function
+[#284] (open) by @Aakif-Kohari: [FEATURE]: add X25519 elliptic-curve Diffie-Hellman key exchange
+[#283] (open) by @Aakif-Kohari: [FEATURE]: add Porta cipher with reciprocal 13-row tableau
+[#282] (open) by @Aakif-Kohari: [FEATURE]: add Nihilist cipher with additive numeric key stream
+[#281] (open) by @Aakif-Kohari: [FEATURE] : add Bifid cipher with keyed Polybius fractionation
+[#280] (open) by @durdana3105: [BUG] Refactor Favorite Cipher Storage Operations into Reusable Helpers
+[#279] (open) by @durdana3105: [BUG] Improve Error Handling for Favorite Cipher LocalStorage Operations
+[#278] (open) by @durdana3105: [BUG] Add Comprehensive Unit Tests for Favorite Cipher Utilities
+[#277] (open) by @durdana3105: [BUG] Improve Type Safety for Cipher Worker Option Generation
+[#276] (open) by @durdana3105: [BUG] Add Comprehensive Unit Tests for Comparison Utility Functions
+[#275] (open) by @durdana3105: [BUG] Refactor createCipherWorkerOptions() to Use Configuration Mapping
+[#263] (closed) by @faizahmad-khan: [BUG]  securityStatus type mismatch between CipherDefinition and CipherMetadata — 'legacy' status missing from registry
+[#258] (open) by @anubhavy-05: [BUG] Playground state (plaintext + cipher config) lost on page refresh — no URL persistence
+[#256] (closed) by @Aakif-Kohari: [FEATURE] Add Autokey Vigenère Cipher Module
+[#255] (closed) by @Aakif-Kohari: [DOCS] Add MDX Article: "Stream Ciphers vs Block Ciphers — A Practical Comparison"
+[#254] (closed) by @Aakif-Kohari: [FEATURE] Add Four-Square Cipher Module (Classical Digraph Cipher)
+[#253] (closed) by @Aakif-Kohari: [FEATURE] Add Salsa20 Stream Cipher Module
+[#252] (closed) by @Aakif-Kohari: [FEATURE] Add XTEA Block Cipher Module
+[#245] (closed) by @Aditya8369: Add “retry expected ciphertext generation” + resilient UX on worker failure
+[#244] (closed) by @Aditya8369: Standardize error codes and map them to user-friendly messages in the UI
+[#243] (closed) by @Aditya8369: Replace NodeJS.Timeout usage in a browser hook
+[#242] (closed) by @Aditya8369: Improve cache key correctness and collision resistance
+[#241] (closed) by @Aditya8369: Fix/correct worker request cancelation behavior to avoid unnecessary full worker termination
+[#236] (closed) by @faizahmad-khan: [BUG] fix(benchmark): BenchmarkEngine.generateKey produces half the requested byte length
+[#234] (open) by @durdana3105: [BUG] Add Unit Tests for Benchmark Calculations and Edge Cases
+[#233] (closed) by @durdana3105: [BUG] Extend Benchmark Statistics with Additional Performance Metrics
+[#232] (closed) by @durdana3105: [BUG] Replace Manual Random Data Generation with Cryptographically Secure Random Values
+[#231] (closed) by @durdana3105: Add Input Validation and Error Handling to BenchmarkEngine
+[#230] (closed) by @durdana3105: Add a Comprehensive TROUBLESHOOT.md for Common Setup and Runtime Issues
+[#228] (closed) by @faizahmad-khan: [BUG] fix(encoding): toByteArray silently discards invalid hex characters causing data corruption
+[#227] (closed) by @krishna28004: AES decrypt() ignores the supplied mode option, resulting in inconsistent CBC behavior
+[#225] (closed) by @vedant7007: Feature: AES-GCM authenticated encryption (AEAD) with tamper-detection demo
+[#224] (closed) by @vedant7007: Feature: Avalanche-effect / diffusion visualizer (with the ByteHeatmap from GUIDELINES)
+[#223] (closed) by @vedant7007: Feature: Block-cipher modes lab — AES-CTR/CFB/OFB + ECB penguin demo
+[#222] (closed) by @krishna28004: 3DES instrumented execution path produces different output than the standard implementation
+[#217] (closed) by @Aakif-Kohari: feat(resources): Add 10 Curated Cryptography Learning Resources to Registry
+[#216] (closed) by @Aakif-Kohari: docs(content): Add MDX Article — "Understanding Digital Signatures and Certificate Trust Chains"
+[#215] (closed) by @Aakif-Kohari: feat(cipher): Add Columnar Transposition Cipher Engine with Key-Sorted Column Visualization
+[#214] (closed) by @Aakif-Kohari: feat(cipher): Add Polybius Square Classical Cipher with 5×5 Grid Step Visualization
+[#213] (closed) by @Aakif-Kohari: feat(cipher): Add SHA-1 Hash Function Engine with Broken-Status Step-by-Step Visualization
+[#212] (closed) by @Aakif-Kohari: feat(kdf): Add standalone PBKDF2 Key Derivation Visualizer
+[#211] (closed) by @Aakif-Kohari: feat(attacks): Add Frequency Analysis Attack Simulator (Caesar Cipher)
+[#210] (closed) by @Aakif-Kohari: feat(attacks): Add Meet-in-the-Middle Attack Simulator (Double-DES)
+[#209] (closed) by @Aakif-Kohari: feat(attacks): Add SHA-256 Length Extension Attack Simulator
+[#203] (closed) by @sanjana2505006: [FEATURE] Add step-by-step visualization for AES-CBC mode
+[#201] (closed) by @dipanshubatra: [FEATURE] Add Changelog & Feature Voting Roadmap with Interactive Community Feedback
+[#199] (closed) by @dipanshubatra: [FEATURE] Add Cryptographic Glossary with Interactive Flashcards and Quiz Mode
+[#197] (closed) by @dipanshubatra: [FEATURE] Add Community & Discord Hub with Interactive Community Simulator
+[#195] (closed) by @dipanshubatra: [FEATURE] Add Interactive Cryptography Blog Page with Educational Content and Dynamic Navigation
+[#193] (closed) by @dipanshubatra: [FEATURE] Add Interactive API Reference & Sandbox for Developer Documentation
+[#191] (closed) by @Aakif-Kohari: feat(cipher): Add Ed25519 (EdDSA) digital signature visualization
+[#190] (closed) by @Aakif-Kohari: feat(cipher): Add RIPEMD-160 hash function visualization
+[#189] (closed) by @Aakif-Kohari: feat(cipher): Add ADFGVX cipher with Polybius substitution + columnar transposition visualization
+[#188] (closed) by @Aakif-Kohari: feat(cipher): Add RC4 stream cipher with byte-level keystream visualization
+[#178] (closed) by @Aakif-Kohari: feat(cipher): Add SHA3-256 (Keccak sponge construction) visualization
+[#177] (closed) by @Aakif-Kohari: feat(cipher): Add ChaCha20 stream cipher with quarter-round visualization
+[#176] (closed) by @Aakif-Kohari: feat(cipher): Add ElGamal encryption with modular exponentiation visualization
+[#175] (closed) by @Aakif-Kohari: feat(cipher): Add Hill Cipher with 2x2 matrix visualization
+[#166] (closed) by @Khushi1310-nayak: [FEATURE] Enhance Landing Page with Interactive Learning Experience and Improved User Engagement
+[#162] (closed) by @krishna28004: Benchmark page memory metric may not accurately represent cipher execution footprint
+[#159] (closed) by @Aakif-Kohari: feat(challenge): Add multi-cipher support with difficulty progression
+[#158] (closed) by @Aakif-Kohari: feat(cipher): Add Beaufort Cipher with step-by-step visualization
+[#155] (closed) by @shivi14112007-create: feat: Add Password-Based Encryption (PBE) with PBKDF2/Argon2 Key Derivation Support
+[#153] (closed) by @Aditya8369: Add templates for issues
+[#152] (closed) by @Aakif-Kohari: [Proposal] Add automated accessibility regression tests (jest-axe) for StepAnimator
+[#151] (closed) by @Aakif-Kohari: [Proposal] Remove 'unsafe-inline' from CSP script-src - vercel.json contradicts GUIDELINES.md's own security spec
+[#150] (closed) by @vedant7007: sanitize() is required by GUIDELINES.md but never actually used anywhere
+[#149] (closed) by @vedant7007: package.json declares fast-check twice (duplicate JSON key)
+[#148] (closed) by @vedant7007: CI never runs next build or a type-check, so non-compiling code can merge
+[#147] (closed) by @vedant7007: RSA and Diffie-Hellman 'real mode' are just XOR but claim to use secure RSA-OAEP / ECDH
+[#146] (closed) by @vedant7007: components/cipher/CipherLayout.tsx doesn't compile — missing imports + an extra closing paren (main is broken)
+[#143] (closed) by @Jidnyasa-P: [Feature] Add Side-by-Side Cipher Comparison Workspace
+[#142] (closed) by @Jidnyasa-P: [Feature] Add Personal Notes and Bookmarks to Visualization Steps
+[#141] (closed) by @Jidnyasa-P: [Feature] Add Export, Search and Clear Controls to Cipher Conversion History
+[#140] (closed) by @Jidnyasa-P: [Feature] Add Favorite and Pinned Ciphers for Quick Access
+[#138] (closed) by @Diwakar-odds: feat(core): Implement Web Workers & SharedArrayBuffer for multi-threaded cipher analysis
+[#132] (closed) by @Aakif-Kohari: exportToCSV unit test never calls the function under test (assertion is meaningless)
+[#131] (closed) by @Jidnyasa-P: [Feature] Add Recently Viewed Ciphers for Faster Navigation
+[#130] (closed) by @Jidnyasa-P: [Feature] Add Shareable Permalinks for Individual Visualization Steps
+[#129] (closed) by @Aakif-Kohari: PlayfairGrid violates GUIDELINES.md - no ARIA roles, aria-selected, or keyboard navigation
+[#128] (closed) by @Jidnyasa-P: [Feature] Add Named Workspace Presets to the Cipher Visualizer
+[#127] (closed) by @Jidnyasa-P: [Feature] Add Documentation Bookmarks and Local Reading Progress
+[#126] (closed) by @Jidnyasa-P: [Feature] Add JSON Export and Import for Cipher Visualization Traces
+[#123] (open) by @harshbhadoriya456-source: `[UX Enhancement] Context-Aware Input Controls for Cipher Visualizer`
+[#121] (closed) by @shreeyasriram10: [Feature]: Add Performance Benchmark Dashboard for Cryptographic Algorithms
+[#116] (closed) by @Vachhani-Tapan: bug: AES instrumented decryption ignores CBC mode and decrypts as ECB
+[#115] (closed) by @Vachhani-Tapan: bug : Playfair decryption corrupts ciphertext containing consecutive duplicate characters
+[#113] (closed) by @shivi14112007-create: [Feature]: Interactive Padding Oracle Attack Simulator — exploit CBC's own padding-validation leak
+[#110] (closed) by @shivi14112007-create: encrypt() missing input length validation (>4096 bytes) in caesar, rot13, sha256
+[#108] (closed) by @krishna28004: Multi-step AddItemModal loses form data from previous steps before submission
+[#107] (closed) by @Khushi1310-nayak: Enhancement: Implement Learning Resources page with curated cryptography content
+[#105] (closed) by @Diwakar-odds: [ECSoC_2026] Feat: Implement Web Worker Error Boundary for Cipher Fallbacks
+[#99] (closed) by @csxark: [Bug] UI Polish and Visual Bug Fixes
+[#98] (open) by @csxark: [UI] Improve Loading, Empty and Error States
+[#97] (closed) by @csxark: [Performance] Optimize Application Performance
+[#96] (open) by @csxark: [Accessibility] Improve Keyboard Navigation and Accessibility
+[#95] (closed) by @csxark: [Responsive] Improve Mobile and Tablet Experience
+[#94] (closed) by @csxark: [UI] Standardize Design System Across the Project
+[#93] (closed) by @csxark: [Docs] Improve Documentation Experience
+[#92] (closed) by @csxark: [Feature] Enhance Cryptography Challenge Mode
+[#91] (closed) by @csxark: [UI] Improve Benchmark Charts
+[#90] (closed) by @csxark: [Enhancement] Improve Benchmark Dashboard Metrics
+[#89] (closed) by @csxark: [Feature] Improve Step-by-Step Visualization Controls
+[#88] (open) by @csxark: [UI] Improve Playground Layout and Responsiveness
+[#87] (closed) by @csxark: [Feature] Build Complete Resources Page
+[#86] (closed) by @csxark: [UI] Improve Landing Page Hero Section
+[#85] (closed) by @shivi14112007-create: No CI pipeline — tests, lint, and build aren't run automatically on PRs
+[#83] (closed) by @Aditya8369: Memoization / caching of cipher computations
+[#82] (closed) by @Aditya8369: Typed message protocol between UI and worker
+[#81] (closed) by @Aditya8369: Worker job queue + cancellation
+[#79] (closed) by @shivi14112007-create: AES/DES/3DES silently operate in ECB mode only — CipherOptions.iv is declared but never used
+[#78] (open) by @Papia-tech: FEATURE: Implement PWA Support
+[#75] (closed) by @shivi14112007-create: Memory leak: object URL not revoked after CSV export download
+[#71] (closed) by @Khushi1310-nayak: Enhancement: Add mathematical breakdowns and interactive snippets for core Ciphers
+[#69] (closed) by @ShraddSec: Add in-app navigation from Docs back to the main application
+[#68] (closed) by @Aditya8369: docs: Add a CODE_OF_CONDUCT.md file
+[#67] (closed) by @black-panther1209: Inconsistent and unsafe error handling in RSA visualizer input pipeline
+[#59] (closed) by @Gauravmane31: README and CONTRIBUTING reference test/typecheck scripts that are not defined in package.json
+[#56] (closed) by @revatikadam0607: 🎨 Enhance Interactive UI with Smooth Hover Effects & Micro-Interactions
+[#55] (closed) by @revatikadam0607: 🚀 Transform the Documentation Page into a Comprehensive Developer Hub
+[#54] (closed) by @revatikadam0607: 🚀 Modernize Documentation with Better Visuals, Navigation, and Contribution Guide
+[#51] (closed) by @harshrana14-fi: Title: Background theme mismatch — dark section renders inconsistently with light UI on Playground Page
+[#49] (closed) by @harshrana14-fi: Title: Hero section has leftover template copy and broken links
+[#48] (closed) by @priyalgupta776-ux: Add a footer to the site
+[#47] (closed) by @Kruthica: Fix inconsistent background colors when Dark Mode is enabled
+[#44] (closed) by @Tushar-khurana-official: [UI] Add animated loading skeleton for crypto data cards
+[#43] (closed) by @tanishadorairaju: UI/UX: Mismatch in Dark/Light Mode transition timings
+[#40] (closed) by @tanishadorairaju: UI/UX: Mathematical Trace button misaligned
+[#36] (closed) by @Aditya8369: bug: Next.js generateStaticParams may not work with output: 'export' + trailing slash + redirect mismatch
+[#35] (closed) by @Aditya8369: bug: Worker request never settles / loading may get stuck
+[#34] (closed) by @Aditya8369: bug: Worker can’t be located at runtime
+[#33] (closed) by @adityakrmishra: perf: Optimize Web Worker data transfer to eliminate UI stutter during heavy cryptography
+[#31] (closed) by @Sakshi123509: UI/UX: fix abrupt dark background and add card hover effects in light theme
+[#29] (closed) by @Priyasha-Yadav: Feature: Add a Branded Custom 404 Page
+[#28] (closed) by @Dhruvesh1611: Enhancement: Add Optional Auto Compute Mode for the Cipher Visualizer
+[#27] (closed) by @khedkaravani-rgb: Enhance homepage with a dynamic typewriter animation
+[#24] (closed) by @Papia-tech: Enhance Scrollbar UI for Better Visual Consistency
+[#20] (closed) by @JMR825: README deployment URL differs from GitHub Production deployment
+[#19] (closed) by @student-nitrr: Add History section to store recent conversions
+[#17] (closed) by @jainiksha: [FEATURE] Implement Interactive Cryptography Challenge Mode with Real-Time Score Tracking
+[#15] (closed) by @Jidnyasa-P: [Feature]: Add an active filter summary for the current heatmap configuration
+[#14] (closed) by @priyalgupta776-ux: RSA demo mode: key field ambiguously parsed as n,e causes confusing errors when users enter primes p,q
+[#13] (closed) by @jainiksha: [FEATURE] Add Cipher Performance Benchmark Dashboard for Algorithm Comparison
+[#11] (closed) by @aryxncodes7: Navigation bar is not visible on mobile
+[#10] (closed) by @aryxncodes7: Bug: 404 errors on Navbar links and misaligned Sun icon
+[#7] (closed) by @Komal290106: Bug: Default Next.js metadata is displayed instead of CryptoViz branding
+[#5] (closed) by @Sakshi123509: Bug: Theme toggle button is not functioning on the landing page

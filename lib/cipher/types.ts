@@ -70,6 +70,7 @@ export type CipherName =
   | 'hill'
   | 'autokey'
   | 'adfgvx'
+  | 'bifid'
   | 'foursquare'
   | 'xor'
   | 'otp'

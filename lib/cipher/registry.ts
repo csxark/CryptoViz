@@ -433,4 +433,14 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: '32-byte private key hex (64 chars), or leave blank to generate one',
   },
+  {
+    id: 'x25519',
+    name: 'X25519',
+    category: 'asymmetric',
+    description: 'Elliptic-curve Diffie-Hellman key agreement over Curve25519 (RFC 7748) — the modern, rigid-curve alternative to classic Diffie-Hellman and NIST P-256 ECDH.',
+    defaultKey: 'a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac',
+    defaultInput: 'e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4',
+    securityStatus: 'secure',
+    keyPlaceholder: '32-byte private key hex (64 chars), or leave blank to generate one',
+  },
 ]

@@ -39,6 +39,7 @@ import { encrypt as hmacEncrypt, decrypt as hmacDecrypt } from '../cipher/hash/h
 import { encrypt as bcryptEncrypt, decrypt as bcryptDecrypt } from '../cipher/hash/bcrypt'
 import { encrypt as sha3Encrypt, decrypt as sha3Decrypt } from '../cipher/hash/sha3'
 import { encrypt as ripemd160Encrypt, decrypt as ripemd160Decrypt } from '../cipher/hash/ripemd160'
+import { encrypt as blake2bEncrypt, decrypt as blake2bDecrypt } from '../cipher/hash/blake2b'
 import { encrypt as sha1Encrypt, decrypt as sha1Decrypt } from '../cipher/hash/sha1'
 
 import { deriveKey } from '../kdf/pbkdf2'
@@ -240,6 +241,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? ripemd160Encrypt(input, key, options)
           : ripemd160Decrypt()
+        break
+      case 'blake2b':
+        result = encryptMode
+          ? blake2bEncrypt(input, key, options)
+          : blake2bDecrypt()
         break
       case 'sha1':
         result = encryptMode

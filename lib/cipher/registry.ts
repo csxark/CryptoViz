@@ -366,6 +366,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: 'abc',
     securityStatus: 'legacy',
   },
+  {
+    id: 'blake2b',
+    name: 'BLAKE2b-256',
+    category: 'hash',
+    description: 'RFC 7693 hash function — faster than MD5/SHA-2 while at least as secure as SHA-3, with a natively built-in keyed-MAC mode (no HMAC construction needed).',
+    defaultKey: '',
+    defaultInput: 'abc',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Optional MAC key (leave blank for plain hash)',
+  },
   // Asymmetric
   {
     id: 'rsa',

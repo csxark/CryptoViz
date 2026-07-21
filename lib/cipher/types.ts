@@ -94,6 +94,7 @@ export type CipherName =
   | 'polybius'
   | 'sha3'
   | 'ripemd160'
+  | 'blake2b'
   | 'hmac'
   | 'sha1'
 

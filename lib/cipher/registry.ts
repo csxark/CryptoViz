@@ -137,6 +137,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: 'gridKey,transpositionKey (e.g. PICTURE,GERMAN)',
   },
   {
+    id: 'bifid',
+    name: 'Bifid Cipher',
+    category: 'classical',
+    description: 'A fractionating cipher combining a keyed Polybius-square substitution with a positional transposition across the whole message.',
+    defaultKey: 'BIFID',
+    defaultInput: 'HELLOWORLD',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Optional keyword to key the grid (e.g. BIFID)',
+  },
+  {
     id: 'foursquare',
     name: 'Four-Square Cipher',
     category: 'classical',

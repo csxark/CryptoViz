@@ -14,6 +14,7 @@ import { encrypt as beaufortEncrypt, decrypt as beaufortDecrypt } from '../ciphe
 import { encrypt as hillEncrypt, decrypt as hillDecrypt } from '../cipher/classical/hill'
 import { encrypt as columnarEncrypt, decrypt as columnarDecrypt } from '../cipher/classical/columnar-transposition'
 import { encrypt as autokeyEncrypt, decrypt as autokeyDecrypt } from '../cipher/classical/autokey'
+import { encrypt as portaEncrypt, decrypt as portaDecrypt } from '../cipher/classical/porta'
 import { encrypt as adfgvxEncrypt, decrypt as adfgvxDecrypt } from '../cipher/classical/adfgvx'
 import { encrypt as bifidEncrypt, decrypt as bifidDecrypt } from '../cipher/classical/bifid'
 import { encrypt as foursquareEncrypt, decrypt as foursquareDecrypt } from '../cipher/classical/four-square'
@@ -117,6 +118,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? autokeyEncrypt(input, key, options)
           : autokeyDecrypt(input, key, options)
+        break
+      case 'porta':
+        result = encryptMode
+          ? portaEncrypt(input, key, options)
+          : portaDecrypt(input, key, options)
         break
       case 'adfgvx':
         result = encryptMode

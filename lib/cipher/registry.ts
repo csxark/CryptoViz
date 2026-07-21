@@ -127,6 +127,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: 'Keyword (e.g. QUEENLY)',
   },
   {
+    id: 'porta',
+    name: 'Porta Cipher',
+    category: 'classical',
+    description: 'A 1563 reciprocal polyalphabetic cipher that swaps letters between two 13-letter alphabet halves using a 13-row tableau — self-inverse like Beaufort.',
+    defaultKey: 'PORTA',
+    defaultInput: 'HELLO WORLD',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Keyword (e.g. PORTA)',
+  },
+  {
     id: 'adfgvx',
     name: 'ADFGVX Cipher',
     category: 'classical',

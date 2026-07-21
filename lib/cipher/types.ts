@@ -69,6 +69,7 @@ export type CipherName =
   | 'beaufort'
   | 'hill'
   | 'autokey'
+  | 'porta'
   | 'adfgvx'
   | 'bifid'
   | 'foursquare'

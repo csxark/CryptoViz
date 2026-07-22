@@ -84,6 +84,7 @@ export type CipherName =
   | 'salsa20'
   | 'skipjack'
   | 'chacha20'
+  | 'rc5'
   | 'xtea'
   | 'rsa'
   | 'columnar-transposition'

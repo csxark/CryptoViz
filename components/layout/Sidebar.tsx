@@ -51,17 +51,17 @@ export default function Sidebar({ ciphers }: SidebarProps) {
   
 
   return (
-    <aside className="w-full shrink-0 border-b border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950 md:w-64 md:border-b-0 md:border-r">
+    <aside className="w-full shrink-0 border-b border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950 md:w-64 md:border-b-0 md:border-r" aria-label="Cipher categories">
       <div className="space-y-6 md:sticky md:top-4">
         
 
         {categories.map((category) => (
           <section key={category}>
-            <h2 className="mb-2 px-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <h2 className="mb-2 px-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400" id={`sidebar-heading-${category}`}>
               {CATEGORY_LABELS[category]}
             </h2>
 
-            <ul className="space-y-1">
+            <ul className="space-y-1" aria-labelledby={`sidebar-heading-${category}`}>
               {grouped[category].map((cipher) => {
                 const href = `/visualizer/${cipher.id}/`
                 const isActive = pathname.startsWith(href)

@@ -30,7 +30,7 @@ const rotationStyles = `
 export default function HeroIllustration() {
   return (
     /* Shifted left using mr-auto and added responsive negative margin-left for desktop screens */
-    <div className="relative flex h-[660px] w-full max-w-[620px] -my-4 items-center justify-center overflow-visible bg-transparent select-none mb-16 mr-auto lg:-ml-12">
+    <div className="relative flex h-[660px] w-full max-w-[620px] -my-4 items-center justify-center overflow-visible bg-transparent select-none mb-16 mr-auto lg:-ml-12" aria-hidden="true">
       <style>{rotationStyles}</style>
 
       {/* Atmospheric Space */}

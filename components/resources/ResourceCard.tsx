@@ -52,6 +52,7 @@ export default function ResourceCard({ resource }: Props) {
         target="_blank"
         rel="noopener noreferrer"
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2A31] bg-transparent px-4 py-3 text-sm font-medium text-[#00C2AE] transition hover:border-[#00C2AE] hover:bg-[#0C3634]/30"
+        aria-label={`Open resource: ${resource.title}`}
         >
         Open Resource
         <ExternalLink size={16} />

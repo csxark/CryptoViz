@@ -28,7 +28,7 @@ function FooterColumn({ title, links }: { title: string; links: { name: string; 
       <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-[#F5F5F5]">
         {title}
       </h3>
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-4 space-y-3" aria-label={`${title} links`}>
         {links.map((link) => (
           <li key={link.name}>
             <Link

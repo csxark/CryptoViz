@@ -49,7 +49,7 @@ export const docCategories: DocCategory[] = [
     type: 'general',
     title: "Getting Started",
     description: "An overview of the CryptoViz visualization architecture and baseline requirements.",
-    content: "CryptoViz is a real-time cryptocurrency data visualization dashboard. It delivers an intuitive environment engineered to break down complex cryptographic concepts and cipher execution models into clear, human-readable algorithmic visualizations."
+    content: "CryptoViz is a real-time cryptography  data visualization dashboard. It delivers an intuitive environment engineered to break down complex cryptographic concepts and cipher execution models into clear, human-readable algorithmic visualizations."
   },
   {
     type: 'general',

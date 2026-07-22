@@ -86,6 +86,7 @@ export type CipherName =
   | 'chacha20'
   | 'rc5'
   | 'xtea'
+  | 'idea'
   | 'rsa'
   | 'columnar-transposition'
   | 'dh'

@@ -340,6 +340,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: '32-character hex key (128-bit)',
   },
+  {
+    id: 'idea',
+    name: 'IDEA',
+    category: 'symmetric',
+    description: 'Lai-Massey block cipher (used in PGP 2.0) mixing XOR, addition mod 2^16, and multiplication mod 2^16+1 across 8.5 rounds.',
+    defaultKey: '000102030405060708090a0b0c0d0e0f',
+    defaultInput: '0000000100020003',
+    securityStatus: 'legacy',
+    keyPlaceholder: '32-character hex key (128-bit)',
+    options: [
+      { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
+    ],
+  },
   // Hash
   {
     id: 'sha256',

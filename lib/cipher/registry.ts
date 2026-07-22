@@ -305,6 +305,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '64-char hex key | 24-char hex nonce [:counter]',
   },
   {
+    id: 'rc5',
+    name: 'RC5-32/12/16',
+    category: 'symmetric',
+    description: 'Parameterized Feistel-like cipher (Rivest, 1994) whose signature feature is data-dependent rotation — the rotation amount each round comes from the data itself, not a fixed schedule.',
+    defaultKey: '00000000000000000000000000000000',
+    defaultInput: '0000000000000000',
+    securityStatus: 'legacy',
+    keyPlaceholder: '32-character hex key (128-bit); fixed to 12 rounds / 64-bit block',
+    options: [
+      { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
+    ],
+  },
+  {
     id: 'xtea',
     name: 'XTEA',
     category: 'symmetric',

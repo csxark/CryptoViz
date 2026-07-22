@@ -406,6 +406,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: 'Optional MAC key (leave blank for plain hash)',
   },
+  {
+    id: 'poly1305',
+    name: 'Poly1305',
+    category: 'hash',
+    description: 'One-time polynomial MAC over GF(2^130-5) (RFC 8439), originally paired with ChaCha20 for AEAD. Generates a tag; not reversible, same as SHA-3/SHA-1/RIPEMD-160.',
+    defaultKey: '85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b',
+    defaultInput: '43727970746f6772617068696320466f72756d2052657365617263682047726f7570',
+    securityStatus: 'secure',
+    keyPlaceholder: '64-character hex key (32 bytes: r || s)',
+    options: [
+      { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
+    ],
+  },
   // Asymmetric
   {
     id: 'rsa',

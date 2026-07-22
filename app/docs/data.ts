@@ -569,5 +569,61 @@ export const docCategories: DocCategory[] = [
       { title: "RFC 2104: HMAC (Keyed-Hashing for Message Authentication)", url: "https://datatracker.ietf.org/doc/html/rfc2104" },
       { title: "NIST FIPS 198-1: The Keyed-Hash Message Authentication Code", url: "https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf" }
     ]
+  },
+  {
+    type: 'cipher',
+    title: "Scrypt KDF",
+    description: "A memory-hard key derivation function designed to prevent GPU/ASIC-based hardware brute-force attacks.",
+    overview: {
+      history: "Created by Colin Percival in 2009 for the Tarsnap secure backup service, Scrypt was designed to require significantly more memory than bcrypt or PBKDF2, making custom hardware implementations (ASICs) prohibitively expensive to build.",
+      description: "Scrypt is a password-based key derivation function. It starts by stretching the password/salt using PBKDF2, mixes it with a sequential memory loop (ROMix) utilizing Salsa20/8 core steps, performs data-dependent random reads, and runs a final PBKDF2 step to derive the output key. This design enforces memory-hardness."
+    },
+    mathematics: {
+      encryptionFormula: "\\text{Scrypt}(P, S, N, r, p, dkLen) = \\text{PBKDF2-HMAC-SHA256}(P, B', 1, dkLen)",
+      decryptionFormula: "\\text{Verify}(P, S, N, r, p, \\text{Key}) \\to [\\text{Scrypt}(P, S, N, r, p, dkLen) == \\text{Key}]",
+      explanation: [
+        "P and S represent password and salt inputs.",
+        "N is the CPU/memory cost parameter (must be a power of 2).",
+        "r is the block size parameter, dictating the sequential memory footprint.",
+        "p is the parallelization parameter, controlling active threads."
+      ]
+    },
+    workedExample: {
+      plaintext: "correct horse battery staple",
+      parameters: "N = 16384, r = 8, p = 1, dkLen = 32",
+      steps: [
+        { description: "Parameter Parsing", result: "Validate N=16384 (power of 2), r=8, p=1, dkLen=32." },
+        { description: "Memory Allocation", result: "Allocate (128 * r * N * p) = 16 MB of workspace memory." },
+        { description: "Initial Stretch", result: "Stretches password with PBKDF2 into block array B of size 1024 bytes." },
+        { description: "Salsa20 ROMix Loop", result: "Compute Salsa20/8 core mix blocks sequentially to populate array V." },
+        { description: "Integerify Querying", result: "Retrieve random blocks from V based on data state, XORing blocks." },
+        { description: "Final Hashing", result: "Pass final block array through PBKDF2 to derive 32-byte key." }
+      ],
+      finalCiphertext: "[32-byte hexadecimal derived key]"
+    },
+    complexity: "Time complexity: O(N * r). Space complexity: O(N * r).",
+    securityAnalysis: {
+      advantages: [
+        "Extremely high protection against specialized hardware (ASICs/GPUs) due to memory-hard constraints.",
+        "Tunable parameters allow adjusting security based on hardware improvements over time."
+      ],
+      weaknesses: [
+        "High memory usage can lead to denial-of-service (DoS) vulnerabilities on authentication servers if parameters are configured too high."
+      ]
+    },
+    realWorldApplications: [
+      "Password hashing in Unix-like systems and secure database setups.",
+      "Key derivation in cryptocurrency wallets (Litecoin, Dogecoin, Ethereum).",
+      "Securing file-level backups (Tarsnap backup service)."
+    ],
+    codeSnippets: {
+      python: "import hashlib\n\n# Uses hashlib's scrypt implementation (Python 3.6+)\ndef derive_scrypt(password, salt, N=16384, r=8, p=1, dkLen=32):\n    return hashlib.scrypt(password.encode(), salt=salt.encode(), n=N, r=r, p=p, dklen=dkLen).hex()",
+      javascript: "import { scrypt } from '@noble/hashes/scrypt.js'\n\nconst keyBytes = scrypt(passwordBytes, saltBytes, { N: 16384, r: 8, p: 1, dkLen: 32 });"
+    },
+    playgroundLink: "/kdf/scrypt",
+    references: [
+      { title: "RFC 7914: The scrypt Password-Based Key Derivation Function", url: "https://datatracker.ietf.org/doc/html/rfc7914" },
+      { title: "Tarsnap: Scrypt algorithm description by Colin Percival", url: "https://www.tarsnap.com/scrypt.html" }
+    ]
   }
 ];

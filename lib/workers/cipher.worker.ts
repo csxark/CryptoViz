@@ -47,6 +47,7 @@ import { encrypt as blake2bEncrypt, decrypt as blake2bDecrypt } from '../cipher/
 import { encrypt as sha1Encrypt, decrypt as sha1Decrypt } from '../cipher/hash/sha1'
 
 import { deriveKey } from '../kdf/pbkdf2'
+import { deriveScryptKey } from '../kdf/scrypt'
 import { CipherError } from '../utils/errors'
 
 import type { WorkerRequest, WorkerResponse } from '../../types/worker'
@@ -284,6 +285,15 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
           iterations: options.iterations,
           hash: options.hash,
           keyLength: options.keyLength,
+          salt: options.salt,
+        })
+        break
+      case 'scrypt':
+        result = await deriveScryptKey(input, {
+          N: options.N,
+          r: options.r,
+          p: options.p,
+          dkLen: options.dkLen,
           salt: options.salt,
         })
         break

@@ -295,6 +295,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '64-char hex key | 16-char hex nonce',
   },
   {
+    id: 'skipjack',
+    name: 'Skipjack',
+    category: 'symmetric',
+    description: 'NSA Clipper-chip cipher, declassified 1998. Unbalanced Feistel network alternating two round functions (Rule A / Rule B) across 32 rounds.',
+    defaultKey: '00998877665544332211',
+    defaultInput: '33221100ddccbbaa',
+    securityStatus: 'legacy',
+    keyPlaceholder: '20-character hex key (80-bit)',
+    options: [
+      { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
+    ],
+  },
+  {
     id: 'chacha20',
     name: 'ChaCha20',
     category: 'symmetric',

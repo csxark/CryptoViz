@@ -219,7 +219,8 @@ export default function ChallengeMode() {
         const runs = prev ? [...prev] : []
         const ch = currentChallenge
         const hintCount = showHintIndex
-        const wrongAttempts = 0
+        const existing = runs[currentQuestionIndex]
+        const wrongAttempts = existing?.wrongAttempts ?? 0
         const explanation = getWrongAnswerExplanation({ cipherId: ch.cipherId, difficulty: ch.difficulty })
         const earnedXp = computeEarnedXp({ wasCorrect: false, hintRevealedCount: hintCount })
 

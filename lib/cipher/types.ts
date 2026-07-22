@@ -102,6 +102,7 @@ export type CipherName =
   | 'sha3'
   | 'ripemd160'
   | 'blake2b'
+  | 'poly1305'
   | 'hmac'
   | 'sha1'
 

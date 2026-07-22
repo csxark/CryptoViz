@@ -6,7 +6,7 @@ import type {
   BenchmarkSession,
   DeviceInfo,
 } from "@/types/benchmark";
-import { BenchmarkEngine } from "@/lib/utils/benchmark";
+import { BenchmarkEngine, isWebCryptoSupported } from "@/lib/utils/benchmark";
 import { getDeviceInfo } from "@/lib/utils/deviceInfo";
 import { useCipherWorker } from "@/lib/hooks/useCipherWorker";
 import {
@@ -100,11 +100,13 @@ export default function BenchmarkPage() {
   const [chartType, setChartType] = useState<"bar" | "line" | "scatter">("bar");
   const [error, setError] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState("");
+  const [webCryptoAvailable, setWebCryptoAvailable] = useState<boolean>(false);
   const { runCipher } = useCipherWorker();
 
   useEffect(() => {
     setDeviceInfo(getDeviceInfo());
     setHistory(loadBenchmarkHistory());
+    setWebCryptoAvailable(isWebCryptoSupported());
   }, []);
 
   const handleCategoryChange = useCallback((category: Category) => {
@@ -255,13 +257,29 @@ export default function BenchmarkPage() {
       <Navbar />
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
         <header className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-            Performance Benchmark Dashboard
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400">
-            Compare cipher time, worker round-trip time, rendering cost, and
-            historical sessions.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                Browser Capability & Performance Benchmark
+              </h1>
+              <p className="text-zinc-600 dark:text-zinc-400">
+                Compare cipher time, worker round-trip time, rendering cost, and
+                hardware WebCrypto capabilities.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">WebCrypto API:</span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  webCryptoAvailable
+                    ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                    : "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+                }`}
+              >
+                {webCryptoAvailable ? "Hardware Accelerated" : "JS Fallback"}
+              </span>
+            </div>
+          </div>
         </header>
 
         {error && (

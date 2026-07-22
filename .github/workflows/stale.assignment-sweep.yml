@@ -3,7 +3,7 @@ name: Stale Assignment Sweep
 # ==========================================================================
 # Daily sweep: if an issue has been assigned to a contributor for 3+ days
 # and no Pull Request referencing that issue has ever been opened, the
-# contributor is automatically unassigned and the "help wanted" label is
+# contributor is automatically unassigned and the "Available for contribution" label is
 # added so the issue becomes visible to other contributors again.
 #
 # If a PR referencing the issue DOES exist (open, merged, or closed — any
@@ -37,7 +37,7 @@ jobs:
     # ------------------------------------------------------------------
     env:
       STALE_AFTER_DAYS: "3"
-      STALE_LABEL: "help wanted"
+      STALE_LABEL: "Available for contribution"
 
     steps:
       - name: Unassign stale issues without a linked PR

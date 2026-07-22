@@ -36,6 +36,7 @@ import { encrypt as eccEncrypt, decrypt as eccDecrypt } from '../cipher/asymmetr
 import { encrypt as elgamalEncrypt, decrypt as elgamalDecrypt } from '../cipher/asymmetric/elgamal'
 import { encrypt as ed25519Encrypt, decrypt as ed25519Decrypt } from '../cipher/asymmetric/ed25519'
 import { encrypt as x25519Encrypt, decrypt as x25519Decrypt } from '../cipher/asymmetric/x25519'
+import { encrypt as merkleHellmanEncrypt, decrypt as merkleHellmanDecrypt } from '../cipher/asymmetric/merkle-hellman'
 import { encrypt as sha256Encrypt, decrypt as sha256Decrypt } from '../cipher/hash/sha256'
 import { encrypt as sha512Encrypt, decrypt as sha512Decrypt } from '../cipher/hash/sha512'
 import { encrypt as md5Encrypt, decrypt as md5Decrypt } from '../cipher/hash/md5'
@@ -230,6 +231,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? x25519Encrypt(input, key, options)
           : x25519Decrypt(input, key, options)
+        break
+      case 'merkle-hellman':
+        result = encryptMode
+          ? merkleHellmanEncrypt(input, key, options)
+          : merkleHellmanDecrypt(input, key, options)
         break
       case 'sha256':
         result = encryptMode

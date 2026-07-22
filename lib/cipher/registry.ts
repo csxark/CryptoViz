@@ -483,4 +483,14 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: '32-byte private key hex (64 chars), or leave blank to generate one',
   },
+  {
+    id: 'merkle-hellman',
+    name: 'Merkle–Hellman Knapsack',
+    category: 'asymmetric',
+    description: 'First public-key cryptosystem after RSA (1978), based on the subset-sum problem rather than factoring. Broken by Shamir (1984) via lattice reduction — kept for educational value.',
+    defaultKey: '2,3,6,13,27,52,105,210,420,41',
+    defaultInput: 'HI',
+    securityStatus: 'broken',
+    keyPlaceholder: 'superincreasing sequence,modulus,multiplier (e.g. 2,3,6,13,27,52,105,210,420,41)',
+  },
 ]

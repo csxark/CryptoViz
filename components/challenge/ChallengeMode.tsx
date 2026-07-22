@@ -96,6 +96,7 @@ function uid() {
 export default function ChallengeMode() {
   const { runCipher, loading, error } = useCipherWorker()
   const successTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const sessionPersistedRef = useRef(false)
 
   const MAX_CIPHERTEXT_RETRIES = 3
   const RETRY_BACKOFF_BASE_MS = 400
@@ -264,6 +265,7 @@ export default function ChallengeMode() {
 
   const resetSession = useCallback(() => {
     successTimeoutRef.current && clearTimeout(successTimeoutRef.current)
+    sessionPersistedRef.current = false
     setReplayMode(false)
 
     setStarted(true)
@@ -281,6 +283,7 @@ export default function ChallengeMode() {
 
   const startNewSession = useCallback(() => {
     successTimeoutRef.current && clearTimeout(successTimeoutRef.current)
+    sessionPersistedRef.current = false
     setReplayMode(false)
     setSessionChallenges(generateSessionChallenges(difficulty))
     setQuestionRuns(new Array(TOTAL_QUESTIONS))
@@ -430,6 +433,8 @@ export default function ChallengeMode() {
 
   // Completion: persist XP, streak, history, update legacy best score
   useEffect(() => {
+    // Guard: prevent double-persistence from StrictMode, stale closure re-renders, etc.
+    if (sessionPersistedRef.current) return
     if (!started) return
     if (!questionRuns) return
     if (currentQuestionIndex <= TOTAL_QUESTIONS - 1) return
@@ -498,11 +503,15 @@ export default function ChallengeMode() {
       localStorage.setItem(BEST_SCORE_KEY, String(next))
       return next
     })
+
+    // Mark this session as persisted to prevent double-persistence
+    sessionPersistedRef.current = true
   }, [started, questionRuns, currentQuestionIndex, difficulty])
 
   const handleReplay = useCallback(() => {
     if (!sessionChallenges) return
     successTimeoutRef.current && clearTimeout(successTimeoutRef.current)
+    sessionPersistedRef.current = false
     setReplayMode(true)
     setQuestionRuns(new Array(TOTAL_QUESTIONS))
     setCurrentQuestionIndex(0)

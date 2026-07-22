@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { CipherDefinition } from '../../lib/cipher/registry'
@@ -37,16 +36,13 @@ import {
   traceToCipherResult,
   type CipherTraceFile,
 } from '../../lib/utils/cipherTrace'
-
 const StepAnimator = dynamic(() => import('./StepAnimator'), { ssr: false })
 const PlayfairGrid = dynamic(() => import('./PlayfairGrid'), { ssr: false })
 const RailFenceViz = dynamic(() => import('./RailFenceViz'), { ssr: false })
 const DHVisualizer = dynamic(() => import('./DHVisualizer'), { ssr: false })
-
 interface CipherLayoutProps {
   cipher: CipherDefinition;
 }
-
 interface HistoryEntry {
   id: string;
   input: string;
@@ -55,10 +51,8 @@ interface HistoryEntry {
   output: string;
   timestamp: string;
 }
-
 const getHistoryStorageKey = (cipherId: string) =>
   `cryptoviz-history-${cipherId}`;
-
 const isValidHistoryEntry = (entry: unknown): entry is HistoryEntry => {
   return (
     typeof entry === "object" &&
@@ -71,28 +65,23 @@ const isValidHistoryEntry = (entry: unknown): entry is HistoryEntry => {
     "timestamp" in entry
   );
 };
-
 const isValidHistoryArray = (data: unknown): data is HistoryEntry[] => {
   return Array.isArray(data) && data.every(isValidHistoryEntry);
 };
-
 export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const { runCipher, loading, error: workerError } = useCipherWorker();
   const abortControllerRef = useRef<AbortController | null>(null);
   const pendingSharedStepRef = useRef<number | null>(null);
-
   const [input, setInput] = useState(cipher.defaultInput);
   const [key, setKey] = useState(cipher.defaultKey);
   const [action, setAction] = useState<"encrypt" | "decrypt">("encrypt");
   const [autoCompute, setAutoCompute] = useState(true);
-
   // Custom options states
   const [hexInput, setHexInput] = useState(true);
   const [rounds, setRounds] = useState(4);
   const [demoMode, setDemoMode] = useState(true);
   const [bobSecret, setBobSecret] = useState("15");
   const [aesMode, setAesMode] = useState("ECB");
-
   const [result, setResult] = useState<CipherResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -103,15 +92,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     version: 1,
     scopes: {},
   }));
-
   useEffect(() => {
     setAnnotationStore(loadStepAnnotationStore())
   }, [])
-
   // Restore a shared visualizer configuration from the URL (runs once per cipher).
   useEffect(() => {
     const shared = parseVisualizerPermalink(window.location.search)
-
     if (shared.input !== undefined) setInput(shared.input)
     if (shared.key !== undefined) setKey(shared.key)
     if (shared.direction !== undefined && cipher.id !== 'dh') {
@@ -121,10 +107,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     if (shared.options.rounds !== undefined) setRounds(shared.options.rounds)
     if (shared.options.demoMode !== undefined) setDemoMode(shared.options.demoMode)
     if (shared.options.bobSecret !== undefined) setBobSecret(shared.options.bobSecret)
-
     pendingSharedStepRef.current = shared.step ?? null
   }, [cipher.id])
-
   // Sync playground state into the URL (debounced) so refresh/share preserves the session.
   useEffect(() => {
     const debounceId = setTimeout(() => {
@@ -137,10 +121,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       })
       window.history.replaceState(window.history.state, '', permalink)
     }, 300)
-
     return () => clearTimeout(debounceId)
   }, [input, key, action, hexInput, rounds, demoMode, bobSecret, aesMode, currentStep, cipher.id])
-
   // Reset inputs when cipher changes
   useEffect(() => {
     if (abortControllerRef.current) {
@@ -154,9 +136,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     setCurrentStep(0);
     setAnimationSpeed(1);
     setActiveTab("result");
-
     setHistory(loadConversionHistory(cipher.id));
-
     // Reset option defaults
     if (cipher.options) {
       cipher.options.forEach((opt) => {
@@ -166,35 +146,29 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         if (opt.id === "bobSecret" && shared.options.bobSecret === undefined) setBobSecret(opt.default);
       });
     }
-
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
   }, [cipher]);
-
   const workspaceOptions: Record<string, unknown> = {
     hexInput,
     rounds,
     demoMode,
     bobSecret,
   };
-
   const handlePresetLoad = (preset: WorkspacePreset) => {
     if (preset.cipherId !== cipher.id) {
       setError("This preset belongs to a different cipher.");
       return;
     }
-
     setAutoCompute(false);
     setAction(cipher.id === "dh" ? "encrypt" : preset.direction);
     setInput(preset.input);
-
     if (preset.key !== undefined) {
       setKey(preset.key);
     }
-
     if (typeof preset.options.hexInput === "boolean") {
       setHexInput(preset.options.hexInput);
     }
@@ -207,14 +181,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     if (typeof preset.options.bobSecret === "string") {
       setBobSecret(preset.options.bobSecret);
     }
-
     setAnimationSpeed(preset.animationSpeed);
     setResult(null);
     setCurrentStep(0);
     setActiveTab("result");
     setError(null);
   };
-
   const handleRun = async () => {
     const cleanUrl = updateStepInCurrentUrl(window.location.href, null);
     window.history.replaceState(window.history.state, '', cleanUrl);
@@ -223,7 +195,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     }
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
     setError(null);
     try {
       // Gather options
@@ -231,7 +202,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         instrument: true, // Always request instrumented steps for visualizer
         signal: controller.signal,
       };
-
       if (cipher.id === "des" || cipher.id === "3des" || cipher.id === "aes") {
         options.hexInput = hexInput;
       }
@@ -248,10 +218,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         options.mode = "demo"; // Always demo for paint mixing
         options.bobSecret = bobSecret;
       }
-
       // DH does not support decrypt
       const currentAction = cipher.id === "dh" ? "encrypt" : action;
-
       const res = await runCipher(
         currentAction,
         cipher.id,
@@ -259,7 +227,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         key,
         options,
       );
-
       if (!controller.signal.aborted) {
         setResult(res);
         const restoredStep = pendingSharedStepRef.current;
@@ -269,7 +236,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
             : clampStepIndex(restoredStep, res.steps?.length ?? 0),
         );
         pendingSharedStepRef.current = null;
-
         if (res?.output !== undefined) {
           const entry: ConversionHistoryEntry = {
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -280,7 +246,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
             output: String(res.output),
             timestamp: new Date().toLocaleString(),
           };
-
           setHistory((prev) =>
             saveConversionHistory(cipher.id, [entry, ...prev]),
           );
@@ -298,14 +263,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       }
     }
   };
-
   const handleTraceImport = (trace: CipherTraceFile) => {
     // Loading a trace only updates local UI state. It does not call runCipher().
     setAutoCompute(false);
     setInput(trace.input);
     setKey(trace.key);
     setAction(trace.direction);
-
     if (typeof trace.options.hexInput === "boolean") {
       setHexInput(trace.options.hexInput);
     }
@@ -318,7 +281,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     if (typeof trace.options.bobSecret === "string") {
       setBobSecret(trace.options.bobSecret);
     }
-
     const importedResult = traceToCipherResult(trace);
     setResult(importedResult);
     const restoredStep = pendingSharedStepRef.current;
@@ -331,15 +293,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     setActiveTab("result");
     setError(null);
   };
-
   // Auto-run with debounce when computation inputs change
   useEffect(() => {
     if (!autoCompute) return;
-
     const debounceId = setTimeout(() => {
       void handleRun();
     }, 450);
-
     return () => clearTimeout(debounceId);
   }, [
     autoCompute,
@@ -353,7 +312,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     bobSecret,
     aesMode,
   ]);
-
   // Helper for status badge styling
   const getStatusBadge = (status: "secure" | "legacy" | "deprecated" | "broken") => {
     switch (status) {
@@ -367,38 +325,29 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         return "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border-red-200 dark:border-red-900";
     }
   };
-
   // Specific visualizer rendering based on current step
   const renderSpecificVisualizer = () => {
     if (!result || result.steps.length === 0) return null;
-
     const step = result.steps[currentStep];
-
     if (cipher.id === "playfair" && step.matrix) {
       return <PlayfairGrid matrix={step.matrix} highlights={step.highlight} />;
     }
-
     if (cipher.id === "railfence" && step.matrix) {
       return <RailFenceViz matrix={step.matrix} highlight={step.highlight} />;
     }
-
     if (cipher.id === "dh") {
       return <DHVisualizer currentStep={currentStep} />;
     }
-
     return null;
   };
-
   const handleStepChange = (nextStep: number) => {
     const safeStep = clampStepIndex(nextStep, result?.steps?.length ?? 0)
     setCurrentStep(safeStep)
-
     if (result?.steps?.length) {
       const nextUrl = updateStepInCurrentUrl(window.location.href, safeStep)
       window.history.replaceState(window.history.state, '', nextUrl)
     }
   }
-
   const handleCopyStepLink = async () => {
     const permalink = buildVisualizerPermalink(window.location.href, {
       input,
@@ -412,15 +361,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         bobSecret,
       },
     })
-
     await navigator.clipboard.writeText(permalink)
   }
-
   const annotationScope = {
     cipherId: cipher.id,
     direction: cipher.id === 'dh' ? ('encrypt' as const) : action,
   }
-
   const activeStep = result?.steps?.[currentStep]
   const activeStepId = activeStep
     ? createStableStepId(activeStep.label, currentStep)
@@ -432,7 +378,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const activeAnnotation = activeStepId
     ? scopeAnnotations.find((item) => item.stepId === activeStepId)
     : undefined
-
   const bookmarkedSteps = result?.steps
     ? result.steps
         .map((step, index) => {
@@ -450,7 +395,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
           ): item is NonNullable<typeof item> => item !== null,
         )
     : []
-
   const handleToggleStepBookmark = () => {
     if (!activeStep || !activeStepId) return
     setAnnotationStore(
@@ -462,7 +406,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       ),
     )
   }
-
   const handleSaveStepNote = (note: string) => {
     if (!activeStep || !activeStepId) return
     setAnnotationStore(
@@ -475,14 +418,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       ),
     )
   }
-
   const handleDeleteStepNote = () => {
     if (!activeStepId) return
     setAnnotationStore(
       removeStepNote(annotationStore, annotationScope, activeStepId),
     )
   }
-
   const handleClearStepAnnotations = async () => {
     if (
       !window.confirm(
@@ -491,11 +432,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     ) {
       return
     }
-
     setAnnotationStore(
       clearScopeAnnotations(annotationStore, annotationScope),
     )
-
     const permalink = buildVisualizerPermalink(window.location.href, {
       input,
       key,
@@ -508,19 +447,16 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         bobSecret,
       },
     })
-
     await navigator.clipboard.writeText(permalink)
   }
-
   const traceOptions: Record<string, unknown> = {
     hexInput,
     rounds,
     demoMode,
     bobSecret,
   };
-
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 max-w-5xl mx-auto">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-6 md:px-6 md:py-8 lg:px-8">
       {/* Title & Metadata Card */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-5 dark:border-zinc-800">
         <div>
@@ -531,7 +467,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
             {cipher.description}
           </p>
         </div>
-
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${getStatusBadge(
@@ -545,10 +480,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
           </span>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
         {/* Controls Column (Left) */}
-        <div className="flex flex-col gap-4 lg:col-span-5">
+        <div className="flex flex-col gap-6 lg:col-span-5">
           {/* Action toggle (Encrypt / Decrypt) */}
           {cipher.category !== "hash" && cipher.id !== "dh" && (
             <div className="flex rounded-lg bg-zinc-100 p-0.5 dark:bg-zinc-800/80">
@@ -574,9 +508,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
               </button>
             </div>
           )}
-
           {/* Inputs Section */}
-          <div className="flex flex-col gap-3.5 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+          <div className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
             {/* Input message */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -591,7 +524,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 placeholder="Enter input here..."
               />
             </div>
-
             {/* Key Field (if cipher requires key) */}
             {cipher.defaultKey !== undefined && (
               <div className="flex flex-col gap-1.5">
@@ -613,7 +545,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 />
               </div>
             )}
-
             {/* Specific algorithm options */}
             {cipher.id === "bcrypt" && (
               <div className="flex flex-col gap-1.5">
@@ -635,7 +566,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 />
               </div>
             )}
-
             {cipher.id === "dh" && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -649,7 +579,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 />
               </div>
             )}
-
             {cipher.id === "rsa" && (
               <div className="flex items-center justify-between border-t border-zinc-100 pt-3 dark:border-zinc-800">
                 <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -663,7 +592,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 />
               </div>
             )}
-
             {["des", "3des", "aes"].includes(cipher.id) && (
               <div className="flex items-center justify-between border-t border-zinc-100 pt-3 dark:border-zinc-800">
                 <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -677,7 +605,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 />
               </div>
             )}
-
             {cipher.id === "aes" && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -702,9 +629,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 </p>
               </div>
             )}
-
             {/* Run button + Auto Compute toggle */}
-            <div className="mt-2 flex items-center gap-3">
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
                 onClick={handleRun}
                 disabled={loading}
@@ -737,7 +663,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                   "Run Computation"
                 )}
               </button>
-
               <label
                 className={`h-10 flex items-center gap-3 rounded-lg border px-3.5 text-xs font-semibold cursor-pointer select-none transition-all duration-200 ${
                   autoCompute
@@ -755,7 +680,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
               </label>
             </div>
           </div>
-
           <WorkspacePresetManager
             cipherId={cipher.id}
             workspace={{
@@ -768,7 +692,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
             }}
             onLoad={handlePresetLoad}
           />
-
           {/* Errors Display */}
           {(error || workerError) && (
             <div className="rounded-xl border border-red-100 bg-red-50 p-4 dark:border-red-950/40 dark:bg-red-950/10">
@@ -798,9 +721,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
             </div>
           )}
         </div>
-
         {/* Output & Trace Column (Right) */}
-        <div className="flex flex-col gap-4 lg:col-span-7">
+        <div className="flex flex-col gap-6 lg:col-span-7">
           <div className="flex rounded-lg bg-zinc-100 p-0.5 dark:bg-zinc-800/80">
             <button
               onClick={() => setActiveTab("result")}
@@ -823,11 +745,10 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
               History
             </button>
           </div>
-
           {activeTab === "result" ? (
             <>
               {/* Main output display */}
-              <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
+              <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
                 <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                   {cipher.category === "hash"
                     ? "Generated Hash Digest"
@@ -842,10 +763,14 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                   ) : result ? (
                     result.output
                   ) : (
-                    <span className="italic text-zinc-400">No output</span>
+                    <span className="flex flex-col gap-1">
+                      <span className="italic text-zinc-400">No output yet</span>
+                      <span className="text-xs text-zinc-400/70 not-italic">
+                        Run a computation to see the encrypted / decrypted result.
+                      </span>
+                    </span>
                   )}
                 </div>
-
                 {result && result.durationMs !== undefined && (
                   <div className="mt-3 flex items-center justify-between border-t border-zinc-100 pt-3 text-xs text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
                     <span>Off-thread Execution time</span>
@@ -855,7 +780,6 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                   </div>
                 )}
               </div>
-
               <TraceTransferControls
                 cipherId={cipher.id}
                 direction={cipher.id === "dh" ? "encrypt" : action}
@@ -865,10 +789,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 result={result}
                 onImport={handleTraceImport}
               />
-
               {/* Custom Visualizer rendering (like grids, paint mixer, etc.) */}
               {renderSpecificVisualizer()}
-
               {/* Interactive Walkthrough Trace */}
               {result && result.steps && result.steps.length > 0 && (
                 <div className="flex flex-col gap-2">

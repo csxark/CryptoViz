@@ -526,6 +526,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '32-byte private key hex (64 chars), or leave blank to generate one',
   },
   {
+    id: 'rabin',
+    name: 'Rabin',
+    category: 'asymmetric',
+    description: 'A public-key scheme (1979) with a PROVEN security reduction to integer factoring, unlike RSA. Decryption produces four candidate square roots, illustrating why real deployments need plaintext redundancy to disambiguate.',
+    defaultKey: '437',
+    defaultInput: '66',
+    securityStatus: 'secure',
+    keyPlaceholder: 'n (public) or p,q (private, both must be ≡ 3 mod 4)',
+  },
+  {
     id: 'x25519',
     name: 'X25519',
     category: 'asymmetric',

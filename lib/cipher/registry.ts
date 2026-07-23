@@ -545,4 +545,14 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'broken',
     keyPlaceholder: 'superincreasing sequence,modulus,multiplier (e.g. 2,3,6,13,27,52,105,210,420,41)',
   },
+  {
+    id: 'ecdsa',
+    name: 'ECDSA (secp256k1)',
+    category: 'asymmetric',
+    description: 'Elliptic Curve Digital Signature Algorithm over secp256k1 (the Bitcoin/Ethereum curve), using RFC 6979 deterministic nonces to avoid the k-reuse key-recovery attacks that have broken real-world ECDSA implementations.',
+    defaultKey: '',
+    defaultInput: 'hello',
+    securityStatus: 'secure',
+    keyPlaceholder: '32-byte private key hex (64 chars), or leave blank to generate one',
+  },
 ]

@@ -95,6 +95,7 @@ export type CipherName =
   | 'ed25519'
   | 'x25519'
   | 'merkle-hellman'
+  | 'ecdsa'
   | 'sha256'
   | 'sha512'
   | 'md5'

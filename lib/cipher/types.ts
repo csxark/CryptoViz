@@ -106,6 +106,8 @@ export type CipherName =
   | 'poly1305'
   | 'hmac'
   | 'sha1'
+  | 'hkdf'
+  | 'bloom-filter'
 
 export interface TestVector {
   input: string

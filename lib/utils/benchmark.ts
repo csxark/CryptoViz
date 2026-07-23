@@ -3,6 +3,13 @@ import { CIPHER_REGISTRY } from '@/lib/cipher/registry'
 import { CipherResult } from '@/lib/cipher/types'
 
 /**
+ * Checks if WebCrypto API is available in the current browser environment.
+ */
+export function isWebCryptoSupported(): boolean {
+  return typeof window !== 'undefined' && !!window.crypto && !!window.crypto.subtle
+}
+
+/**
  * Core benchmarking engine - Note: Must be used with useCipherWorker hook in components
  */
 export class BenchmarkEngine {

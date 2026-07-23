@@ -44,8 +44,13 @@ export default function RootLayout({
             of sync with what Navbar computes. */}
       </head>
       <body className="min-h-full flex flex-col bg-[#060816] relative">
+        {/* Skip-to-content link for keyboard and screen reader users */}
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
+
         {/* Full Page Border Glow */}
-        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
 
         </div>
         {children}</body>

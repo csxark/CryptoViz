@@ -515,4 +515,4 @@ export const docCategories: DocCategory[] = [
       { title: "RFC 9162: Certificate Transparency (Merkle Trees)", url: "https://datatracker.ietf.org/doc/html/rfc9162" }
     ]
   }
-];
+];

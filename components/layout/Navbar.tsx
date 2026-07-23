@@ -48,7 +48,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">
+    <nav className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80" role="navigation" aria-label="Main navigation">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex items-center gap-2">
@@ -80,6 +80,7 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`relative text-sm font-medium transition-colors duration-200 hover:text-zinc-950 dark:hover:text-white after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:bg-teal-500 after:content-[''] after:transition-all after:duration-300 hover:after:w-full ${isActive
                     ? 'text-teal-600 dark:text-teal-400'
                     : 'text-zinc-600 dark:text-zinc-400'
@@ -91,7 +92,7 @@ export default function Navbar() {
             })}
           </div>
 
-          <span className="h-6 w-[1px] bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
+          <span className="h-6 w-[1px] bg-zinc-200 dark:bg-zinc-800 hidden sm:block" aria-hidden="true" />
 
           {/* Theme Toggle Button */}
           <button
@@ -126,8 +127,10 @@ export default function Navbar() {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
 className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 transition-all duration-200 hover:scale-110 hover:bg-zinc-100 hover:text-zinc-900 active:scale-95 sm:hidden dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"            aria-label="Toggle menu"
+            aria-controls="mobile-menu"
+            aria-expanded={isMobileMenuOpen}
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               {isMobileMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -140,7 +143,7 @@ className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 tra
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="sm:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white/95 backdrop-blur-md dark:bg-zinc-950/95">
+        <div id="mobile-menu" className="sm:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white/95 backdrop-blur-md dark:bg-zinc-950/95">
           <div className="space-y-1 px-4 pb-4 pt-2">
             {navLinks.map((link) => {
               const isActive = pathname.startsWith(link.href) && link.href !== '#'
@@ -149,6 +152,7 @@ className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 tra
                   key={link.name}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`block rounded-lg px-3 py-2 text-base font-medium transition-colors ${
                     isActive
                       ? 'bg-zinc-100 text-teal-600 dark:bg-zinc-900/50 dark:text-teal-400'

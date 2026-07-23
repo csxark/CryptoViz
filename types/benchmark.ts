@@ -1,10 +1,13 @@
 /**
  * Benchmark types for performance measurement of cryptographic algorithms.
  */
+
+export type CipherCategory = "classical" | "symmetric" | "asymmetric" | "hash" | "kdf";
+
 export interface BenchmarkResult {
   cipherId: string;
   cipherName: string;
-  category: string;
+  category: CipherCategory;
   inputSize: number;
   direction: "encrypt" | "decrypt" | "hash";
   iterations: number;
@@ -21,8 +24,11 @@ export interface BenchmarkResult {
   renderTime?: number;
   /** Optional memory growth metric captured during benchmark execution. */
   memoryUsage?: number;
+  /** WebCrypto vs JS implementation status */
+  implementation?: "WebCrypto" | "JavaScript";
+  status?: "success" | "unsupported" | "error";
+  errorMessage?: string;
 }
-
 
 export interface BenchmarkComparison {
   inputSize: number;
@@ -57,4 +63,12 @@ export interface DeviceInfo {
 export interface AlgorithmGroup {
   category: "classical" | "symmetric" | "asymmetric" | "hash";
   algorithms: string[];
+}
+
+export interface BrowserCapabilityReport {
+  userAgent: string;
+  webCryptoSupported: boolean;
+  supportedAlgorithms: string[];
+  benchmarkResults: BenchmarkResult[];
+  timestamp: number;
 }

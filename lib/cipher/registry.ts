@@ -295,6 +295,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '64-char hex key | 16-char hex nonce',
   },
   {
+    id: 'skipjack',
+    name: 'Skipjack',
+    category: 'symmetric',
+    description: 'NSA Clipper-chip cipher, declassified 1998. Unbalanced Feistel network alternating two round functions (Rule A / Rule B) across 32 rounds.',
+    defaultKey: '00998877665544332211',
+    defaultInput: '33221100ddccbbaa',
+    securityStatus: 'legacy',
+    keyPlaceholder: '20-character hex key (80-bit)',
+    options: [
+      { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
+    ],
+  },
+  {
     id: 'chacha20',
     name: 'ChaCha20',
     category: 'symmetric',
@@ -305,6 +318,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '64-char hex key | 24-char hex nonce [:counter]',
   },
   {
+    id: 'rc5',
+    name: 'RC5-32/12/16',
+    category: 'symmetric',
+    description: 'Parameterized Feistel-like cipher (Rivest, 1994) whose signature feature is data-dependent rotation — the rotation amount each round comes from the data itself, not a fixed schedule.',
+    defaultKey: '00000000000000000000000000000000',
+    defaultInput: '0000000000000000',
+    securityStatus: 'legacy',
+    keyPlaceholder: '32-character hex key (128-bit); fixed to 12 rounds / 64-bit block',
+    options: [
+      { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
+    ],
+  },
+  {
     id: 'xtea',
     name: 'XTEA',
     category: 'symmetric',
@@ -313,6 +339,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: '4142434445464748',
     securityStatus: 'secure',
     keyPlaceholder: '32-character hex key (128-bit)',
+  },
+  {
+    id: 'idea',
+    name: 'IDEA',
+    category: 'symmetric',
+    description: 'Lai-Massey block cipher (used in PGP 2.0) mixing XOR, addition mod 2^16, and multiplication mod 2^16+1 across 8.5 rounds.',
+    defaultKey: '000102030405060708090a0b0c0d0e0f',
+    defaultInput: '0000000100020003',
+    securityStatus: 'legacy',
+    keyPlaceholder: '32-character hex key (128-bit)',
+    options: [
+      { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
+    ],
   },
   // Hash
   {
@@ -406,6 +445,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: 'Optional MAC key (leave blank for plain hash)',
   },
+  {
+    id: 'poly1305',
+    name: 'Poly1305',
+    category: 'hash',
+    description: 'One-time polynomial MAC over GF(2^130-5) (RFC 8439), originally paired with ChaCha20 for AEAD. Generates a tag; not reversible, same as SHA-3/SHA-1/RIPEMD-160.',
+    defaultKey: '85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b',
+    defaultInput: '43727970746f6772617068696320466f72756d2052657365617263682047726f7570',
+    securityStatus: 'secure',
+    keyPlaceholder: '64-character hex key (32 bytes: r || s)',
+    options: [
+      { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
+    ],
+  },
   // Asymmetric
   {
     id: 'rsa',
@@ -482,5 +534,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: 'e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4',
     securityStatus: 'secure',
     keyPlaceholder: '32-byte private key hex (64 chars), or leave blank to generate one',
+  },
+  {
+    id: 'merkle-hellman',
+    name: 'Merkle–Hellman Knapsack',
+    category: 'asymmetric',
+    description: 'First public-key cryptosystem after RSA (1978), based on the subset-sum problem rather than factoring. Broken by Shamir (1984) via lattice reduction — kept for educational value.',
+    defaultKey: '2,3,6,13,27,52,105,210,420,41',
+    defaultInput: 'HI',
+    securityStatus: 'broken',
+    keyPlaceholder: 'superincreasing sequence,modulus,multiplier (e.g. 2,3,6,13,27,52,105,210,420,41)',
   },
 ]

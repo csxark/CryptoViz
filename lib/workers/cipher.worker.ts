@@ -28,14 +28,18 @@ import { encrypt as aesEncrypt, decrypt as aesDecrypt } from '../cipher/symmetri
 import { encrypt as aesGcmEncrypt, decrypt as aesGcmDecrypt } from '../cipher/symmetric/aes-gcm'
 import { encrypt as rc4Encrypt, decrypt as rc4Decrypt } from '../cipher/symmetric/rc4'
 import { encrypt as salsa20Encrypt, decrypt as salsa20Decrypt } from '../cipher/symmetric/salsa20'
+import { encrypt as skipjackEncrypt, decrypt as skipjackDecrypt } from '../cipher/symmetric/skipjack'
 import { encrypt as chacha20Encrypt, decrypt as chacha20Decrypt } from '../cipher/symmetric/chacha20'
+import { encrypt as rc5Encrypt, decrypt as rc5Decrypt } from '../cipher/symmetric/rc5'
 import { encrypt as xteaEncrypt, decrypt as xteaDecrypt } from '../cipher/symmetric/xtea'
+import { encrypt as ideaEncrypt, decrypt as ideaDecrypt } from '../cipher/symmetric/idea'
 import { encrypt as rsaEncrypt, decrypt as rsaDecrypt } from '../cipher/asymmetric/rsa'
 import { encrypt as dhEncrypt, decrypt as dhDecrypt } from '../cipher/asymmetric/dh'
 import { encrypt as eccEncrypt, decrypt as eccDecrypt } from '../cipher/asymmetric/ecc'
 import { encrypt as elgamalEncrypt, decrypt as elgamalDecrypt } from '../cipher/asymmetric/elgamal'
 import { encrypt as ed25519Encrypt, decrypt as ed25519Decrypt } from '../cipher/asymmetric/ed25519'
 import { encrypt as x25519Encrypt, decrypt as x25519Decrypt } from '../cipher/asymmetric/x25519'
+import { encrypt as merkleHellmanEncrypt, decrypt as merkleHellmanDecrypt } from '../cipher/asymmetric/merkle-hellman'
 import { encrypt as sha256Encrypt, decrypt as sha256Decrypt } from '../cipher/hash/sha256'
 import { encrypt as sha512Encrypt, decrypt as sha512Decrypt } from '../cipher/hash/sha512'
 import { encrypt as md5Encrypt, decrypt as md5Decrypt } from '../cipher/hash/md5'
@@ -44,6 +48,7 @@ import { encrypt as bcryptEncrypt, decrypt as bcryptDecrypt } from '../cipher/ha
 import { encrypt as sha3Encrypt, decrypt as sha3Decrypt } from '../cipher/hash/sha3'
 import { encrypt as ripemd160Encrypt, decrypt as ripemd160Decrypt } from '../cipher/hash/ripemd160'
 import { encrypt as blake2bEncrypt, decrypt as blake2bDecrypt } from '../cipher/hash/blake2b'
+import { encrypt as poly1305Encrypt, decrypt as poly1305Decrypt } from '../cipher/hash/poly1305'
 import { encrypt as sha1Encrypt, decrypt as sha1Decrypt } from '../cipher/hash/sha1'
 
 import { deriveKey } from '../kdf/pbkdf2'
@@ -191,15 +196,30 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
           ? salsa20Encrypt(input, key, options)
           : salsa20Decrypt(input, key, options)
         break
+      case 'skipjack':
+        result = encryptMode
+          ? skipjackEncrypt(input, key, options)
+          : skipjackDecrypt(input, key, options)
+        break
       case 'chacha20':
         result = encryptMode
           ? chacha20Encrypt(input, key, options)
           : chacha20Decrypt(input, key, options)
         break
+      case 'rc5':
+        result = encryptMode
+          ? rc5Encrypt(input, key, options)
+          : rc5Decrypt(input, key, options)
+        break
       case 'xtea':
         result = encryptMode
           ? xteaEncrypt(input, key, options)
           : xteaDecrypt(input, key, options)
+        break
+      case 'idea':
+        result = encryptMode
+          ? ideaEncrypt(input, key, options)
+          : ideaDecrypt(input, key, options)
         break
       case 'rsa':
         result = encryptMode
@@ -230,6 +250,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? x25519Encrypt(input, key, options)
           : x25519Decrypt(input, key, options)
+        break
+      case 'merkle-hellman':
+        result = encryptMode
+          ? merkleHellmanEncrypt(input, key, options)
+          : merkleHellmanDecrypt(input, key, options)
         break
       case 'sha256':
         result = encryptMode
@@ -270,6 +295,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? blake2bEncrypt(input, key, options)
           : blake2bDecrypt()
+        break
+      case 'poly1305':
+        result = encryptMode
+          ? poly1305Encrypt(input, key, options)
+          : poly1305Decrypt()
         break
       case 'sha1':
         result = encryptMode

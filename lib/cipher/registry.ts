@@ -458,6 +458,30 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
       { name: 'Hex Input Mode', id: 'hexInput', type: 'boolean', default: true },
     ],
   },
+  {
+    id: 'siphash',
+    name: 'SipHash',
+    category: 'hash',
+    description: 'A family of fast, secure keyed hash functions (PRFs) optimized for short inputs to prevent hash-flooding DoS attacks. Default is SipHash-2-4.',
+    defaultKey: '000102030405060708090a0b0c0d0e0f',
+    defaultInput: 'SipHash',
+    securityStatus: 'secure',
+    keyPlaceholder: '16-byte key: 16-char ASCII or 32-char hex (e.g. 000102...)',
+    options: [
+      {
+        name: 'Compression Rounds (c)',
+        id: 'cRounds',
+        type: 'number',
+        default: 2,
+      },
+      {
+        name: 'Finalization Rounds (d)',
+        id: 'dRounds',
+        type: 'number',
+        default: 4,
+      },
+    ],
+  },
   // Asymmetric
   {
     id: 'rsa',

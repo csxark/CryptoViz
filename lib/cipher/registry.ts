@@ -341,6 +341,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '32-character hex key (128-bit)',
   },
   {
+    id: 'rc6',
+    name: 'RC6-32/20/16',
+    category: 'symmetric',
+    description: 'An AES finalist (Rivest et al., 1998) using data-dependent rotations driven by integer squaring — the successor to RC5, with a 128-bit block instead of RC5\'s 64-bit block.',
+    defaultKey: '000102030405060708090a0b0c0d0e0f',
+    defaultInput: '00000000000000000000000000000000',
+    securityStatus: 'secure',
+    keyPlaceholder: '32-character hex key (128-bit)',
+  },
+  {
     id: 'idea',
     name: 'IDEA',
     category: 'symmetric',

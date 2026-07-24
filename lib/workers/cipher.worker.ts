@@ -32,6 +32,7 @@ import { encrypt as skipjackEncrypt, decrypt as skipjackDecrypt } from '../ciphe
 import { encrypt as chacha20Encrypt, decrypt as chacha20Decrypt } from '../cipher/symmetric/chacha20'
 import { encrypt as rc5Encrypt, decrypt as rc5Decrypt } from '../cipher/symmetric/rc5'
 import { encrypt as xteaEncrypt, decrypt as xteaDecrypt } from '../cipher/symmetric/xtea'
+import { encrypt as rc6Encrypt, decrypt as rc6Decrypt } from '../cipher/symmetric/rc6'
 import { encrypt as ideaEncrypt, decrypt as ideaDecrypt } from '../cipher/symmetric/idea'
 import { encrypt as rsaEncrypt, decrypt as rsaDecrypt } from '../cipher/asymmetric/rsa'
 import { encrypt as dhEncrypt, decrypt as dhDecrypt } from '../cipher/asymmetric/dh'
@@ -219,6 +220,11 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         result = encryptMode
           ? xteaEncrypt(input, key, options)
           : xteaDecrypt(input, key, options)
+        break
+      case 'rc6':
+        result = encryptMode
+          ? rc6Encrypt(input, key, options)
+          : rc6Decrypt(input, key, options)
         break
       case 'idea':
         result = encryptMode

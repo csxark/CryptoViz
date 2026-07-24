@@ -498,12 +498,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
         id: 'numHashes',
         type: 'number',
         default: 3,
+      },
+    ],
+  },
+  {
     id: 'hkdf',
     name: 'HKDF (HMAC Key Derivation)',
     category: 'hash',
     description: 'HMAC-based Extract-and-Expand Key Derivation Function (RFC 5869) that converts weak or shared input keying material into cryptographically strong output keys.',
     defaultKey: '000102030405060708090a0b0c',
-    defaultInput: '0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b',
+    defaultInput: '0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b',
     securityStatus: 'secure',
     keyPlaceholder: 'Salt hex or text (optional)',
     options: [

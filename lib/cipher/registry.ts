@@ -446,6 +446,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: 'Optional MAC key (leave blank for plain hash)',
   },
   {
+    id: 'blake3',
+    name: 'BLAKE3',
+    category: 'hash',
+    description: 'A Merkle-tree-structured hash (2020), successor to BLAKE2. Splits input into chunks combined via a binary tree, enabling parallel hashing — structurally different from every sequential hash already here.',
+    defaultKey: '',
+    defaultInput: 'abc',
+    securityStatus: 'secure',
+  },
+  {
     id: 'poly1305',
     name: 'Poly1305',
     category: 'hash',

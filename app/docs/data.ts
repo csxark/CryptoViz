@@ -49,7 +49,7 @@ export const docCategories: DocCategory[] = [
     type: 'general',
     title: "Getting Started",
     description: "An overview of the CryptoViz visualization architecture and baseline requirements.",
-    content: "CryptoViz is a real-time cryptography  data visualization dashboard. It delivers an intuitive environment engineered to break down complex cryptographic concepts and cipher execution models into clear, human-readable algorithmic visualizations."
+    content: "CryptoViz is a real-time cryptocurrency data visualization dashboard. It delivers an intuitive environment engineered to break down complex cryptographic concepts and cipher execution models into clear, human-readable algorithmic visualizations."
   },
   {
     type: 'general',
@@ -459,6 +459,60 @@ export const docCategories: DocCategory[] = [
     playgroundLink: "/visualizer/rsa",
     references: [
       { title: "Wikipedia: RSA (cryptosystem)", url: "https://en.wikipedia.org/wiki/RSA_(cryptosystem)" }
+    ]
+  },
+  {
+    type: 'cipher',
+    title: "Merkle Trees",
+    description: "A cryptographic tree structure designed to securely and efficiently verify the contents of large data sets.",
+    overview: {
+      history: "Proposed by Ralph Merkle in 1979 and patented in 1980, Merkle Trees are a foundational concept in computer science. They are heavily utilized in peer-to-peer file systems like BitTorrent and IPFS, version control systems like Git, and modern blockchains like Bitcoin and Ethereum.",
+      description: "A Merkle Tree is a binary tree where every leaf node is the hash of a data block, and every non-leaf (internal) node is the hash of its children concatenated together. It allows verifying that a specific data block exists inside a larger tree structure by providing only a logarithmic number of sibling hashes, known as a Merkle Proof."
+    },
+    mathematics: {
+      encryptionFormula: "H_{Parent} = \\text{Hash}(H_{Left} \\parallel H_{Right})",
+      decryptionFormula: "\\text{Verify}(H_{Leaf}, \\text{AuditPath}, H_{Root}) \\to \\{\\text{True}, \\text{False}\\}",
+      explanation: [
+        "H_Left and H_Right are the sibling hashes representing left and right nodes.",
+        "\\parallel denotes the concatenation of the two byte arrays.",
+        "If a node lacks a sibling at an odd-numbered level, it is either duplicated (Bitcoin strategy) or promoted directly (Git/IPFS strategy).",
+        "Merkle Proof: A logarithmic list of sibling hashes (audit path) and directions that allows recalculating the root hash from a single leaf hash."
+      ]
+    },
+    workedExample: {
+      plaintext: "Tx0, Tx1, Tx2, Tx3",
+      parameters: "SHA-256 Hashing Strategy",
+      steps: [
+        { description: "Leaf Hash Calculation", result: "Compute H0=Hash(Tx0), H1=Hash(Tx1), H2=Hash(Tx2), H3=Hash(Tx3)." },
+        { description: "Level 1 Parent Pairing", result: "Pair children: H01=Hash(H0 + H1) and H23=Hash(H2 + H3)." },
+        { description: "Level 2 Root Calculation", result: "Pair Level 1 parents: Root=Hash(H01 + H23)." }
+      ],
+      finalCiphertext: "[32-byte hexadecimal Merkle Root Hash]"
+    },
+    complexity: "Tree construction: O(N) hashes. Proof generation: O(log N). Proof verification: O(log N).",
+    securityAnalysis: {
+      advantages: [
+        "Validates inclusion of data in O(log N) time and space complexity.",
+        "A client only needs to store the 32-byte root hash to verify integrity of millions of transactions.",
+        "Instantly isolates the location of modified data when comparing two different trees."
+      ],
+      weaknesses: [
+        "Vulnerable to second-preimage attacks (pairing inner nodes as leaf hashes) if leaf and internal nodes are not explicitly distinguished using distinct byte prefixes (e.g., prefixing leaf data with 0x00 and internal hashes with 0x01 before hashing)."
+      ]
+    },
+    realWorldApplications: [
+      "Git: Verifying file and directory structure modifications.",
+      "BitTorrent & IPFS: Validating individual data chunks downloaded from untrusted peers.",
+      "Cryptocurrency & Blockchain: Storing transactions in blocks (e.g., Bitcoin Block Headers) to support Simple Payment Verification (SPV) wallets."
+    ],
+    codeSnippets: {
+      python: "import hashlib\n\ndef compute_parent(left_hex, right_hex):\n    # Convert hex inputs to bytes, concatenate and hash\n    combined = bytes.fromhex(left_hex) + bytes.fromhex(right_hex)\n    return hashlib.sha256(combined).hexdigest()",
+      javascript: "import { sha256 } from '@noble/hashes/sha2.js'\n\nfunction computeParent(leftHex, rightHex) {\n  const leftBytes = toByteArray(leftHex);\n  const rightBytes = toByteArray(rightHex);\n  const combined = new Uint8Array([...leftBytes, ...rightBytes]);\n  return fromByteArray(sha256(combined), 'hex');\n}"
+    },
+    playgroundLink: "/merkle",
+    references: [
+      { title: "Ralph Merkle's original patent", url: "https://patents.google.com/patent/US4309569A/en" },
+      { title: "RFC 9162: Certificate Transparency (Merkle Trees)", url: "https://datatracker.ietf.org/doc/html/rfc9162" }
     ]
   }
 ];

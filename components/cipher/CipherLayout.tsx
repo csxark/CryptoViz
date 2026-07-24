@@ -40,6 +40,7 @@ const StepAnimator = dynamic(() => import('./StepAnimator'), { ssr: false })
 const PlayfairGrid = dynamic(() => import('./PlayfairGrid'), { ssr: false })
 const RailFenceViz = dynamic(() => import('./RailFenceViz'), { ssr: false })
 const DHVisualizer = dynamic(() => import('./DHVisualizer'), { ssr: false })
+const SipHashVisualizer = dynamic(() => import('./SipHashVisualizer'), { ssr: false })
 interface CipherLayoutProps {
   cipher: CipherDefinition;
 }
@@ -82,6 +83,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const [demoMode, setDemoMode] = useState(true);
   const [bobSecret, setBobSecret] = useState("15");
   const [aesMode, setAesMode] = useState("ECB");
+  const [cRounds, setCRounds] = useState(2);
+  const [dRounds, setDRounds] = useState(4);
   const [result, setResult] = useState<CipherResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -107,6 +110,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     if (shared.options.rounds !== undefined) setRounds(shared.options.rounds)
     if (shared.options.demoMode !== undefined) setDemoMode(shared.options.demoMode)
     if (shared.options.bobSecret !== undefined) setBobSecret(shared.options.bobSecret)
+    if (shared.options.cRounds !== undefined) setCRounds(shared.options.cRounds)
+    if (shared.options.dRounds !== undefined) setDRounds(shared.options.dRounds)
     pendingSharedStepRef.current = shared.step ?? null
   }, [cipher.id])
   // Sync playground state into the URL (debounced) so refresh/share preserves the session.
@@ -117,12 +122,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         key,
         direction: cipher.id === 'dh' ? 'encrypt' : action,
         step: currentStep,
-        options: { hexInput, rounds, demoMode, bobSecret },
+        options: { hexInput, rounds, demoMode, bobSecret, cRounds, dRounds },
       })
       window.history.replaceState(window.history.state, '', permalink)
     }, 300)
     return () => clearTimeout(debounceId)
-  }, [input, key, action, hexInput, rounds, demoMode, bobSecret, aesMode, currentStep, cipher.id])
+  }, [input, key, action, hexInput, rounds, demoMode, bobSecret, aesMode, cRounds, dRounds, currentStep, cipher.id])
   // Reset inputs when cipher changes
   useEffect(() => {
     if (abortControllerRef.current) {
@@ -144,6 +149,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         if (opt.id === "rounds" && shared.options.rounds === undefined) setRounds(opt.default);
         if (opt.id === "demoMode" && shared.options.demoMode === undefined) setDemoMode(opt.default);
         if (opt.id === "bobSecret" && shared.options.bobSecret === undefined) setBobSecret(opt.default);
+        if (opt.id === "cRounds" && shared.options.cRounds === undefined) setCRounds(opt.default);
+        if (opt.id === "dRounds" && shared.options.dRounds === undefined) setDRounds(opt.default);
       });
     }
     return () => {
@@ -157,6 +164,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     rounds,
     demoMode,
     bobSecret,
+    cRounds,
+    dRounds,
   };
   const handlePresetLoad = (preset: WorkspacePreset) => {
     if (preset.cipherId !== cipher.id) {
@@ -180,6 +189,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     }
     if (typeof preset.options.bobSecret === "string") {
       setBobSecret(preset.options.bobSecret);
+    }
+    if (typeof preset.options.cRounds === "number") {
+      setCRounds(preset.options.cRounds);
+    }
+    if (typeof preset.options.dRounds === "number") {
+      setDRounds(preset.options.dRounds);
     }
     setAnimationSpeed(preset.animationSpeed);
     setResult(null);
@@ -217,6 +232,10 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       if (cipher.id === "dh") {
         options.mode = "demo"; // Always demo for paint mixing
         options.bobSecret = bobSecret;
+      }
+      if (cipher.id === "siphash") {
+        options.cRounds = cRounds;
+        options.dRounds = dRounds;
       }
       // DH does not support decrypt
       const currentAction = cipher.id === "dh" ? "encrypt" : action;
@@ -281,6 +300,12 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     if (typeof trace.options.bobSecret === "string") {
       setBobSecret(trace.options.bobSecret);
     }
+    if (typeof trace.options.cRounds === "number") {
+      setCRounds(trace.options.cRounds);
+    }
+    if (typeof trace.options.dRounds === "number") {
+      setDRounds(trace.options.dRounds);
+    }
     const importedResult = traceToCipherResult(trace);
     setResult(importedResult);
     const restoredStep = pendingSharedStepRef.current;
@@ -311,6 +336,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     demoMode,
     bobSecret,
     aesMode,
+    cRounds,
+    dRounds,
   ]);
   // Helper for status badge styling
   const getStatusBadge = (status: "secure" | "legacy" | "deprecated" | "broken") => {
@@ -338,6 +365,16 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     if (cipher.id === "dh") {
       return <DHVisualizer currentStep={currentStep} />;
     }
+    if (cipher.id === "siphash") {
+      return (
+        <SipHashVisualizer
+          steps={result.steps}
+          currentStep={currentStep}
+          cRounds={cRounds}
+          dRounds={dRounds}
+        />
+      );
+    }
     return null;
   };
   const handleStepChange = (nextStep: number) => {
@@ -359,6 +396,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         rounds,
         demoMode,
         bobSecret,
+        cRounds,
+        dRounds,
       },
     })
     await navigator.clipboard.writeText(permalink)
@@ -565,6 +604,46 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                   className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-200 dark:bg-zinc-700 accent-teal-600 dark:accent-teal-400"
                 />
               </div>
+            )}
+            {cipher.id === "siphash" && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                      Compression Rounds (c)
+                    </label>
+                    <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400">
+                      {cRounds}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="8"
+                    value={cRounds}
+                    onChange={(e) => setCRounds(parseInt(e.target.value))}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-200 dark:bg-zinc-700 accent-teal-600 dark:accent-teal-400"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                      Finalization Rounds (d)
+                    </label>
+                    <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400">
+                      {dRounds}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="16"
+                    value={dRounds}
+                    onChange={(e) => setDRounds(parseInt(e.target.value))}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-200 dark:bg-zinc-700 accent-teal-600 dark:accent-teal-400"
+                  />
+                </div>
+              </>
             )}
             {cipher.id === "dh" && (
               <div className="flex flex-col gap-1.5">

@@ -460,5 +460,61 @@ export const docCategories: DocCategory[] = [
     references: [
       { title: "Wikipedia: RSA (cryptosystem)", url: "https://en.wikipedia.org/wiki/RSA_(cryptosystem)" }
     ]
+  },
+  {
+    type: 'cipher',
+    title: "SipHash",
+    description: "A family of pseudorandom functions (PRFs) optimized for high performance on short inputs, commonly used for hash table lookups to prevent hash-flooding DoS attacks.",
+    overview: {
+      history: "SipHash was designed in 2012 by Jean-Philippe Aumasson and Daniel J. Bernstein as a defense against 'hash flooding' denial-of-service (DoS) attacks, where attackers feed a hash table with carefully crafted inputs designed to cause deliberate collisions.",
+      description: "Unlike cryptographic hashes such as SHA-256, SipHash is a keyed hash function (PRF). It accepts a 128-bit key and processes inputs in 64-bit blocks using a 256-bit state. It alternates addition, rotation, and XOR (ARX) operations across multiple mixing rounds."
+    },
+    mathematics: {
+      encryptionFormula: "\\text{SipHash-c-d}(m, k) \\to \\text{Tag}",
+      decryptionFormula: "\\text{Not Applicable (One-way Hash)}",
+      explanation: [
+        "Uses four 64-bit state registers v0, v1, v2, v3, initialized with key words k0 and k1 and constants.",
+        "Processes the input in 8-byte blocks. For each block, XORs it into v3, runs c permutation rounds, then XORs it into v0.",
+        "Applies finalization setup by XORing v2 with 0xff constant, followed by d final permutation rounds.",
+        "Produces the 64-bit output tag by XORing all registers: v0 ⊕ v1 ⊕ v2 ⊕ v3."
+      ]
+    },
+    workedExample: {
+      plaintext: "SipHash",
+      parameters: "Key = 000102030405060708090a0b0c0d0e0f, c=2, d=4",
+      steps: [
+        { description: "State Initialization", result: "v0 = k0 ⊕ 0x736f6d6570736575, v1 = k1 ⊕ 0x646f72616e646f6d, etc." },
+        { description: "Message Padding", result: "Construct 8-byte blocks, appending message length to the final block." },
+        { description: "Block Absorption", result: "Inject blocks into v3, execute c rounds, then inject into v0." },
+        { description: "Finalization Padding", result: "XOR v2 with 0xff constant to isolate state." },
+        { description: "Final Mixing", result: "Execute d final rounds and XOR all registers: v0 ⊕ v1 ⊕ v2 ⊕ v3." }
+      ],
+      finalCiphertext: "310e0edd47db6f72 (for empty string)"
+    },
+    complexity: "O(n) time complexity where n is input byte length. Operates in constant memory O(1) using four 64-bit registers.",
+    securityAnalysis: {
+      advantages: [
+        "Highly efficient for short inputs (designed specifically for strings in hash tables).",
+        "Prevents hash collision DoS attacks due to dependence on a 128-bit secret key.",
+        "Very simple ARX structure, easy to implement in software."
+      ],
+      weaknesses: [
+        "Not collision-resistant if the key is known or leaked.",
+        "Should not be used as a keyless cryptographic hash function like SHA-256."
+      ]
+    },
+    realWorldApplications: [
+      "Hash table index collision mitigation in Python, Ruby, Rust, Perl, and Swift.",
+      "DNS query ID hashing and network routing table lookups.",
+      "Lightweight Message Authentication Code (MAC) generation."
+    ],
+    codeSnippets: {
+      python: "# SipHash is natively used by Python internally for dictionary keys.\n# Available in standard hash libraries or third-party modules:\n# import siphash\n# h = siphash.SipHash(key, message)",
+      javascript: "// Simple pure TS implementation of SipHash round mixing\nfunction sipRound(state) {\n  state.v0 += state.v1;\n  state.v1 = rotl(state.v1, 13) ^ state.v0;\n  // ... etc.\n}"
+    },
+    playgroundLink: "/visualizer/siphash",
+    references: [
+      { title: "Official SipHash Research Paper (Aumasson & Bernstein)", url: "https://131002.net/siphash/siphash.pdf" }
+    ]
   }
 ];

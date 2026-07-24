@@ -10,6 +10,8 @@ export interface VisualizerPermalinkState {
     rounds: number
     demoMode: boolean
     bobSecret: string
+    cRounds?: number
+    dRounds?: number
   }
 }
 
@@ -23,6 +25,8 @@ export interface ParsedVisualizerPermalink {
     rounds?: number
     demoMode?: boolean
     bobSecret?: string
+    cRounds?: number
+    dRounds?: number
   }
 }
 
@@ -70,6 +74,8 @@ export function parseVisualizerPermalink(
       bobSecret: params.has('bobSecret')
         ? params.get('bobSecret') ?? ''
         : undefined,
+      cRounds: parseInteger(params.get('cRounds')),
+      dRounds: parseInteger(params.get('dRounds')),
     },
   }
 }
@@ -87,6 +93,16 @@ export function buildVisualizerPermalink(
   url.searchParams.set('rounds', String(state.options.rounds))
   url.searchParams.set('demoMode', state.options.demoMode ? '1' : '0')
   url.searchParams.set('bobSecret', state.options.bobSecret)
+  if (state.options.cRounds !== undefined) {
+    url.searchParams.set('cRounds', String(state.options.cRounds))
+  } else {
+    url.searchParams.delete('cRounds')
+  }
+  if (state.options.dRounds !== undefined) {
+    url.searchParams.set('dRounds', String(state.options.dRounds))
+  } else {
+    url.searchParams.delete('dRounds')
+  }
   return url.toString()
 }
 

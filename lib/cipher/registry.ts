@@ -545,6 +545,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '32-byte private key hex (64 chars), or leave blank to generate one',
   },
   {
+    id: 'paillier',
+    name: 'Paillier',
+    category: 'asymmetric',
+    description: 'A public-key scheme (1999) supporting homomorphic addition: multiplying two ciphertexts and decrypting the product yields the sum of the original plaintexts, without either being exposed.',
+    defaultKey: '221,222',
+    defaultInput: '15',
+    securityStatus: 'secure',
+    keyPlaceholder: 'n,g (public) or n,lambda,mu / p,q (private)',
+  },
+  {
     id: 'merkle-hellman',
     name: 'Merkle–Hellman Knapsack',
     category: 'asymmetric',

@@ -94,6 +94,7 @@ export type CipherName =
   | 'elgamal'
   | 'ed25519'
   | 'x25519'
+  | 'paillier'
   | 'merkle-hellman'
   | 'ecdsa'
   | 'sha256'

@@ -49,7 +49,7 @@ export const docCategories: DocCategory[] = [
     type: 'general',
     title: "Getting Started",
     description: "An overview of the CryptoViz visualization architecture and baseline requirements.",
-    content: "CryptoViz is a real-time cryptography  data visualization dashboard. It delivers an intuitive environment engineered to break down complex cryptographic concepts and cipher execution models into clear, human-readable algorithmic visualizations."
+    content: "CryptoViz is a real-time cryptocurrency data visualization dashboard. It delivers an intuitive environment engineered to break down complex cryptographic concepts and cipher execution models into clear, human-readable algorithmic visualizations."
   },
   {
     type: 'general',
@@ -459,6 +459,171 @@ export const docCategories: DocCategory[] = [
     playgroundLink: "/visualizer/rsa",
     references: [
       { title: "Wikipedia: RSA (cryptosystem)", url: "https://en.wikipedia.org/wiki/RSA_(cryptosystem)" }
+    ]
+  },
+  {
+    type: 'cipher',
+    title: "Merkle Trees",
+    description: "A cryptographic tree structure designed to securely and efficiently verify the contents of large data sets.",
+    overview: {
+      history: "Proposed by Ralph Merkle in 1979 and patented in 1980, Merkle Trees are a foundational concept in computer science. They are heavily utilized in peer-to-peer file systems like BitTorrent and IPFS, version control systems like Git, and modern blockchains like Bitcoin and Ethereum.",
+      description: "A Merkle Tree is a binary tree where every leaf node is the hash of a data block, and every non-leaf (internal) node is the hash of its children concatenated together. It allows verifying that a specific data block exists inside a larger tree structure by providing only a logarithmic number of sibling hashes, known as a Merkle Proof."
+    },
+    mathematics: {
+      encryptionFormula: "H_{Parent} = \\text{Hash}(H_{Left} \\parallel H_{Right})",
+      decryptionFormula: "\\text{Verify}(H_{Leaf}, \\text{AuditPath}, H_{Root}) \\to \\{\\text{True}, \\text{False}\\}",
+      explanation: [
+        "H_Left and H_Right are the sibling hashes representing left and right nodes.",
+        "\\parallel denotes the concatenation of the two byte arrays.",
+        "If a node lacks a sibling at an odd-numbered level, it is either duplicated (Bitcoin strategy) or promoted directly (Git/IPFS strategy).",
+        "Merkle Proof: A logarithmic list of sibling hashes (audit path) and directions that allows recalculating the root hash from a single leaf hash."
+      ]
+    },
+    workedExample: {
+      plaintext: "Tx0, Tx1, Tx2, Tx3",
+      parameters: "SHA-256 Hashing Strategy",
+      steps: [
+        { description: "Leaf Hash Calculation", result: "Compute H0=Hash(Tx0), H1=Hash(Tx1), H2=Hash(Tx2), H3=Hash(Tx3)." },
+        { description: "Level 1 Parent Pairing", result: "Pair children: H01=Hash(H0 + H1) and H23=Hash(H2 + H3)." },
+        { description: "Level 2 Root Calculation", result: "Pair Level 1 parents: Root=Hash(H01 + H23)." }
+      ],
+      finalCiphertext: "[32-byte hexadecimal Merkle Root Hash]"
+    },
+    complexity: "Tree construction: O(N) hashes. Proof generation: O(log N). Proof verification: O(log N).",
+    securityAnalysis: {
+      advantages: [
+        "Validates inclusion of data in O(log N) time and space complexity.",
+        "A client only needs to store the 32-byte root hash to verify integrity of millions of transactions.",
+        "Instantly isolates the location of modified data when comparing two different trees."
+      ],
+      weaknesses: [
+        "Vulnerable to second-preimage attacks (pairing inner nodes as leaf hashes) if leaf and internal nodes are not explicitly distinguished using distinct byte prefixes (e.g., prefixing leaf data with 0x00 and internal hashes with 0x01 before hashing)."
+      ]
+    },
+    realWorldApplications: [
+      "Git: Verifying file and directory structure modifications.",
+      "BitTorrent & IPFS: Validating individual data chunks downloaded from untrusted peers.",
+      "Cryptocurrency & Blockchain: Storing transactions in blocks (e.g., Bitcoin Block Headers) to support Simple Payment Verification (SPV) wallets."
+    ],
+    codeSnippets: {
+      python: "import hashlib\n\ndef compute_parent(left_hex, right_hex):\n    # Convert hex inputs to bytes, concatenate and hash\n    combined = bytes.fromhex(left_hex) + bytes.fromhex(right_hex)\n    return hashlib.sha256(combined).hexdigest()",
+      javascript: "import { sha256 } from '@noble/hashes/sha2.js'\n\nfunction computeParent(leftHex, rightHex) {\n  const leftBytes = toByteArray(leftHex);\n  const rightBytes = toByteArray(rightHex);\n  const combined = new Uint8Array([...leftBytes, ...rightBytes]);\n  return fromByteArray(sha256(combined), 'hex');\n}"
+    },
+    playgroundLink: "/merkle",
+    references: [
+      { title: "Ralph Merkle's original patent", url: "https://patents.google.com/patent/US4309569A/en" },
+      { title: "RFC 9162: Certificate Transparency (Merkle Trees)", url: "https://datatracker.ietf.org/doc/html/rfc9162" }
+    ]
+  },
+  {
+    type: 'cipher',
+    title: "HMAC-SHA256",
+    description: "Keyed-Hash Message Authentication Code using SHA-256 to verify data integrity and authenticity.",
+    overview: {
+      history: "First proposed in 1996 by Mihir Bellare, Ran Canetti, and Hugo Krawczyk, and formalized in RFC 2104. It was designed to solve the vulnerabilities of simple MAC designs like H(K || m) which are susceptible to length extension attacks.",
+      description: "HMAC is a cryptographic construction for calculating a message authentication code involving a cryptographic hash function in combination with a secret key. It computes the hash twice using nested padding constants (ipad and opad) to bind the message state securely to the key."
+    },
+    mathematics: {
+      encryptionFormula: "\\text{HMAC}(K, m) = H((K' \\oplus opad) \\parallel H((K' \\oplus ipad) \\parallel m))",
+      decryptionFormula: "\\text{Verify}(K, m, \\text{Mac}) \\to [\\text{HMAC}(K, m) == \\text{Mac}]",
+      explanation: [
+        "K' is the block-sized prepared key. If K is longer than 64 bytes, K' = H(K). If K is shorter, K' is K padded with trailing zeros to 64 bytes.",
+        "ipad is the inner padding constant (the byte 0x36 repeated 64 times).",
+        "opad is the outer padding constant (the byte 0x5c repeated 64 times).",
+        "\\parallel represents byte concatenation, and \\oplus represents bitwise XOR."
+      ]
+    },
+    workedExample: {
+      plaintext: "Hi There",
+      parameters: "Key = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b (Hex format)",
+      steps: [
+        { description: "Key Preparation", result: "Original key is 20 bytes (<= 64). Pad key with zeros to block size: 0b0b...0000..." },
+        { description: "Inner XOR Calculation", result: "Compute K' XOR ipad (0x36) resulting in: 3d3d...3636..." },
+        { description: "Inner SHA-256 Hashing", result: "Concatenate Inner Key and 'Hi There' message and compute SHA-256: 3b344c61d8db..." },
+        { description: "Outer XOR Calculation", result: "Compute K' XOR opad (0x5c) resulting in: 5757...5c5c..." },
+        { description: "Outer SHA-256 (Final HMAC)", result: "Concatenate Outer Key and Inner Hash, compute final SHA-256 digest." }
+      ],
+      finalCiphertext: "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"
+    },
+    complexity: "O(N) operations, equivalent to two standard SHA-256 updates.",
+    securityAnalysis: {
+      advantages: [
+        "Provably immune to length extension attacks because the final outer hash hides the internal state of the inner hash.",
+        "Provides both data integrity (tamper proofing) and authenticity (key ownership proof)."
+      ],
+      weaknesses: [
+        "Cryptographic security relies entirely on the strength of the underlying hash function (e.g., HMAC-SHA256 is strong, whereas HMAC-MD5 is legacy due to MD5 weaknesses)."
+      ]
+    },
+    realWorldApplications: [
+      "API Request Signing: Standard authentication method for AWS (Signature Version 4) and Twilio request verification.",
+      "Token-Based Authentication: Forming the signature part of JSON Web Tokens (JWT).",
+      "Key Derivation Functions: Forms the core PRF (Pseudorandom Function) for HKDF in TLS 1.3."
+    ],
+    codeSnippets: {
+      python: "import hmac\nimport hashlib\n\ndef generate_hmac(key_bytes, msg_bytes):\n    return hmac.new(key_bytes, msg_bytes, hashlib.sha256).hexdigest()",
+      javascript: "import { hmac } from '@noble/hashes/hmac.js'\nimport { sha256 } from '@noble/hashes/sha2.js'\n\nconst digestBytes = hmac(sha256, keyBytes, msgBytes);"
+    },
+    playgroundLink: "/visualizer/hmac",
+    references: [
+      { title: "RFC 2104: HMAC (Keyed-Hashing for Message Authentication)", url: "https://datatracker.ietf.org/doc/html/rfc2104" },
+      { title: "NIST FIPS 198-1: The Keyed-Hash Message Authentication Code", url: "https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf" }
+    ]
+  },
+  {
+    type: 'cipher',
+    title: "Scrypt KDF",
+    description: "A memory-hard key derivation function designed to prevent GPU/ASIC-based hardware brute-force attacks.",
+    overview: {
+      history: "Created by Colin Percival in 2009 for the Tarsnap secure backup service, Scrypt was designed to require significantly more memory than bcrypt or PBKDF2, making custom hardware implementations (ASICs) prohibitively expensive to build.",
+      description: "Scrypt is a password-based key derivation function. It starts by stretching the password/salt using PBKDF2, mixes it with a sequential memory loop (ROMix) utilizing Salsa20/8 core steps, performs data-dependent random reads, and runs a final PBKDF2 step to derive the output key. This design enforces memory-hardness."
+    },
+    mathematics: {
+      encryptionFormula: "\\text{Scrypt}(P, S, N, r, p, dkLen) = \\text{PBKDF2-HMAC-SHA256}(P, B', 1, dkLen)",
+      decryptionFormula: "\\text{Verify}(P, S, N, r, p, \\text{Key}) \\to [\\text{Scrypt}(P, S, N, r, p, dkLen) == \\text{Key}]",
+      explanation: [
+        "P and S represent password and salt inputs.",
+        "N is the CPU/memory cost parameter (must be a power of 2).",
+        "r is the block size parameter, dictating the sequential memory footprint.",
+        "p is the parallelization parameter, controlling active threads."
+      ]
+    },
+    workedExample: {
+      plaintext: "correct horse battery staple",
+      parameters: "N = 16384, r = 8, p = 1, dkLen = 32",
+      steps: [
+        { description: "Parameter Parsing", result: "Validate N=16384 (power of 2), r=8, p=1, dkLen=32." },
+        { description: "Memory Allocation", result: "Allocate (128 * r * N * p) = 16 MB of workspace memory." },
+        { description: "Initial Stretch", result: "Stretches password with PBKDF2 into block array B of size 1024 bytes." },
+        { description: "Salsa20 ROMix Loop", result: "Compute Salsa20/8 core mix blocks sequentially to populate array V." },
+        { description: "Integerify Querying", result: "Retrieve random blocks from V based on data state, XORing blocks." },
+        { description: "Final Hashing", result: "Pass final block array through PBKDF2 to derive 32-byte key." }
+      ],
+      finalCiphertext: "[32-byte hexadecimal derived key]"
+    },
+    complexity: "Time complexity: O(N * r). Space complexity: O(N * r).",
+    securityAnalysis: {
+      advantages: [
+        "Extremely high protection against specialized hardware (ASICs/GPUs) due to memory-hard constraints.",
+        "Tunable parameters allow adjusting security based on hardware improvements over time."
+      ],
+      weaknesses: [
+        "High memory usage can lead to denial-of-service (DoS) vulnerabilities on authentication servers if parameters are configured too high."
+      ]
+    },
+    realWorldApplications: [
+      "Password hashing in Unix-like systems and secure database setups.",
+      "Key derivation in cryptocurrency wallets (Litecoin, Dogecoin, Ethereum).",
+      "Securing file-level backups (Tarsnap backup service)."
+    ],
+    codeSnippets: {
+      python: "import hashlib\n\n# Uses hashlib's scrypt implementation (Python 3.6+)\ndef derive_scrypt(password, salt, N=16384, r=8, p=1, dkLen=32):\n    return hashlib.scrypt(password.encode(), salt=salt.encode(), n=N, r=r, p=p, dklen=dkLen).hex()",
+      javascript: "import { scrypt } from '@noble/hashes/scrypt.js'\n\nconst keyBytes = scrypt(passwordBytes, saltBytes, { N: 16384, r: 8, p: 1, dkLen: 32 });"
+    },
+    playgroundLink: "/kdf/scrypt",
+    references: [
+      { title: "RFC 7914: The scrypt Password-Based Key Derivation Function", url: "https://datatracker.ietf.org/doc/html/rfc7914" },
+      { title: "Tarsnap: Scrypt algorithm description by Colin Percival", url: "https://www.tarsnap.com/scrypt.html" }
     ]
   }
 ];

@@ -40,6 +40,7 @@ const StepAnimator = dynamic(() => import('./StepAnimator'), { ssr: false })
 const PlayfairGrid = dynamic(() => import('./PlayfairGrid'), { ssr: false })
 const RailFenceViz = dynamic(() => import('./RailFenceViz'), { ssr: false })
 const DHVisualizer = dynamic(() => import('./DHVisualizer'), { ssr: false })
+const HmacVisualizer = dynamic(() => import('./HmacVisualizer'), { ssr: false })
 interface CipherLayoutProps {
   cipher: CipherDefinition;
 }
@@ -337,6 +338,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     }
     if (cipher.id === "dh") {
       return <DHVisualizer currentStep={currentStep} />;
+    }
+    if (cipher.id === "hmac") {
+      return <HmacVisualizer currentStep={currentStep} result={result} />;
     }
     return null;
   };

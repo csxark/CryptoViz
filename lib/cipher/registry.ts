@@ -245,6 +245,62 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     ],
   },
   {
+    id: 'bloom-filter',
+    name: 'Bloom Filter Simulator',
+    category: 'hash',
+    description: 'A space-efficient probabilistic data structure testing set membership with zero false negatives and a tunable false-positive probability.',
+    defaultKey: '3',
+    defaultInput: 'phishing-bank-login.com',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Number of hash functions k (e.g. 3)',
+    options: [
+      {
+        name: 'Bit Array Size (m)',
+        id: 'size',
+        type: 'number',
+        default: 64,
+      },
+      {
+        name: 'Hash Functions (k)',
+        id: 'numHashes',
+        type: 'number',
+        default: 3,
+    id: 'hkdf',
+    name: 'HKDF (HMAC Key Derivation)',
+    category: 'hash',
+    description: 'HMAC-based Extract-and-Expand Key Derivation Function (RFC 5869) that converts weak or shared input keying material into cryptographically strong output keys.',
+    defaultKey: '000102030405060708090a0b0c',
+    defaultInput: '0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Salt hex or text (optional)',
+    options: [
+      {
+        name: 'Hash Function',
+        id: 'hash',
+        type: 'select',
+        default: 'SHA-256',
+        choices: [
+          { label: 'SHA-256 (32-byte HashLen)', value: 'SHA-256' },
+          { label: 'SHA-512 (64-byte HashLen)', value: 'SHA-512' },
+          { label: 'SHA-1 (20-byte HashLen)', value: 'SHA-1' },
+        ],
+      },
+      {
+        name: 'Context Info (info)',
+        id: 'info',
+        type: 'text',
+        default: 'f0f1f2f3f4f5f6f7f8f9',
+      },
+      {
+        name: 'Derived Key Length (L bytes)',
+        id: 'keyLength',
+        type: 'number',
+        default: 42,
+      },
+    ],
+  },
+  // Asymmetric
+  {
     id: "rsa",
     name: "RSA-2048",
     category: "asymmetric",

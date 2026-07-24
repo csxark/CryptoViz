@@ -199,3 +199,21 @@
 [#298] (open) by @Aakif-Kohari: [FEATURE] Add Poly1305 message authentication code (MAC) module
 [#297] (open) by @Aakif-Kohari: [FEATURE] Add Merkle–Hellman Knapsack asymmetric cryptosystem
 [#296] (open) by @Aakif-Kohari: [FEATURE] Add IDEA (International Data Encryption Algorithm) symmetric block cipher
+
+=== Audited 2026-07-24 13:19 UTC (16 new) ===
+[#389] (open) by @Aakif-Kohari: [FEATURE] Add AES-CMAC (cipher-based message authentication code)
+[#388] (open) by @Aakif-Kohari: [FEATURE] Add DSA (Digital Signature Algorithm, finite-field discrete log)
+[#387] (open) by @Aakif-Kohari: [FEATURE] Add X448 (Diffie-Hellman key exchange over Curve448)
+[#386] (open) by @Aakif-Kohari: [FEATURE] Add Schnorr signatures (BIP340) over secp256k1
+[#385] (open) by @Aakif-Kohari: [FEATURE] Add Speck128/128 lightweight block cipher (NSA ARX design)
+[#373] (closed) by @Aakif-Kohari: [FEATURE] Add Rabin cryptosystem (asymmetric, security reducible to integer factoring)
+[#372] (closed) by @Aakif-Kohari: [FEATURE] Add Paillier cryptosystem (partially homomorphic encryption)
+[#371] (closed) by @Aakif-Kohari: [FEATURE] Add ECDSA (Elliptic Curve Digital Signature Algorithm) over secp256k1
+[#370] (closed) by @Aakif-Kohari: [FEATURE] Add BLAKE3 hash function
+[#369] (closed) by @Aakif-Kohari: [FEATURE] Add RC6 symmetric block cipher (AES finalist, data-dependent rotations + multiplication)
+[#351] (open) by @durdana3105: [BUG] Refactor Step Creation into a Reusable Helper
+[#350] (open) by @durdana3105: [BUG] Replace Magic Numbers with Named Constants
+[#349] (open) by @durdana3105: [BUG] Improve Input Validation for DES Key Generation
+[#348] (open) by @durdana3105: [BUG] Add Progress Callback Support for Forward Pass
+[#347] (open) by @durdana3105: [BUG] Refactor DES Block Operations to Reduce Code Duplication
+[#344] (closed) by @AimaMuzammil: Docs "Getting Started" page incorrectly describes CryptoViz as a "cryptocurrency" tool instead of "cryptography"

@@ -68,7 +68,14 @@ export default function ResourcesPage() {
   />
 </div>
 
-        <SearchBar resources={filteredResources} />
+        <SearchBar
+          resources={filteredResources}
+          onClear={() => {
+            setSearch("");
+            setCategory("All");
+            setDifficulty("All");
+          }}
+        />
       </main>
     </div>
   );

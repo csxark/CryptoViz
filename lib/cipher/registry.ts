@@ -7,14 +7,14 @@ export interface CipherDefinition {
   description: string;
   defaultKey: string;
   defaultInput: string;
-  securityStatus: "secure" | "deprecated" | "broken";
+  securityStatus: "secure" | "legacy" | "deprecated" | "broken";
   keyPlaceholder?: string;
   options?: {
     name: string;
     id: string;
     type: "number" | "text" | "boolean" | "select";
-    default: any;
-    choices?: { label: string; value: any }[];
+    default: CipherOptionValue;
+    choices?: { label: string; value: CipherOptionValue }[];
   }[];
 }
 

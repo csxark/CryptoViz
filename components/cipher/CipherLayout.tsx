@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import type { CipherDefinition } from '../../lib/cipher/registry'
+import type { CipherDefinition, CipherOptionValue } from '../../lib/cipher/registry'
 import type { CipherResult } from '../../lib/cipher/types'
 import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
 import type { AnimationSpeed } from './StepAnimator'
@@ -54,6 +54,9 @@ interface HistoryEntry {
 }
 const getHistoryStorageKey = (cipherId: string) =>
   `cryptoviz-history-${cipherId}`;
+const isBooleanOptionValue = (value: CipherOptionValue): value is boolean => typeof value === 'boolean'
+const isNumberOptionValue = (value: CipherOptionValue): value is number => typeof value === 'number'
+const isStringOptionValue = (value: CipherOptionValue): value is string => typeof value === 'string'
 const isValidHistoryEntry = (entry: unknown): entry is HistoryEntry => {
   return (
     typeof entry === "object" &&
@@ -141,10 +144,18 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     // Reset option defaults
     if (cipher.options) {
       cipher.options.forEach((opt) => {
-        if (opt.id === "hexInput" && shared.options.hexInput === undefined) setHexInput(opt.default);
-        if (opt.id === "rounds" && shared.options.rounds === undefined) setRounds(opt.default);
-        if (opt.id === "demoMode" && shared.options.demoMode === undefined) setDemoMode(opt.default);
-        if (opt.id === "bobSecret" && shared.options.bobSecret === undefined) setBobSecret(opt.default);
+        if (opt.id === "hexInput" && shared.options.hexInput === undefined && isBooleanOptionValue(opt.default)) {
+          setHexInput(opt.default);
+        }
+        if (opt.id === "rounds" && shared.options.rounds === undefined && isNumberOptionValue(opt.default)) {
+          setRounds(opt.default);
+        }
+        if (opt.id === "demoMode" && shared.options.demoMode === undefined && isBooleanOptionValue(opt.default)) {
+          setDemoMode(opt.default);
+        }
+        if (opt.id === "bobSecret" && shared.options.bobSecret === undefined && isStringOptionValue(opt.default)) {
+          setBobSecret(opt.default);
+        }
       });
     }
     return () => {

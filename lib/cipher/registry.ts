@@ -1,3 +1,5 @@
+export type CipherOptionValue = string | number | boolean
+
 export interface CipherDefinition {
   id: string
   name: string
@@ -11,8 +13,8 @@ export interface CipherDefinition {
     name: string
     id: string
     type: 'number' | 'text' | 'boolean' | 'select'
-    default: any
-    choices?: { label: string; value: any }[]
+    default: CipherOptionValue
+    choices?: { label: string; value: CipherOptionValue }[]
   }[]
 }
 

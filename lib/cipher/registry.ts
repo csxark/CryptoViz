@@ -478,6 +478,26 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     ],
   },
   {
+    id: 'bloom-filter',
+    name: 'Bloom Filter Simulator',
+    category: 'hash',
+    description: 'A space-efficient probabilistic data structure testing set membership with zero false negatives and a tunable false-positive probability.',
+    defaultKey: '3',
+    defaultInput: 'phishing-bank-login.com',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Number of hash functions k (e.g. 3)',
+    options: [
+      {
+        name: 'Bit Array Size (m)',
+        id: 'size',
+        type: 'number',
+        default: 64,
+      },
+      {
+        name: 'Hash Functions (k)',
+        id: 'numHashes',
+        type: 'number',
+        default: 3,
     id: 'hkdf',
     name: 'HKDF (HMAC Key Derivation)',
     category: 'hash',

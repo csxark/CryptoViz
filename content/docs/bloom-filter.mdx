@@ -1,0 +1,84 @@
+---
+title: "Understanding Bloom Filters: Probabilistic Set Membership"
+description: "How space-efficient probabilistic data structures offer fast set-membership queries with zero false negatives and controllable false-positive rates."
+difficulty: intermediate
+readingTime: 8
+tags: ["data-structures", "bloom-filter", "hash", "performance"]
+prerequisites: ["what-is-a-hash-function"]
+publishedAt: 2026-07-23
+updatedAt: 2026-07-23
+---
+
+A **Bloom Filter** is a space-efficient probabilistic data structure invented by Burton Howard Bloom in 1970. It is used to test whether an element is a member of a set. 
+
+Unlike traditional hash tables or binary search trees, a Bloom filter trades exact precision for massive memory efficiency:
+
+- **False Positive Matches**: Possible ($p > 0$). A query may report that an element is in the set when it actually is not.
+- **False Negative Matches**: Impossible ($p = 0$). If a Bloom filter reports that an element is **not** in the set, it is **guaranteed** not to be in the set.
+
+---
+
+## How It Works
+
+A Bloom filter consists of:
+1. A bit array of $m$ bits, all initialized to `0`.
+2. $k$ independent hash functions $h_1, h_2, \dots, h_k$, each mapping an input string to an integer index in $\{0, 1, \dots, m-1\}$.
+
+### Inserting an Element
+
+To insert an element $x$:
+1. Compute the $k$ hash values: $h_1(x) \bmod m, \; h_2(x) \bmod m, \; \dots, \; h_k(x) \bmod m$.
+2. Set the bit at each computed index to `1`.
+
+### Querying an Element
+
+To test whether an element $y$ is in the set:
+1. Compute the same $k$ hash values: $h_1(y) \bmod m, \; h_2(y) \bmod m, \; \dots, \; h_k(y) \bmod m$.
+2. Inspect the bit array at those indices:
+   - If **ANY** bit is `0`, $y$ is **DEFINITELY NOT** in the set.
+   - If **ALL** bits are `1`, $y$ is **POSSIBLY** in the set.
+
+---
+
+## Mathematical Foundations
+
+### False Positive Probability
+
+Assuming hash functions distribute values uniformly across the $m$ bits, the probability that a specific bit is not set by a single hash function during one insertion is:
+
+$$
+1 - \frac{1}{m}
+$$
+
+After inserting $n$ elements with $k$ hash functions, the probability that a specific bit remains `0` is:
+
+$$
+\left(1 - \frac{1}{m}\right)^{kn} \approx e^{-kn / m}
+$$
+
+The probability that a specific bit is set to `1` is therefore $1 - e^{-kn / m}$.
+
+The probability that all $k$ bits for a non-inserted element are `1` (a false positive) is:
+
+$$
+p \approx \left(1 - e^{-kn / m}\right)^k
+$$
+
+### Optimal Number of Hash Functions
+
+For a given bit array size $m$ and number of inserted elements $n$, the number of hash functions $k$ that minimizes the false positive probability is:
+
+$$
+k_{\text{opt}} = \frac{m}{n} \ln 2 \approx 0.693 \frac{m}{n}
+$$
+
+---
+
+## Real-World Applications
+
+- **Malicious URL Protection**: Google Chrome uses a compact local Bloom filter to check whether a URL is safe before making an API request to Safe Browsing servers.
+- **Crypto SPV Wallets**: Bitcoin Simplified Payment Verification (SPV) clients use Bloom filters to request transactions matching their addresses without revealing their exact public keys to full nodes.
+- **Database Query Optimization**: Apache Cassandra, RocksDB, and PostgreSQL use Bloom filters to skip reading disk SSTables for keys that do not exist.
+- **CDNs & Web Caching**: Akamai and Varnish use Bloom filters to avoid caching one-hit-wonder web requests.
+
+Try experimenting with different bit array sizes $m$ and hash counts $k$ in the interactive `[bloom-filter]` simulator.

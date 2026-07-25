@@ -98,10 +98,14 @@ export function meetInTheMiddleAttack(
     onStep?.(step)
   }
 
-  emit({
-    label: 'Forward pass',
-    detail: `Encrypting the known plaintext under every candidate k1 in a ${keySpaceBits}-bit reduced keyspace (${spaceSize.toLocaleString()} candidates), storing E_k1(P) -> k1 in a lookup table.`,
-  })
+  const emitStep = (label: string, detail: string) => {
+    emit({ label, detail })
+  }
+
+  emitStep(
+    'Forward pass',
+    `Encrypting the known plaintext under every candidate k1 in a ${keySpaceBits}-bit reduced keyspace (${spaceSize.toLocaleString()} candidates), storing E_k1(P) -> k1 in a lookup table.`
+  )
 
   const forwardTable = new Map<string, number>()
   for (let k1 = 0; k1 < spaceSize; k1++) {
@@ -110,10 +114,10 @@ export function meetInTheMiddleAttack(
     forwardTable.set(bytesToHex(intermediate), k1)
   }
 
-  emit({
-    label: 'Backward pass',
-    detail: `Decrypting the known ciphertext under every candidate k2, checking each D_k2(C) against the forward table for a match — instead of trying all k1×k2 combinations.`,
-  })
+  emitStep(
+    'Backward pass',
+    `Decrypting the known ciphertext under every candidate k2, checking each D_k2(C) against the forward table for a match — instead of trying all k1×k2 combinations.`
+  )
 
   let attempts = 0
   for (let k2 = 0; k2 < spaceSize; k2++) {
@@ -127,10 +131,10 @@ export function meetInTheMiddleAttack(
       const foundKeyA = keyFromInt(matchedK1, keySpaceBits)
       const foundKeyB = keyFromInt(k2, keySpaceBits)
 
-      emit({
-        label: 'Intermediate collision found',
-        detail: `E_k1(P) === D_k2(C) === ${hex} at k1=${matchedK1}, k2=${k2}, after ${attempts.toLocaleString()} backward-pass attempts (vs. up to ${spaceSize.toLocaleString()} for a naive meet).`,
-      })
+      emitStep(
+        'Intermediate collision found',
+        `E_k1(P) === D_k2(C) === ${hex} at k1=${matchedK1}, k2=${k2}, after ${attempts.toLocaleString()} backward-pass attempts (vs. up to ${spaceSize.toLocaleString()} for a naive meet).`
+      )
 
       return {
         keyASearchSpace: spaceSize,

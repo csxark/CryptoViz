@@ -55,8 +55,12 @@ export interface CipherOptions {
   padding?: string
   encoding?: Encoding
   iv?: string
+  hash?: string
+  keyLength?: number
+  info?: string
   /** When true, capture state after every sub-step (for visualizer) */
   instrument?: boolean
+  [key: string]: string | number | boolean | Encoding | undefined
 }
 
 export type CipherName =
@@ -86,6 +90,7 @@ export type CipherName =
   | 'chacha20'
   | 'rc5'
   | 'xtea'
+  | 'rc6'
   | 'idea'
   | 'rsa'
   | 'columnar-transposition'
@@ -93,8 +98,11 @@ export type CipherName =
   | 'ecc'
   | 'elgamal'
   | 'ed25519'
+  | 'rabin'
   | 'x25519'
+  | 'paillier'
   | 'merkle-hellman'
+  | 'ecdsa'
   | 'sha256'
   | 'sha512'
   | 'md5'
@@ -103,9 +111,12 @@ export type CipherName =
   | 'sha3'
   | 'ripemd160'
   | 'blake2b'
+  | 'blake3'
   | 'poly1305'
   | 'hmac'
   | 'sha1'
+  | 'hkdf'
+  | 'bloom-filter'
 
 export interface TestVector {
   input: string

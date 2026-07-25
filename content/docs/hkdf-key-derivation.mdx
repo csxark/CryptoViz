@@ -1,0 +1,77 @@
+---
+title: "HKDF: HMAC-Based Extract-and-Expand Key Derivation"
+description: "A deep dive into RFC 5869 HKDF — how the Extract-then-Expand paradigm converts weak or shared secrets into cryptographically independent subkeys for TLS 1.3 and modern security protocols."
+difficulty: intermediate
+readingTime: 8
+tags: ["kdf", "hkdf", "hmac", "hash", "tls"]
+prerequisites: ["what-is-a-hash-function"]
+publishedAt: 2026-07-23
+updatedAt: 2026-07-23
+---
+
+Key Derivation Functions (KDFs) are essential cryptographic building blocks used to transform input key material into one or more cryptographically strong keys. While password-based KDFs (like PBKDF2 or Argon2) focus on slowing down brute-force attempts on low-entropy human passwords, **HKDF** (RFC 5869) focuses on turning existing high-entropy secret material (such as a Diffie-Hellman shared secret) into multiple cryptographically strong and independent keys.
+
+---
+
+## The Extract-then-Expand Paradigm
+
+HKDF divides key derivation into two distinct logical phases: **Extract** and **Expand**.
+
+### 1. HKDF-Extract Phase
+
+The goal of the Extract phase is to concentrate the entropy of the Input Keying Material ($\text{IKM}$) into a uniform Pseudorandom Key ($\text{PRK}$).
+
+$$
+\text{PRK} = \text{HMAC-Hash}(\text{salt},\; \text{IKM})
+$$
+
+- $\text{IKM}$: The raw input key material (e.g. Diffie-Hellman output $g^{ab} \bmod p$).
+- $\text{salt}$: An optional non-secret random value. If no salt is provided, HKDF defaults to a string of $\text{HashLen}$ zeros.
+- Output: A fixed-size $\text{PRK}$ of length $\text{HashLen}$ bytes (e.g. 32 bytes for SHA-256).
+
+### 2. HKDF-Expand Phase
+
+The goal of the Expand phase is to expand the pseudorandom key ($\text{PRK}$) to the target length $L$ bytes ($\text{OKM}$) using context-specific information ($\text{info}$).
+
+$$
+T(0) = \text{"" (empty string)}
+$$
+
+$$
+T(1) = \text{HMAC-Hash}(\text{PRK},\; T(0) \;\parallel\; \text{info} \;\parallel\; \text{0x01})
+$$
+
+$$
+T(2) = \text{HMAC-Hash}(\text{PRK},\; T(1) \;\parallel\; \text{info} \;\parallel\; \text{0x02})
+$$
+
+$$
+T(i) = \text{HMAC-Hash}(\text{PRK},\; T(i-1) \;\parallel\; \text{info} \;\parallel\; \text{byte}(i))
+$$
+
+$$
+\text{OKM} = \text{first } L \text{ bytes of } T(1) \;\parallel\; T(2) \;\parallel\; \dots \;\parallel\; T(N)
+$$
+
+Where $N = \lceil L / \text{HashLen} \rceil$.
+
+---
+
+## Why Is `info` Important?
+
+The context information string $\text{info}$ allows a single secret key ($\text{PRK}$) to safely derive multiple independent subkeys for different sub-protocol components. For example:
+
+- $\text{info} = \text{"tls13 client traffic secret"}$ $\rightarrow$ Client Encryption Key
+- $\text{info} = \text{"tls13 server traffic secret"}$ $\rightarrow$ Server Encryption Key
+
+Because the $\text{info}$ strings differ, the derived output keys are computationally independent.
+
+---
+
+## Real-World Applications
+
+- **TLS 1.3 Key Schedule**: Uses HKDF to derive handshake traffic keys, application traffic keys, and resumption master keys.
+- **Signal & Noise Protocols**: Uses HKDF in ratcheting sessions to generate forward-secret symmetric keys.
+- **IPsec / IKEv2**: Uses HKDF for key material expansion.
+
+Try experimenting with different salts, info context strings, and key lengths in the interactive `[hkdf]` visualizer.

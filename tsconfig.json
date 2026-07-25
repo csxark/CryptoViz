@@ -21,7 +21,8 @@
     "paths": {
       "@/*": ["./*"],
       "@cipher/*": ["./lib/cipher/*"]
-    }
+    },
+    "types": ["node"]
   },
   "include": [
     "next-env.d.ts",

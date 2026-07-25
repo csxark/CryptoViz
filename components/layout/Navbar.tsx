@@ -41,6 +41,7 @@ export default function Navbar() {
     { name: 'Compare', href: '/compare' },
     { name: 'Benchmark', href: '/benchmark' },
     { name: 'Avalanche', href: '/avalanche' },
+    { name: 'Merkle Tree', href: '/merkle' },
     { name: 'Challenge', href: '/challenge' },
     { name: 'Docs', href: '/docs' },
     { name: 'Resources', href: '/resources' },

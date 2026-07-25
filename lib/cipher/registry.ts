@@ -13,8 +13,8 @@ export interface CipherDefinition {
     name: string;
     id: string;
     type: "number" | "text" | "boolean" | "select";
-    default: any;
-    choices?: { label: string; value: any }[];
+    default: CipherOptionValue;
+    choices?: { label: string; value: CipherOptionValue }[];
   }[];
 }
 
@@ -163,6 +163,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     ],
   },
   {
+    id: 'speck',
+    name: 'Speck128/128',
+    category: 'symmetric',
+    description: 'An NSA lightweight ARX cipher (2013) using only addition, rotation, and XOR — no S-boxes or lookup tables at all, unlike every other symmetric cipher in this registry.',
+    defaultKey: '0f0e0d0c0b0a09080706050403020100',
+    defaultInput: '6f6e6920736968746d2073696874706d',
+    securityStatus: 'secure',
+    keyPlaceholder: '32-character hex key (128-bit)',
+  },
+  {
     id: "sha256",
     name: "SHA-256",
     category: "hash",
@@ -202,6 +212,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: "what do ya want for nothing?",
     securityStatus: "secure",
     keyPlaceholder: "HMAC Secret Key",
+  },
+  {
+    id: 'cmac',
+    name: 'AES-CMAC',
+    category: 'hash',
+    description: 'A MAC built entirely from AES block-cipher calls plus a GF(2^128) subkey-derivation step (NIST SP 800-38B) — no separate hash function, unlike HMAC. Composed from the existing AES module, no new dependencies.',
+    defaultKey: '2b7e151628aed2a6abf7158809cf4f3c',
+    defaultInput: '6bc1bee22e409f96e93d7e117393172a',
+    securityStatus: 'secure',
   },
   {
     id: "bcrypt",
@@ -351,6 +370,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     ],
   },
   {
+    id: 'dsa',
+    name: 'DSA',
+    category: 'asymmetric',
+    description: 'The finite-field discrete-log ancestor of ECDSA (NIST FIPS 186, 1994) — same r/s signature equation, computed in a prime-order subgroup instead of on a curve. Demo uses toy parameters; real DSA needs p>=2048 bits, q>=224 bits.',
+    defaultKey: '47,23,4,5',
+    defaultInput: '15',
+    securityStatus: 'secure',
+    keyPlaceholder: 'p,q,g,x (private, sign) or p,q,g,y (public, verify)',
+  },
+  {
     id: "dh",
     name: "Diffie-Hellman",
     category: "asymmetric",
@@ -370,6 +399,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     ],
   },
   {
+    id: 'x448',
+    name: 'X448',
+    category: 'asymmetric',
+    description: 'Diffie-Hellman key exchange over Curve448 (RFC 7748) — the higher-security sibling of X25519, targeting ~224-bit security with 56-byte keys instead of X25519\'s 32-byte keys.',
+    defaultKey: '',
+    defaultInput: '',
+    securityStatus: 'secure',
+    keyPlaceholder: '56-byte private key hex (112 chars), or leave blank to generate one',
+  },
+  {
     id: "ecc",
     name: "ECC (ECDSA P-256)",
     category: "asymmetric",
@@ -380,5 +419,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: "hello",
     securityStatus: "secure",
     keyPlaceholder: "32-byte private key hex (64 chars)",
+  },
+  {
+    id: 'schnorr',
+    name: 'Schnorr (BIP340)',
+    category: 'asymmetric',
+    description: 'Schnorr signatures per BIP340 over secp256k1, using x-only public keys. Provably secure under a simpler assumption than ECDSA and supports clean signature aggregation (MuSig) — compare against ecdsa.ts on the same curve.',
+    defaultKey: '',
+    defaultInput: 'hello',
+    securityStatus: 'secure',
+    keyPlaceholder: '32-byte private key hex (64 chars), or leave blank to generate one',
   },
 ];

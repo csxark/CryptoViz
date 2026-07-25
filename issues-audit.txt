@@ -217,3 +217,10 @@
 [#348] (open) by @durdana3105: [BUG] Add Progress Callback Support for Forward Pass
 [#347] (open) by @durdana3105: [BUG] Refactor DES Block Operations to Reduce Code Duplication
 [#344] (closed) by @AimaMuzammil: Docs "Getting Started" page incorrectly describes CryptoViz as a "cryptocurrency" tool instead of "cryptography"
+
+=== Audited 2026-07-24 18:30 UTC (5 new) ===
+[#399] (closed) by @Jivan-Patel: [FEATURE] Export Chart Data to CSV
+[#398] (closed) by @Jivan-Patel: [BUG] App crashes on API rate limit with unhandled promise rejection
+[#397] (closed) by @Jivan-Patel: [FEATURE] Add support for CoinGecko API
+[#396] (closed) by @Jivan-Patel: [BUG] Historical price chart fails to render on mobile Safari
+[#395] (closed) by @Jivan-Patel: [FEATURE] Implement Dark Mode Toggle Feature

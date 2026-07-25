@@ -360,21 +360,45 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
         // shape everything else uses — password arrives as `input`, KDF
         // params are packed into `options` since they aren't a cipher key.
         result = await deriveKey(input, {
-          iterations: options.iterations,
-          hash: options.hash,
-          keyLength: options.keyLength,
-          salt: options.salt,
-        })
-        break
-      case 'scrypt':
+          iterations: options?.iterations ?? 10000,
+          hash: options?.hash ?? "SHA-256",
+          keyLength: options?.keyLength ?? 32,
+          salt: options?.salt,
+        });
+        break;
+      case "scrypt":
         result = await deriveScryptKey(input, {
-          N: options.N,
-          r: options.r,
-          p: options.p,
-          dkLen: options.dkLen,
-          salt: options.salt,
-        })
-        break
+          N: options?.N ?? 16384,
+          r: options?.r ?? 8,
+          p: options?.p ?? 1,
+          dkLen: options?.dkLen ?? 32,
+          salt: options?.salt,
+        });
+        break;
+      case "rc4":
+        result = encryptMode ? rc4Encrypt(input, key, options) : rc4Decrypt(input, key, options);
+        break;
+      case "salsa20":
+        result = encryptMode ? salsa20Encrypt(input, key, options) : salsa20Decrypt(input, key, options);
+        break;
+      case "skipjack":
+        result = encryptMode ? skipjackEncrypt(input, key, options) : skipjackDecrypt(input, key, options);
+        break;
+      case "chacha20":
+        result = encryptMode ? chacha20Encrypt(input, key, options) : chacha20Decrypt(input, key, options);
+        break;
+      case "rc5":
+        result = encryptMode ? rc5Encrypt(input, key, options) : rc5Decrypt(input, key, options);
+        break;
+      case "xtea":
+        result = encryptMode ? xteaEncrypt(input, key, options) : xteaDecrypt(input, key, options);
+        break;
+      case "rc6":
+        result = encryptMode ? rc6Encrypt(input, key, options) : rc6Decrypt(input, key, options);
+        break;
+      case "idea":
+        result = encryptMode ? ideaEncrypt(input, key, options) : ideaDecrypt(input, key, options);
+        break;
       default:
         throw new Error(`Unsupported cipher ID: ${cipherId}`)
     }
@@ -387,7 +411,7 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
     const response: WorkerResponse = {
       requestId,
       success: true,
-      payload: { result },
+      payload: { result: result as any },
       timings: { durationMs },
     }
     workerScope.postMessage(response)

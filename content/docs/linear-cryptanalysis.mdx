@@ -1,0 +1,43 @@
+# Linear Cryptanalysis Simulator
+
+Linear cryptanalysis is a powerful plaintext-known attack first introduced by Mitsuru Matsui in 1993. It targets block ciphers by exploiting high-probability linear approximations between input bits, output bits, and key bits.
+
+CryptoViz includes this interactive playground for educational purposes. It demonstrates the attack against a simplified 2-round Substitution-Permutation Network (SPN) block cipher.
+
+## How it Works
+
+Linear cryptanalysis exploits correlations in the S-boxes of a block cipher. An S-box is designed to be highly non-linear, but it is often possible to find linear equations of the form:
+
+$$P_{i_1} \oplus P_{i_2} \dots \oplus C_{j_1} \oplus C_{j_2} \dots = K_{k_1} \oplus K_{k_2} \dots$$
+
+that hold with a probability $p$ significantly different from $1/2$. The difference $\epsilon = p - 1/2$ is called the **bias**.
+
+### 1. S-Box Linear Approximation Table (LAT)
+For any 4-bit S-box, we compute a $16 \times 16$ grid where each entry corresponds to the correlation between an input bit mask $\alpha$ and an output bit mask $\beta$. The entry value is $N_{\text{matches}} - 8$. A value of $\pm 4$ or $\pm 6$ represents a highly biased relation, which is prime for cryptanalysis.
+
+### 2. Matsui's Piling-Up Lemma
+To approximate multiple rounds, we combine approximations of individual S-boxes. Assuming the round approximations are independent, the Piling-Up Lemma dictates that for $r$ approximations with biases $\epsilon_1, \dots, \epsilon_r$, the combined bias is:
+
+$$\epsilon_{1..r} = 2^{r-1} \prod_{i=1}^{r} \epsilon_i$$
+
+As the number of rounds increases, the bias collapses exponentially toward 0.
+
+### 3. Last-Round Key Recovery
+The simulator uses a 2-round SPN cipher with a 16-bit key. Using the known linear path, we guess subkey candidates for the final round key $K_3$ and decrypt the last round S-box output. 
+
+For each key guess, we check if the linear relation holds over $N$ plaintext-ciphertext samples:
+- The **correct subkey** yields the actual intermediate state, resulting in a high empirical bias (approaching the theoretical path bias).
+- An **incorrect subkey** yields random-like intermediate states, resulting in a near-zero empirical bias.
+
+The subkey with the largest absolute bias is selected as the recovered key!
+
+## Defenses
+
+Modern block ciphers are designed to resist linear cryptanalysis by:
+- Using larger, more mathematically optimized S-boxes (e.g. AES uses an 8-bit S-box based on finite field inversion, which has extremely low maximum linear bias).
+- Increasing the round count, which makes the combined bias negligible.
+- Ensuring wide diffusion layers (permutations/mix columns) that force active paths to pass through many S-boxes, multiplying the biases out.
+
+## Ethical Use
+
+This simulator runs entirely in your browser sandbox using mock plaintexts and local keys. It is intended purely for educational study.

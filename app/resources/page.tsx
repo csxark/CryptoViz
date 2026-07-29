@@ -35,21 +35,21 @@ export default function ResourcesPage() {
   }, [search, category, difficulty]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#081419] via-[#09090B] to-[#120d1d]">
+    <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-[#081419] dark:via-[#09090B] dark:to-[#120d1d]">
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-6 py-12">
-        <div className="mb-12 border-b border-[#2A2A31] pb-10">
+        <div className="mb-12 border-b border-zinc-200 dark:border-[#2A2A31] pb-10">
 
-  <span className="inline-flex rounded-full border border-[#0C3634] bg-[#0C3634]/40 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-[#00C2AE]">
+  <span className="inline-flex rounded-full border border-teal-200 dark:border-[#0C3634] bg-teal-50 dark:bg-[#0C3634]/40 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-[#00C2AE]">
     RESOURCE LIBRARY
   </span>
 
-  <h1 className="mt-5 text-5xl font-bold tracking-tight text-[#F5F5F5]">
+  <h1 className="mt-5 text-5xl font-bold tracking-tight text-zinc-900 dark:text-[#F5F5F5]">
     Learning Resources
   </h1>
 
-  <p className="mt-4 max-w-3xl text-lg leading-8 text-[#B3B3B8]">
+  <p className="mt-4 max-w-3xl text-lg leading-8 text-zinc-600 dark:text-[#B3B3B8]">
     Explore curated cryptography books, research papers, RFCs, NIST
     publications, videos, and practical learning resources to deepen
     your understanding of modern cryptography.
@@ -57,7 +57,7 @@ export default function ResourcesPage() {
 
 </div>
 
-        <div className="mb-10 rounded-2xl border border-[#2A2A31] bg-[#16161A] p-6">
+        <div className="mb-10 rounded-2xl border border-zinc-200 dark:border-[#2A2A31] bg-white dark:bg-[#16161A] p-6">
   <FilterBar
     search={search}
     setSearch={setSearch}
@@ -68,7 +68,14 @@ export default function ResourcesPage() {
   />
 </div>
 
-        <SearchBar resources={filteredResources} />
+        <SearchBar
+          resources={filteredResources}
+          onClear={() => {
+            setSearch("");
+            setCategory("All");
+            setDifficulty("All");
+          }}
+        />
       </main>
     </div>
   );

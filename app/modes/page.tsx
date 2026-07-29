@@ -1,5 +1,6 @@
 import ModesLab from '@/components/modes/ModesLab'
 import EcbPenguin from '@/components/modes/EcbPenguin'
+import Footer from "@/components/layout/footer";
 
 export const metadata = {
   title: 'Block Cipher Modes Lab — CryptoViz',
@@ -25,6 +26,8 @@ export default function ModesPage() {
 
       <div className="mt-10">
         <EcbPenguin />
+        <br></br>
+        <Footer />
       </div>
     </main>
   )

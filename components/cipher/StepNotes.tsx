@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useId } from 'react'
 import {
   STEP_NOTE_MAX_LENGTH,
   type StepAnnotation,
@@ -23,6 +23,7 @@ export default function StepNotes({
 }: StepNotesProps) {
   const [draft, setDraft] = useState(annotation?.note ?? '')
   const [message, setMessage] = useState<string | null>(null)
+  const noteId = useId()
 
   useEffect(() => {
     setDraft(annotation?.note ?? '')
@@ -71,9 +72,10 @@ export default function StepNotes({
         </button>
       </div>
 
-      <label className="mt-4 grid gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+      <label htmlFor={noteId} className="mt-4 grid gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300">
         Note for “{stepLabel}”
         <textarea
+          id={noteId}
           value={draft}
           maxLength={STEP_NOTE_MAX_LENGTH}
           onChange={(event) => setDraft(event.target.value)}

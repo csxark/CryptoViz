@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useId } from 'react'
 import { encrypt, type AesMode } from '@/lib/cipher/symmetric/aes'
 
 // One plaintext, five modes, side by side — with a single plaintext byte flipped
@@ -43,6 +43,8 @@ function flipByte(text: string, index: number): string {
 export default function ModesLab() {
   const [text, setText] = useState('The magic words are squeamish ossifrage.')
   const [flipIndex, setFlipIndex] = useState(4)
+  const textInputId = useId()
+  const rangeInputId = useId()
 
   const safeIndex = Math.min(flipIndex, Math.max(0, text.length - 1))
   const flipped = useMemo(() => flipByte(text, safeIndex), [text, safeIndex])
@@ -61,10 +63,11 @@ export default function ModesLab() {
     <div className="flex flex-col gap-6">
       <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+          <label htmlFor={textInputId} className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
             Plaintext (ASCII)
           </label>
           <input
+            id={textInputId}
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -74,7 +77,7 @@ export default function ModesLab() {
 
         <div className="mt-4 flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+            <label htmlFor={rangeInputId} className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
               Flip one plaintext byte (position {safeIndex})
             </label>
             <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
@@ -82,6 +85,7 @@ export default function ModesLab() {
             </span>
           </div>
           <input
+            id={rangeInputId}
             type="range"
             min={0}
             max={Math.max(0, text.length - 1)}

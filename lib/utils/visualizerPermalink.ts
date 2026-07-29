@@ -10,6 +10,9 @@ export interface VisualizerPermalinkState {
     rounds: number
     demoMode: boolean
     bobSecret: string
+    padding?: boolean
+    aesMode?: string
+    autoCompute?: boolean
   }
 }
 
@@ -23,6 +26,9 @@ export interface ParsedVisualizerPermalink {
     rounds?: number
     demoMode?: boolean
     bobSecret?: string
+    padding?: boolean
+    aesMode?: string
+    autoCompute?: boolean
   }
 }
 
@@ -70,6 +76,11 @@ export function parseVisualizerPermalink(
       bobSecret: params.has('bobSecret')
         ? params.get('bobSecret') ?? ''
         : undefined,
+      padding: parseBoolean(params.get('padding')),
+      aesMode: params.has('aesMode')
+        ? params.get('aesMode') ?? ''
+        : undefined,
+      autoCompute: parseBoolean(params.get('autoCompute')),
     },
   }
 }
@@ -87,6 +98,15 @@ export function buildVisualizerPermalink(
   url.searchParams.set('rounds', String(state.options.rounds))
   url.searchParams.set('demoMode', state.options.demoMode ? '1' : '0')
   url.searchParams.set('bobSecret', state.options.bobSecret)
+  if (state.options.padding !== undefined) {
+    url.searchParams.set('padding', state.options.padding ? '1' : '0')
+  }
+  if (state.options.aesMode !== undefined) {
+    url.searchParams.set('aesMode', state.options.aesMode)
+  }
+  if (state.options.autoCompute !== undefined) {
+    url.searchParams.set('autoCompute', state.options.autoCompute ? '1' : '0')
+  }
   return url.toString()
 }
 

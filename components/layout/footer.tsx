@@ -16,6 +16,7 @@ const projectLinks = [
 
 const resourceLinks = [
   { name: "Resources", href: "/resources" },
+  { name: "Glossary Explorer", href: "/glossary" },
   { name: "Blog", href: "/blog" },
   { name: "GitHub Repository", href: "https://github.com/csxark/CryptoViz" },
   { name: "Contribution Guide", href: "https://github.com/csxark/CryptoViz/blob/main/CONTRIBUTING.md" },
@@ -28,7 +29,7 @@ function FooterColumn({ title, links }: { title: string; links: { name: string; 
       <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-[#F5F5F5]">
         {title}
       </h3>
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-4 space-y-3" aria-label={`${title} links`}>
         {links.map((link) => (
           <li key={link.name}>
             <Link

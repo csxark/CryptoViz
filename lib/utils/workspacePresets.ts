@@ -37,6 +37,7 @@ const SAFE_OPTION_KEYS = new Set([
   "rounds",
   "demoMode",
   "bobSecret",
+  "padding",
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

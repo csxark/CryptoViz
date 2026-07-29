@@ -29,14 +29,35 @@ const PHRASES = [
   'KEEP THIS MESSAGE SAFE FROM PRYING EYES TODAY',
 ];
 
-const HINTS: Record<CipherName, string[]> = {
+const HINTS: Partial<Record<CipherName, string[]>> = {
   atbash: ['Atbash mirrors the alphabet: A becomes Z, B becomes Y, and so on. No key needed.'],
   rot13: ['ROT13 always shifts by exactly 13 — applying it twice returns the original text.'],
   caesar: ['Count the repeated shift pattern — try each of the 25 possible shifts.'],
   vigenere: ['The key repeats cyclically across the message — look for repeating ciphertext patterns.'],
   railfence: ['Picture the letters zigzagging across rows equal to the key number, then read them back off.'],
   playfair: ['Letters are encrypted in pairs using a 5x5 grid built from the keyword.'],
-} as unknown as Record<CipherName, string[]>;
+};
+
+/**
+ * Safely retrieve hints for a given cipher.
+ *
+ * If the cipher has no hints defined, a fallback hint is returned instead of an
+ * empty array. This ensures the challenge UI always shows useful guidance even
+ * when hints for a newly-added cipher haven't been written yet.
+ *
+ * @remarks When adding a new cipher to any `allowedCiphers` list, add its
+ * hints here so learners see cipher-specific guidance.
+ */
+function getHints(cipherId: CipherName): string[] {
+  const hints = HINTS[cipherId];
+  if (hints && hints.length > 0) {
+    return hints;
+  }
+  return [
+    `Try recalling the core encryption rule for this cipher — break the message down character by character.`,
+    `Visit the cipher's dedicated page to step through encryption and see the intermediate state at each stage.`,
+  ];
+}
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -83,7 +104,7 @@ export function generateChallengeData(
   const cipherId = pick(allowedCiphers);
   const plaintext = pick(wordPool);
   const key = keyForCipher(cipherId, wordPool);
-  const hints = HINTS[cipherId] ?? [];
+  const hints = getHints(cipherId);
 
   return {
     cipherId,

@@ -2,6 +2,8 @@
 
 import type { BenchmarkSession } from "@/types/benchmark";
 import { formatBytes } from "@/lib/utils/benchmarkHistory";
+import SessionComparisonVisualizer from "./SessionComparisonVisualizer";
+import { DEFAULT_SESSION_PRESETS } from "@/lib/utils/sessionComparison";
 
 interface BenchmarkHistoryProps {
   sessions: BenchmarkSession[];
@@ -34,16 +36,20 @@ export default function BenchmarkHistory({
     onSelectedIdsChange([...selectedIds, id].slice(-2));
   };
 
+  // Fallback to default preset if fewer than 2 local history sessions selected
+  const defaultPreset = DEFAULT_SESSION_PRESETS[0];
+  const sessionA = selected[0] || defaultPreset.sessionA;
+  const sessionB = selected[1] || defaultPreset.sessionB;
+
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">
-            Benchmark History
+            Benchmark Session Comparison & History
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Stored locally in this browser. Select up to two sessions to
-            compare.
+            Stored locally in this browser. Select two sessions to compare, or use built-in presets below.
           </p>
         </div>
         {sessions.length > 0 && (
@@ -59,7 +65,7 @@ export default function BenchmarkHistory({
 
       {sessions.length === 0 ? (
         <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-          Completed benchmark sessions will appear here.
+          No benchmark sessions saved in local storage yet. Use the interactive comparison visualizer below with educational presets or complete a benchmark run above!
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -75,7 +81,7 @@ export default function BenchmarkHistory({
                 onClick={() => toggle(session.id)}
                 className={`rounded-lg border p-4 text-left transition-colors ${
                   isSelected
-                    ? "border-teal-500 bg-teal-50 dark:bg-teal-950/20"
+                    ? "border-teal-500 bg-teal-50 dark:bg-teal-950/20 ring-1 ring-teal-500"
                     : "border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900"
                 }`}
               >
@@ -119,66 +125,21 @@ export default function BenchmarkHistory({
         </div>
       )}
 
-      {selected.length === 2 && (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <table className="min-w-[760px] w-full text-sm">
-            <thead className="bg-zinc-50 dark:bg-zinc-950">
-              <tr>
-                <th className="px-4 py-3 text-left">Metric</th>
-                {selected.map((session) => (
-                  <th key={session.id} className="px-4 py-3 text-left">
-                    {new Date(session.timestamp).toLocaleString()}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {[
-                [
-                  "Algorithms",
-                  (s: BenchmarkSession) => String(s.results.length),
-                ],
-                [
-                  "Input size",
-                  (s: BenchmarkSession) => formatBytes(s.inputSize),
-                ],
-                [
-                  "Iterations",
-                  (s: BenchmarkSession) => String(s.iterations ?? "—"),
-                ],
-                [
-                  "Mean cipher time",
-                  (s: BenchmarkSession) =>
-                    `${average(s.results.map((r) => r.averageTime))?.toFixed(4) ?? "—"} ms`,
-                ],
-                [
-                  "Mean worker time",
-                  (s: BenchmarkSession) =>
-                    `${average(s.results.map((r) => r.workerExecutionTime))?.toFixed(4) ?? "—"} ms`,
-                ],
-                [
-                  "Mean render time",
-                  (s: BenchmarkSession) =>
-                    `${average(s.results.map((r) => r.renderTime))?.toFixed(4) ?? "—"} ms`,
-                ],
-              ].map(([label, getter]) => (
-                <tr key={label as string}>
-                  <th className="px-4 py-3 text-left font-medium">
-                    {label as string}
-                  </th>
-                  {selected.map((session) => (
-                    <td key={session.id} className="px-4 py-3 font-mono">
-                      {(getter as (session: BenchmarkSession) => string)(
-                        session,
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Main Interactive Session Comparison Module */}
+      <SessionComparisonVisualizer
+        sessionA={sessionA}
+        sessionB={sessionB}
+        sessionALabel={
+          selected[0]
+            ? `Selected Session 1 (${new Date(selected[0].timestamp).toLocaleTimeString()})`
+            : "Preset Baseline (Session A)"
+        }
+        sessionBLabel={
+          selected[1]
+            ? `Selected Session 2 (${new Date(selected[1].timestamp).toLocaleTimeString()})`
+            : "Preset Candidate (Session B)"
+        }
+      />
     </section>
   );
 }

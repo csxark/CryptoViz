@@ -242,7 +242,7 @@ function invMixColumns(state: Uint8Array): void {
 
 // Process a single 16-byte block
 export function processBlock(
-  blockBytes: Uint8Array,
+  blockBytes: Uint8Array<ArrayBufferLike>,
   roundKeys: Uint8Array[],
   decrypt: boolean
 ): Uint8Array {

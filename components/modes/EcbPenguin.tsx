@@ -131,6 +131,8 @@ export default function EcbPenguin() {
             <figure key={p.label} className="flex flex-col items-center gap-2">
               <canvas
                 ref={p.ref}
+                role="img"
+                aria-label={p.caption}
                 width={SIZE}
                 height={SIZE}
                 className="h-40 w-40 rounded-lg border border-zinc-200 bg-white dark:border-zinc-700"

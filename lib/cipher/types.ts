@@ -55,8 +55,12 @@ export interface CipherOptions {
   padding?: string
   encoding?: Encoding
   iv?: string
+  hash?: string
+  keyLength?: number
+  info?: string
   /** When true, capture state after every sub-step (for visualizer) */
   instrument?: boolean
+  [key: string]: string | number | boolean | Encoding | undefined
 }
 
 export type CipherName =
@@ -78,19 +82,43 @@ export type CipherName =
   | 'otp'
   | 'des'
   | '3des'
+  | 'aes-xts'
   | 'aes'
   | 'aes-gcm'
+  | 'serpent'
+  | 'chacha20-poly1305'
+  | 'speck'
+  | 'aes-ccm'
+  | 'threefish'
+  | 'xchacha20'
+  | 'gost'
+  | 'xsalsa20'
   | 'rc4'
   | 'salsa20'
+  | 'skipjack'
   | 'chacha20'
+  | 'rc5'
   | 'xtea'
+  | 'rc6'
+  | 'camellia'
+  | 'idea'
   | 'rsa'
   | 'columnar-transposition'
+  | 'dsa'
   | 'dh'
+  | 'x448'
   | 'ecc'
+  | 'schnorr'
+  | 'elgamal-signature'
   | 'elgamal'
+  | 'ecies'
+  | 'ed448'
   | 'ed25519'
+  | 'rabin'
   | 'x25519'
+  | 'paillier'
+  | 'merkle-hellman'
+  | 'ecdsa'
   | 'sha256'
   | 'sha512'
   | 'md5'
@@ -99,8 +127,20 @@ export type CipherName =
   | 'sha3'
   | 'ripemd160'
   | 'blake2b'
+  | 'blake3'
+  | 'sha224'
+  | 'sha384'
+  | 'shake128'
+  | 'shake256'
+  | 'md4'
+  | 'poly1305'
   | 'hmac'
+  | 'cmac'
   | 'sha1'
+  | 'hkdf'
+  | 'blake2s'
+  | 'bloom-filter'
+  | 'sm3'
 
 export interface TestVector {
   input: string

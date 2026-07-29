@@ -17,11 +17,14 @@ import { ReferenceList } from "./components/ReferenceList";
 import { DocumentationProgressActions } from "./components/DocumentationProgressActions";
 import { LearningProgressPanel } from "./components/LearningProgressPanel";
 import { useDocumentationProgress } from "./components/useDocumentationProgress";
+import { getTitleScore, getDescriptionScore } from "../../lib/utils/fuzzySearch";
+import GlossaryTextRenderer from "../../components/glossary/GlossaryTextRenderer";
 
 interface SearchItem {
   category: DocCategory;
   field: string;
   snippet: string;
+  score?: number;
 }
 
 const getDocSlug = (title: string) =>
@@ -67,6 +70,39 @@ export default function DocumentationPage() {
   const activeSlug = getDocSlug(activeSection.title);
   const isBookmarked = progress.bookmarks.includes(activeSlug);
   const isCompleted = progress.completed.includes(activeSlug);
+
+  // Automatic reading progress detection
+  useEffect(() => {
+    if (!hasLoaded || isCompleted) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const checkCompletion = () => {
+      const scrollPos = window.scrollY + window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+
+      // 95% threshold or close to bottom
+      if (scrollPos >= docHeight * 0.95 || docHeight - scrollPos < 100) {
+        toggleCompleted(activeSlug);
+      }
+    };
+
+    const handleScroll = () => {
+      clearTimeout(timeoutId);
+      // Debounce: ensure user has stopped scrolling (reading) for 1 second near the bottom
+      timeoutId = setTimeout(checkCompletion, 1000);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    // Initial check for short documents
+    timeoutId = setTimeout(checkCompletion, 2000);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [activeSlug, isCompleted, hasLoaded, toggleCompleted]);
 
   // Next / Previous Navigation items
   const currentIndex = docCategories.findIndex(
@@ -188,6 +224,18 @@ export default function DocumentationPage() {
               {node}
             </code>
           );
+        } else if (typeof part === "string") {
+          node = <GlossaryTextRenderer key={idx} content={part} />;
+          if (isBold) {
+            node = (
+              <strong
+                key={idx}
+                className="font-semibold text-zinc-900 dark:text-white"
+              >
+                {node}
+              </strong>
+            );
+          }
         } else if (isBold) {
           node = (
             <strong
@@ -255,17 +303,20 @@ export default function DocumentationPage() {
     const results: SearchItem[] = [];
 
     docCategories.forEach((cat) => {
-      // Check title
-      if (cat.title.toLowerCase().includes(q)) {
-        results.push({ category: cat, field: "Title", snippet: cat.title });
+      // Check title with fuzzy scoring
+      const titleScore = getTitleScore(q, cat.title);
+      if (titleScore > 0) {
+        results.push({ category: cat, field: "Title", snippet: cat.title, score: titleScore });
       }
 
-      // Check description
-      if (cat.description.toLowerCase().includes(q)) {
+      // Check description with fuzzy scoring
+      const descScore = getDescriptionScore(q, cat.description);
+      if (descScore > 0) {
         results.push({
           category: cat,
           field: "Description",
           snippet: cat.description,
+          score: descScore,
         });
       }
 
@@ -279,7 +330,7 @@ export default function DocumentationPage() {
             (start > 0 ? "..." : "") +
             general.content.substring(start, end) +
             (end < general.content.length ? "..." : "");
-          results.push({ category: cat, field: "Content", snippet });
+          results.push({ category: cat, field: "Content", snippet, score: 40 });
         }
       } else {
         const cipher = cat as CipherDocCategory;
@@ -293,7 +344,7 @@ export default function DocumentationPage() {
             (start > 0 ? "..." : "") +
             text.substring(start, end) +
             (end < text.length ? "..." : "");
-          results.push({ category: cat, field: "Overview", snippet });
+          results.push({ category: cat, field: "Overview", snippet, score: 40 });
         }
 
         if (cipher.overview.description.toLowerCase().includes(q)) {
@@ -305,12 +356,12 @@ export default function DocumentationPage() {
             (start > 0 ? "..." : "") +
             text.substring(start, end) +
             (end < text.length ? "..." : "");
-          results.push({ category: cat, field: "Overview", snippet });
+          results.push({ category: cat, field: "Overview", snippet, score: 40 });
         }
 
         cipher.mathematics.explanation.forEach((exp) => {
           if (exp.toLowerCase().includes(q)) {
-            results.push({ category: cat, field: "Mathematics", snippet: exp });
+            results.push({ category: cat, field: "Mathematics", snippet: exp, score: 40 });
           }
         });
 
@@ -320,19 +371,20 @@ export default function DocumentationPage() {
               category: cat,
               field: "Worked Example",
               snippet: step.description,
+              score: 40,
             });
           }
         });
 
         cipher.securityAnalysis.advantages.forEach((adv) => {
           if (adv.toLowerCase().includes(q)) {
-            results.push({ category: cat, field: "Advantage", snippet: adv });
+            results.push({ category: cat, field: "Advantage", snippet: adv, score: 40 });
           }
         });
 
         cipher.securityAnalysis.weaknesses.forEach((weak) => {
           if (weak.toLowerCase().includes(q)) {
-            results.push({ category: cat, field: "Weakness", snippet: weak });
+            results.push({ category: cat, field: "Weakness", snippet: weak, score: 40 });
           }
         });
 
@@ -342,11 +394,14 @@ export default function DocumentationPage() {
               category: cat,
               field: "Applications",
               snippet: app,
+              score: 40,
             });
           }
         });
       }
     });
+
+    results.sort((a, b) => (b.score || 0) - (a.score || 0));
 
     return results.slice(0, 8);
   }, [searchQuery]);
@@ -662,6 +717,10 @@ export default function DocumentationPage() {
               <input
                 ref={searchInputRef}
                 type="text"
+                role="combobox"
+                aria-expanded={searchOpen}
+                aria-controls="search-listbox"
+                aria-activedescendant={searchResults.length > 0 ? `search-option-${activeIndex}` : undefined}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -679,12 +738,15 @@ export default function DocumentationPage() {
             {/* Results list */}
             <div className="overflow-y-auto flex-1 py-2">
               {searchResults.length > 0 ? (
-                <div className="px-2 space-y-1">
+                <div id="search-listbox" role="listbox" className="px-2 space-y-1">
                   {searchResults.map((item, idx) => {
                     const isFocused = idx === activeIndex;
                     return (
                       <button
                         key={idx}
+                        id={`search-option-${idx}`}
+                        role="option"
+                        aria-selected={isFocused}
                         onClick={() => handleSelectResult(item)}
                         className={`w-full text-left p-3 rounded-lg flex flex-col gap-1 transition-all ${
                           isFocused

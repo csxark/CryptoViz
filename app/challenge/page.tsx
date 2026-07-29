@@ -1,5 +1,6 @@
 import Navbar from "../../components/layout/Navbar";
 import ChallengeMode from "../../components/challenge/ChallengeMode";
+import DailyQuiz from "../../components/challenge/DailyQuiz";
 
 export default function ChallengePage() {
   return (
@@ -28,6 +29,19 @@ export default function ChallengePage() {
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
             Decrypt ciphertext against the clock. Test your knowledge of classical ciphers in a timed challenge session.
           </p>
+        </div>
+
+        <div className="mb-16">
+          <DailyQuiz />
+        </div>
+
+        <div className="relative mb-16">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-zinc-50 px-4 text-sm text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">Or practice infinitely</span>
+          </div>
         </div>
 
         <ChallengeMode />

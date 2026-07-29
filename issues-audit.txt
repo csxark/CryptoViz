@@ -199,3 +199,102 @@
 [#298] (open) by @Aakif-Kohari: [FEATURE] Add Poly1305 message authentication code (MAC) module
 [#297] (open) by @Aakif-Kohari: [FEATURE] Add Merkle–Hellman Knapsack asymmetric cryptosystem
 [#296] (open) by @Aakif-Kohari: [FEATURE] Add IDEA (International Data Encryption Algorithm) symmetric block cipher
+
+=== Audited 2026-07-24 13:19 UTC (16 new) ===
+[#389] (open) by @Aakif-Kohari: [FEATURE] Add AES-CMAC (cipher-based message authentication code)
+[#388] (open) by @Aakif-Kohari: [FEATURE] Add DSA (Digital Signature Algorithm, finite-field discrete log)
+[#387] (open) by @Aakif-Kohari: [FEATURE] Add X448 (Diffie-Hellman key exchange over Curve448)
+[#386] (open) by @Aakif-Kohari: [FEATURE] Add Schnorr signatures (BIP340) over secp256k1
+[#385] (open) by @Aakif-Kohari: [FEATURE] Add Speck128/128 lightweight block cipher (NSA ARX design)
+[#373] (closed) by @Aakif-Kohari: [FEATURE] Add Rabin cryptosystem (asymmetric, security reducible to integer factoring)
+[#372] (closed) by @Aakif-Kohari: [FEATURE] Add Paillier cryptosystem (partially homomorphic encryption)
+[#371] (closed) by @Aakif-Kohari: [FEATURE] Add ECDSA (Elliptic Curve Digital Signature Algorithm) over secp256k1
+[#370] (closed) by @Aakif-Kohari: [FEATURE] Add BLAKE3 hash function
+[#369] (closed) by @Aakif-Kohari: [FEATURE] Add RC6 symmetric block cipher (AES finalist, data-dependent rotations + multiplication)
+[#351] (open) by @durdana3105: [BUG] Refactor Step Creation into a Reusable Helper
+[#350] (open) by @durdana3105: [BUG] Replace Magic Numbers with Named Constants
+[#349] (open) by @durdana3105: [BUG] Improve Input Validation for DES Key Generation
+[#348] (open) by @durdana3105: [BUG] Add Progress Callback Support for Forward Pass
+[#347] (open) by @durdana3105: [BUG] Refactor DES Block Operations to Reduce Code Duplication
+[#344] (closed) by @AimaMuzammil: Docs "Getting Started" page incorrectly describes CryptoViz as a "cryptocurrency" tool instead of "cryptography"
+
+=== Audited 2026-07-24 18:30 UTC (5 new) ===
+[#399] (closed) by @Jivan-Patel: [FEATURE] Export Chart Data to CSV
+[#398] (closed) by @Jivan-Patel: [BUG] App crashes on API rate limit with unhandled promise rejection
+[#397] (closed) by @Jivan-Patel: [FEATURE] Add support for CoinGecko API
+[#396] (closed) by @Jivan-Patel: [BUG] Historical price chart fails to render on mobile Safari
+[#395] (closed) by @Jivan-Patel: [FEATURE] Implement Dark Mode Toggle Feature
+
+=== Audited 2026-07-27 20:14 UTC (21 new) ===
+[#452] (open) by @Aakif-Kohari: [FEATURE] Add Ed448 (EdDSA signatures over Curve448)
+[#451] (open) by @Aakif-Kohari: [FEATURE] Add XChaCha20 (extended-nonce variant of the existing ChaCha20)
+[#450] (open) by @Aakif-Kohari: [FEATURE] Add XSalsa20 (extended-nonce variant of the existing Salsa20)
+[#449] (open) by @Aakif-Kohari: [FEATURE] Add SHA-224 and SHA-384 (truncated SHA-2 variants)
+[#448] (open) by @Aakif-Kohari: [FEATURE] Add MD4 hash function (broken, historical predecessor to MD5)
+[#441] (closed) by @Nidhisharora: [FEATURE] Footer Missing on Modes Page
+[#440] (open) by @gauri9368gupta-maker: [BUG] UI: Navbar elements overlap on mobile devices
+[#435] (closed) by @Nidhisharora: [FEATURE] Enhance the navbar visibility
+[#433] (closed) by @Nidhisharora: Improve README Documentation and User Experience
+[#430] (closed) by @Aakif-Kohari: [FEATURE] Add ChaCha20-Poly1305 AEAD (composes the existing ChaCha20 and Poly1305 modules)
+[#429] (closed) by @Aakif-Kohari: [FEATURE] Add SHAKE128 and SHAKE256 (extendable-output functions)
+[#428] (closed) by @Aakif-Kohari: [FEATURE] Add X25519-based ECIES (Elliptic Curve Integrated Encryption Scheme)
+[#427] (closed) by @Aakif-Kohari: [FEATURE] Add AES-CCM authenticated encryption mode
+[#426] (closed) by @Aakif-Kohari: [FEATURE] Add GOST 28147-89 block cipher (Soviet/Russian standard)
+[#419] (closed) by @sushmitakoti661-prog: [BUG] Dark/light theme toggle has no effect — Tailwind v4 dark: variant defaults to prefers-color-scheme
+[#418] (closed) by @kuldeeprajput-dev: [FEATURE] Customizable Question Count and Timer Duration in Challenge Mode
+[#410] (closed) by @Aakif-Kohari: [FEATURE] Add AES-XTS (tweakable block-cipher mode for disk/sector encryption)
+[#409] (closed) by @Aakif-Kohari: [FEATURE] Add BLAKE2s hash function (32-bit sibling of the existing BLAKE2b)
+[#408] (closed) by @Aakif-Kohari: [FEATURE] Add ElGamal Signature Scheme (distinct from the existing ElGamal encryption module)
+[#407] (closed) by @Aakif-Kohari: [FEATURE] Add Serpent symmetric block cipher (AES finalist, 32-round S-box + bitslice design)
+[#406] (closed) by @Aakif-Kohari: [FEATURE] Add Threefish-256 block cipher (large-block ARX, Skein family)
+
+=== Audited 2026-07-28 20:50 UTC (49 new) ===
+[#547] (open) by @Aakif-Kohari: [FEATURE] Add ML-DSA-65 (Dilithium) post-quantum digital signatures
+[#546] (open) by @Aakif-Kohari: [FEATURE] Add TEA (Tiny Encryption Algorithm, predecessor to the existing XTEA)
+[#545] (open) by @Aakif-Kohari: [FEATURE] Add ML-KEM-768 (Kyber) post-quantum key encapsulation
+[#544] (open) by @Aakif-Kohari: [FEATURE] Add Shamir's Secret Sharing (threshold cryptography)
+[#543] (open) by @Aakif-Kohari: [FEATURE] Add Enigma machine simulation (3-rotor, plugboard, reflector)
+[#521] (closed) by @Aditya8369: docs: Add a pull request template
+[#516] (open) by @csxark: [FEATURE] Learning Certificates
+[#515] (open) by @csxark: [FEATURE] Localization Framework
+[#514] (open) by @csxark: [FEATURE] Interactive Terminology Explorer
+[#513] (closed) by @csxark: [FEATURE] Search Suggestions
+[#512] (open) by @csxark: [FEATURE] Offline Learning Pack
+[#511] (closed) by @csxark: [FEATURE] Accessibility Improvements
+[#510] (closed) by @csxark: [FEATURE] Reading Progress Tracker
+[#509] (open) by @csxark: [FEATURE] Glossary Cross-Linking
+[#508] (open) by @csxark: [FEATURE] Cipher Collections
+[#507] (closed) by @csxark: [FEATURE] Daily Cryptography Quiz
+[#506] (open) by @csxark: [FEATURE] Encoding Error Playground
+[#505] (closed) by @csxark: [FEATURE] Padding Scheme Explorer
+[#504] (open) by @csxark: [FEATURE] S-Box Explorer
+[#503] (open) by @csxark: [FEATURE] Finite Field (GF) Visualizer
+[#502] (open) by @csxark: [FEATURE] Interactive Modular Arithmetic Playground
+[#501] (closed) by @csxark: [FEATURE] Key Size Security Estimator
+[#499] (closed) by @csxark: [FEATURE] Entropy Calculator
+[#498] (open) by @csxark: [FEATURE] Encoding Explorer
+[#497] (open) by @csxark: [FEATURE] Interactive Hex/Binary/ASCII Converter
+[#496] (open) by @csxark: [FEATURE] Cipher Lifecycle Badges
+[#495] (open) by @csxark: [FEATURE] Cryptography Myth Busters
+[#494] (closed) by @csxark: [FEATURE] Algorithm Compatibility Matrix
+[#493] (closed) by @csxark: [FEATURE] Interactive Cipher Decision Tree
+[#492] (open) by @csxark: Build Your Own Cipher Sandbox
+[#491] (open) by @csxark: Searchable Cipher Encyclopedia
+[#490] (open) by @csxark: Interactive Protocol Explorer
+[#489] (open) by @csxark: Post-Quantum Cryptography Learning Hub
+[#488] (open) by @csxark: Cipher Recommendation Assistant
+[#487] (open) by @csxark: Interactive Cryptography Roadmap
+[#486] (open) by @csxark: Standards & RFC Explorer
+[#485] (open) by @csxark: Where Is This Used?
+[#484] (open) by @csxark: Cipher Relationship Graph
+[#483] (open) by @csxark: Interactive Cryptography Timeline
+[#482] (open) by @csxark: Improve Playground Responsiveness
+[#481] (open) by @csxark: Improve Cipher Layout on Mobile
+[#480] (open) by @csxark: Expand Challenge Question Bank
+[#479] (open) by @csxark: Sync Docs UI with Website Theme
+[#478] (open) by @csxark: Curated Cryptography Video Library
+[#477] (open) by @csxark: [FEATURE] Cryptographic Case Studies
+[#476] (open) by @csxark: [FEATURE] Add Resource Filters
+[#475] (open) by @csxark: [FEATURE] Complete Cryptography Resources Library
+[#474] (closed) by @csxark: [FEATURE] Sync Every Cipher Documentation into Docs
+[#473] (open) by @csxark: [FEATURE] Build a Dedicated Cipher Visualizers Hub

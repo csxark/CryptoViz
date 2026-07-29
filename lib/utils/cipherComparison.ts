@@ -15,6 +15,14 @@ export interface ComparisonPanelState {
   options: Record<string, string | number | boolean>
 }
 
+export interface CipherWorkerOptions {
+  instrument: true
+  hexInput?: boolean
+  rounds?: number
+  mode?: 'real' | 'demo'
+  bobSecret?: string
+}
+
 export function getSupportedDirections(
   cipher: CipherDefinition,
 ): CipherDirection[] {
@@ -69,8 +77,8 @@ export function swapComparisonSelection(
 export function createCipherWorkerOptions(
   cipher: CipherDefinition,
   options: Record<string, string | number | boolean>,
-): Record<string, unknown> {
-  const workerOptions: Record<string, unknown> = {
+): CipherWorkerOptions {
+  const workerOptions: CipherWorkerOptions = {
     instrument: true,
   }
 

@@ -226,16 +226,12 @@ export function encrypt(
   }
 }
 
-// SHA-1 is a one-way hash — decrypt is not meaningful; expose same function
-// so the worker contract is satisfied (returns hash of input)
+// SHA-1 is a one-way hash — decryption is not defined.
 export function decrypt(): CipherResult {
-  return {
-    output: 'SHA-1 is a one-way hash function. Decryption is not defined.',
-    outputEncoding: 'utf8' as const,
-    steps: [],
-    metadata: { ...METADATA, blockSize: 512, rounds: 80 },
-    durationMs: 0,
-  }
+  throw new CipherError(
+    'ALGORITHM_UNSUPPORTED',
+    'SHA-1 is a one-way cryptographic hash function. Decryption is not supported.',
+  )
 }
 
 // ─── Test Vectors ─────────────────────────────────────────────────────────────

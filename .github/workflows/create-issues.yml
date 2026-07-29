@@ -1,0 +1,165 @@
+name: Bulk Create Issues from Markdown
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Parse Markdown and Create Issues
+        uses: actions/github-script@v7
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const repo = context.repo;
+
+            // Hardcoded: every .md file in this folder is scanned and turned
+            // into issues each time the workflow runs.
+            const MD_DIRECTORY = '.github/workflows';
+
+            // Hardcoded: these two labels already exist in the repo.
+            const LABELS = ['Available for contribution', 'ECSoC26'];
+
+            const dryRun = process.env.DRY_RUN === 'true';
+
+            // Strips common leading indentation from each line of a template
+            // literal so multi-line markdown bodies don't inherit the JS
+            // source's indentation (which YAML block scalars require).
+            function dedent(str) {
+              return str
+                .split('\n')
+                .map(line => line.trimStart())
+                .join('\n');
+            }
+
+            // Unescape markdown-escaped brackets, e.g. "\[FEATURE\]" -> "[FEATURE]"
+            function unescapeBrackets(str) {
+              return str.replace(/\\\[/g, '[').replace(/\\\]/g, ']');
+            }
+
+            function parseIssuesFromMarkdown(content) {
+              // Split the file into per-issue blocks on horizontal rules (---, ----, etc.)
+              const rawBlocks = content.split(/\n-{3,}\n/);
+              const parsed = [];
+
+              for (const block of rawBlocks) {
+                // Each issue block starts with a top-level heading like "## 1. [FEATURE] Title"
+                const titleMatch = block.match(/^##\s*\d+\.\s*(.+?)\s*$/m);
+                if (!titleMatch) continue;
+
+                const title = unescapeBrackets(titleMatch[1].trim());
+
+                // Description: text between "### Description" and the next "###" heading
+                const descMatch = block.match(/###\s*Description\s*\n([\s\S]*?)(?=\n###|\s*$)/);
+                const description = descMatch ? descMatch[1].trim() : '';
+
+                // Acceptance Criteria: bullet list between "### Acceptance Criteria" and end of block
+                const acMatch = block.match(/###\s*Acceptance Criteria\s*\n([\s\S]*?)(?=\n###|\s*$)/);
+                const acceptanceCriteria = acMatch
+                  ? acMatch[1]
+                      .split('\n')
+                      .map(line => line.trim())
+                      .filter(line => line.startsWith('-'))
+                      .map(line => line.replace(/^-+\s*/, ''))
+                  : [];
+
+                parsed.push({ title, description, acceptanceCriteria });
+              }
+
+              return parsed;
+            }
+
+            const dirFullPath = path.resolve(process.cwd(), MD_DIRECTORY);
+            if (!fs.existsSync(dirFullPath)) {
+              core.setFailed(`Markdown source folder not found: ${MD_DIRECTORY}`);
+              return;
+            }
+
+            const mdFiles = fs.readdirSync(dirFullPath).filter(f => f.toLowerCase().endsWith('.md'));
+
+            if (mdFiles.length === 0) {
+              core.warning(`No .md files found in ${MD_DIRECTORY}. Nothing to do.`);
+              return;
+            }
+
+            core.info(`Found ${mdFiles.length} markdown file(s) in ${MD_DIRECTORY}: ${mdFiles.join(', ')}`);
+
+            let created = 0;
+            let skipped = 0;
+
+            for (const fileName of mdFiles) {
+              const filePath = path.join(MD_DIRECTORY, fileName);
+              const content = fs.readFileSync(path.join(dirFullPath, fileName), 'utf8');
+              const issues = parseIssuesFromMarkdown(content);
+
+              if (issues.length === 0) {
+                core.warning(`No issues could be parsed from ${filePath}. Skipping file.`);
+                continue;
+              }
+
+              core.info(`Parsed ${issues.length} issue(s) from ${filePath}.`);
+
+              for (const issue of issues) {
+                // Avoid duplicates if this file (or one like it) has already been run before
+                const searchRes = await github.rest.search.issuesAndPullRequests({
+                  q: `repo:${repo.owner}/${repo.repo} type:issue in:title "${issue.title}"`
+                });
+                const alreadyExists = searchRes.data.items.some(item => item.title.trim() === issue.title);
+
+                if (alreadyExists) {
+                  core.info(`Skipping "${issue.title}" — an issue with this title already exists.`);
+                  skipped++;
+                  continue;
+                }
+
+                const acceptanceCriteriaText = issue.acceptanceCriteria.length
+                  ? issue.acceptanceCriteria.map(c => `- [ ] ${c}`).join('\n')
+                  : '_None specified._';
+
+                const body = dedent(`
+                  ### Description
+                  ${issue.description || '_No description provided._'}
+
+                  ### Acceptance Criteria
+                  ${acceptanceCriteriaText}
+
+                  ---
+                  _This issue was generated automatically from ${filePath}._
+                `);
+
+                if (dryRun) {
+                  core.info(`[dry run] Would create issue: "${issue.title}" with labels [${LABELS.join(', ')}]`);
+                  created++;
+                  continue;
+                }
+
+                await github.rest.issues.create({
+                  owner: repo.owner,
+                  repo: repo.repo,
+                  title: issue.title,
+                  body: body,
+                  labels: LABELS
+                });
+
+                core.info(`Created issue: "${issue.title}"`);
+                created++;
+              }
+            }
+
+            core.info(`Done. Created: ${created}, Skipped (duplicates): ${skipped}.`);

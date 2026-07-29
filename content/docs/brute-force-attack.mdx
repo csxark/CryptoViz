@@ -1,0 +1,166 @@
+---
+title: "Understanding Brute-Force Attacks"
+description: "An educational guide into how keyspace size and attacker speeds determine password cracking times."
+difficulty: beginner
+readingTime: 6
+tags:
+  - attacks
+  - brute-force
+  - security
+  - passwords
+prerequisites:
+  - dictionary-attack
+publishedAt: 2026-07-27
+updatedAt: 2026-07-27
+---
+
+# Understanding Brute-Force Attacks
+
+## What is a Brute-Force Attack?
+
+A **brute-force attack** is a cryptographic trial-and-error technique in which an attacker systematically tests every possible combination of characters until the correct password or cryptographic key is discovered.
+
+Unlike **dictionary attacks**, which rely on pre-defined lists of commonly used passwords, a brute-force attack explores the **entire search space**. Given enough computational resources and sufficient time, it is mathematically guaranteed to find the correct password.
+
+---
+
+## The Mathematics of Keyspace
+
+The resistance of a password against brute-force attacks is determined by its **keyspace**, which represents the total number of unique password combinations.
+
+The keyspace is calculated using:
+
+$$
+K = S^L
+$$
+
+Where:
+
+- **K** = Total keyspace
+- **S** = Size of the character set
+- **L** = Password length
+
+### Example
+
+For an 8-character password using only lowercase English letters:
+
+$$
+S = 26
+$$
+
+Therefore,
+
+$$
+K = 26^8 = 208,\!827,\!064,\!576
+$$
+
+possible combinations.
+
+If the password length increases to 16 characters:
+
+$$
+K = 26^{16} \approx 4.36 \times 10^{22}
+$$
+
+possible combinations.
+
+> **Important**
+>
+> Increasing password length increases security **exponentially**, making it significantly more effective than merely adding additional character types.
+
+---
+
+## Entropy: Measuring Password Strength
+
+Password strength is commonly measured using **entropy**, expressed in **bits**.
+
+Entropy is defined as:
+
+$$
+H = \log_2(K)
+$$
+
+Since
+
+$$
+K = S^L
+$$
+
+it can also be written as
+
+$$
+H = L \times \log_2(S)
+$$
+
+Each additional bit of entropy doubles the computational effort required for a brute-force attack.
+
+### Password Strength Levels
+
+| Entropy | Strength |
+|---------:|----------|
+| Less than 28 bits | Very Weak |
+| 28–35 bits | Weak |
+| 36–59 bits | Moderate |
+| 60–127 bits | Strong |
+| 128 bits or more | Cryptographically Secure |
+
+---
+
+## Online vs Offline Brute-Force Attacks
+
+The effectiveness of a brute-force attack depends heavily on how passwords are verified.
+
+### Online Attacks
+
+In an online attack, password guesses are submitted directly to a live authentication server.
+
+Modern applications defend against these attacks using:
+
+- Rate limiting
+- Account lockout
+- CAPTCHA
+- IP throttling
+
+Because attackers are typically limited to only a few guesses per second, even relatively weak passwords may take years to crack.
+
+---
+
+### Offline Attacks
+
+Offline attacks occur after an attacker steals a database containing password hashes.
+
+Since password verification happens locally, attackers can leverage:
+
+- High-performance GPUs
+- FPGA hardware
+- ASIC accelerators
+
+Tools such as **Hashcat** and **John the Ripper** can test billions of password guesses every second against weak hashing algorithms such as **MD5** and **SHA-1**.
+
+Without server-side rate limiting, offline attacks become dramatically more powerful.
+
+---
+
+## Protecting Against Brute-Force Attacks
+
+Modern systems defend against brute-force attacks using **Key Derivation Functions (KDFs)**.
+
+Instead of computing password hashes instantly, KDFs intentionally require significant computational time and memory.
+
+Common KDFs include:
+
+- Argon2
+- scrypt
+- PBKDF2
+
+These algorithms reduce the number of guesses an attacker can perform per second, dramatically increasing the computational cost of brute-force attacks.
+
+---
+
+## Key Takeaways
+
+- Brute-force attacks systematically test every possible password combination.
+- Password strength depends primarily on **keyspace** and **entropy**.
+- Longer passwords provide exponentially greater resistance than simply increasing the character set.
+- Offline attacks are significantly more dangerous than online attacks because there is no rate limiting.
+- Modern password hashing algorithms such as **Argon2**, **scrypt**, and **PBKDF2** provide strong protection against brute-force attacks by intentionally slowing password verification.

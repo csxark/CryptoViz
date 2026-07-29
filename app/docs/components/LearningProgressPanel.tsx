@@ -1,5 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui";
+import Link from "next/link";
+
 interface LearningProgressPanelProps {
   completedCount: number;
   bookmarkedCount: number;
@@ -62,6 +65,15 @@ export function LearningProgressPanel({
           />
         </div>
       </div>
+      {percent === 100 && (
+        <div className="mt-4 flex justify-center">
+          <Button asChild variant="success" size="sm">
+            <Link href="/certificate">
+              Claim Certificate
+            </Link>
+          </Button>
+        </div>
+      )}
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-center">
         <div className="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-950/60">

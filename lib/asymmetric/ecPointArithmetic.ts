@@ -205,10 +205,26 @@ function assertOnCurve(point: ECPoint, curve: CurveParams, label: string): void 
   }
 }
 
+/**
+ * Reduce coordinates into `[0, p)`.
+ *
+ * `isOnCurve` reduces mod p before checking, so a caller could hand in
+ * `{ x: 100n, y: 6n }` on p = 97 and have it accepted — while `pointsEqual` and
+ * the `p1.x === p2.x` test in `pointAdd` compare raw bigints and would treat it
+ * as different from `{ x: 3n, y: 6n }`. Adding those two would then take the
+ * chord branch with a zero denominator and throw a misleading "vertical line"
+ * error instead of doubling. Normalising at every entry point removes the whole
+ * class of problem.
+ */
+export function normalisePoint(point: ECPoint, curve: CurveParams): ECPoint {
+  if (point === 'infinity') return 'infinity'
+  return { x: mod(point.x, curve.p), y: mod(point.y, curve.p) }
+}
+
 /** −P is P reflected across the x-axis. */
 export function pointNegate(point: ECPoint, curve: CurveParams): ECPoint {
   if (point === 'infinity') return 'infinity'
-  return { x: point.x, y: mod(-point.y, curve.p) }
+  return { x: mod(point.x, curve.p), y: mod(-point.y, curve.p) }
 }
 
 export function pointsEqual(p1: ECPoint, p2: ECPoint): boolean {
@@ -229,9 +245,10 @@ export function formatPoint(point: ECPoint): string {
  *
  *   λ = (3x² + a) / 2y      x₃ = λ² − 2x      y₃ = λ(x − x₃) − y
  */
-export function pointDouble(point: ECPoint, curve: CurveParams): PointOperationResult {
+export function pointDouble(rawPoint: ECPoint, curve: CurveParams): PointOperationResult {
   validateCurve(curve)
-  assertOnCurve(point, curve, 'P')
+  assertOnCurve(rawPoint, curve, 'P')
+  const point = normalisePoint(rawPoint, curve)
 
   const steps: ArithmeticStep[] = []
   const { p, a } = curve
@@ -303,10 +320,14 @@ export function pointDouble(point: ECPoint, curve: CurveParams): PointOperationR
  *
  *   λ = (y₂ − y₁) / (x₂ − x₁)      x₃ = λ² − x₁ − x₂      y₃ = λ(x₁ − x₃) − y₁
  */
-export function pointAdd(p1: ECPoint, p2: ECPoint, curve: CurveParams): PointOperationResult {
+export function pointAdd(rawP1: ECPoint, rawP2: ECPoint, curve: CurveParams): PointOperationResult {
   validateCurve(curve)
-  assertOnCurve(p1, curve, 'P')
-  assertOnCurve(p2, curve, 'Q')
+  assertOnCurve(rawP1, curve, 'P')
+  assertOnCurve(rawP2, curve, 'Q')
+
+  // Normalise before the x-equality test below, which compares raw bigints.
+  const p1 = normalisePoint(rawP1, curve)
+  const p2 = normalisePoint(rawP2, curve)
 
   const steps: ArithmeticStep[] = []
   const { p } = curve
@@ -405,11 +426,12 @@ export function pointAdd(p1: ECPoint, p2: ECPoint, curve: CurveParams): PointOpe
  */
 export function scalarMultiply(
   k: bigint,
-  point: ECPoint,
+  rawPoint: ECPoint,
   curve: CurveParams
 ): ScalarMultiplyResult {
   validateCurve(curve)
-  assertOnCurve(point, curve, 'P')
+  assertOnCurve(rawPoint, curve, 'P')
+  const point = normalisePoint(rawPoint, curve)
 
   if (k < 0n) {
     throw new CipherError(
@@ -484,10 +506,23 @@ export function scalarMultiply(
   return { result, steps, doublings, additions, naiveAdditions }
 }
 
-/** Repeated addition, kept only as an independent check on double-and-add. */
+/**
+ * Repeated addition, kept only as an independent check on double-and-add.
+ *
+ * Bounded by `MAX_ENUMERABLE_P`: this loops `k` times, so a cryptographic-size
+ * scalar would never return. The guard lives here rather than in the caller so
+ * the library cannot be made to hang by any UI.
+ */
 export function naiveScalarMultiply(k: bigint, point: ECPoint, curve: CurveParams): ECPoint {
   if (k < 0n) {
     throw new CipherError('INVALID_INPUT', `Scalar must be non-negative (got ${k}).`)
+  }
+  if (k > MAX_ENUMERABLE_P) {
+    throw new CipherError(
+      'INVALID_INPUT',
+      `Repeated addition performs k operations, and k = ${k} exceeds the ${MAX_ENUMERABLE_P} ` +
+        `limit. Use scalarMultiply(), which is O(log k) — that difference is the point.`
+    )
   }
 
   let result: ECPoint = 'infinity'
@@ -552,10 +587,28 @@ export function hasseBounds(p: bigint): { lower: number; upper: number; centre: 
   return { lower: Math.ceil(centre - spread), upper: Math.floor(centre + spread), centre }
 }
 
-/** The cyclic subgroup ⟨P⟩ = { P, 2P, 3P, …, O }, in that order. */
-export function subgroupOf(point: ECPoint, curve: CurveParams): SubgroupResult {
+/**
+ * The cyclic subgroup ⟨P⟩ = { P, 2P, 3P, …, O }, in that order.
+ *
+ * Bounded by `MAX_ENUMERABLE_P` for the same reason as `enumeratePoints`: by
+ * Hasse the subgroup order is on the order of p, so on a real curve this would
+ * neither terminate nor fit in memory. `pointOrder` and `discreteLog` both
+ * route through here and inherit the guard.
+ */
+export function subgroupOf(rawPoint: ECPoint, curve: CurveParams): SubgroupResult {
   validateCurve(curve)
-  assertOnCurve(point, curve, 'P')
+  assertOnCurve(rawPoint, curve, 'P')
+
+  if (curve.p > MAX_ENUMERABLE_P) {
+    throw new CipherError(
+      'INVALID_INPUT',
+      `Walking a subgroup takes up to #E ≈ p steps, and this curve has p = ${curve.p}, above ` +
+        `the ${MAX_ENUMERABLE_P} limit. On secp256k1 the walk would take about 2²⁵⁶ additions — ` +
+        `which is exactly why the discrete logarithm is considered hard.`
+    )
+  }
+
+  const point = normalisePoint(rawPoint, curve)
 
   if (point === 'infinity') {
     return { points: ['infinity'], order: 1 }
@@ -657,8 +710,9 @@ export const CURVE_PRESETS: CurveParams[] = [
     gy: 2n,
     plottable: true,
     description:
-      'a = 0 and b = 7 is the secp256k1 shape; this is the same family at a size you can still ' +
-      'plot. #E = 948 = 2² · 3 · 79, so subgroup orders here are genuinely varied.',
+      'Like secp256k1 this has a = 0, though b differs (3 here, 7 there) — the point is the ' +
+      'shape of the equation at a size you can still plot. #E = 948 = 2² · 3 · 79, so subgroup ' +
+      'orders here are genuinely varied.',
   },
   {
     name: 'secp256k1 (Bitcoin) — parameters only',

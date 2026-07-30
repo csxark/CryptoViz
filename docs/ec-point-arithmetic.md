@@ -132,11 +132,14 @@ correct rather than merely self-consistent on toy curves.
 1. Open `/visualizer/ec-point-arithmetic`. The default curve plots 99 affine
    points, symmetric about the midline.
 2. Click two points with **P + Q** selected — the result turns red on the plot
-   and the trace shows the slope, the modular inverse and the coordinates.
-3. Click a point, press **Negate P**, then add the two: the result is `O`, with
-   the vertical-chord explanation.
+   and the trace shows the slope, the modular inverse and the coordinates. The
+   two dropdowns below the plot do the same selection without a mouse.
+3. Click a point, press **Negate P** (which replaces P with −P, leaving Q
+   empty), then click the *original* point again to fill Q. The result is `O`,
+   with the vertical-chord explanation.
 4. Switch to **kP**, set `k = 1000`, and compare the operation count against the
-   naive figure.
+   naive figure. With nothing selected, P shows the base point G — that is the
+   fallback the trace uses.
 5. Press **Use the curve's base point** and expand the subgroup listing — the
    subgroup order divides 100, as Lagrange requires.
 6. Click any multiple in that list to brute-force its discrete log and see the

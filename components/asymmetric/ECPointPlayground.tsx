@@ -34,6 +34,13 @@ type Operation = 'add' | 'double' | 'scalar'
 const PLOT_SIZE = 520
 const PLOT_PADDING = 34
 
+/** Turn an "x,y" option value back into a point, or null for the empty option. */
+function parsePointKey(key: string): ECPoint | null {
+  if (!key) return null
+  const [x, y] = key.split(',')
+  return { x: BigInt(x), y: BigInt(y) }
+}
+
 export default function ECPointPlayground() {
   const [curveName, setCurveName] = useState(CURVE_PRESETS[0].name)
   const [selectedP, setSelectedP] = useState<ECPoint | null>(null)
@@ -283,7 +290,7 @@ export default function ECPointPlayground() {
               viewBox={`0 0 ${PLOT_SIZE} ${PLOT_SIZE}`}
               className="h-auto w-full max-w-xl rounded border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
               role="img"
-              aria-label={`Scatter plot of all ${points.length} affine points on ${curve.name}. The points are symmetric about the horizontal midline. A data table follows below.`}
+              aria-label={`Scatter plot of all ${points.length} affine points on ${curve.name}, symmetric about the horizontal midline. The plot is a visual aid only — the point pickers immediately below select P and Q without it.`}
             >
               <line
                 x1={PLOT_PADDING}
@@ -356,6 +363,59 @@ export default function ECPointPlayground() {
             </span>
             <span>{points.length} affine points + O</span>
           </div>
+
+          {/* Keyboard- and screen-reader-accessible equivalent of clicking the
+              plot. Native selects keep this to two tab stops rather than the
+              hundreds a focusable circle per point would create. */}
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="ec-pick-p"
+                className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Select P
+              </label>
+              <select
+                id="ec-pick-p"
+                className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 font-mono text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
+                value={selectedP && selectedP !== 'infinity' ? `${selectedP.x},${selectedP.y}` : ''}
+                onChange={(e) => setSelectedP(parsePointKey(e.target.value))}
+              >
+                <option value="">— none —</option>
+                {points.map((point) =>
+                  point === 'infinity' ? null : (
+                    <option key={`p-${point.x},${point.y}`} value={`${point.x},${point.y}`}>
+                      ({point.x}, {point.y})
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="ec-pick-q"
+                className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Select Q
+              </label>
+              <select
+                id="ec-pick-q"
+                className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 font-mono text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
+                value={selectedQ && selectedQ !== 'infinity' ? `${selectedQ.x},${selectedQ.y}` : ''}
+                onChange={(e) => setSelectedQ(parsePointKey(e.target.value))}
+              >
+                <option value="">— none —</option>
+                {points.map((point) =>
+                  point === 'infinity' ? null : (
+                    <option key={`q-${point.x},${point.y}`} value={`${point.x},${point.y}`}>
+                      ({point.x}, {point.y})
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+          </div>
         </section>
       )}
 
@@ -390,8 +450,19 @@ export default function ECPointPlayground() {
               P
             </span>
             <span className="font-mono text-sm text-zinc-900 dark:text-white">
-              {selectedP ? formatPoint(selectedP) : curve.plottable ? '— click a point' : formatPoint({ x: curve.gx, y: curve.gy })}
+              {selectedP
+                ? formatPoint(selectedP)
+                : // kP falls back to the base point when nothing is selected, so
+                  // say so rather than showing a prompt while the trace uses G.
+                  operation === 'scalar' || !curve.plottable
+                  ? formatPoint({ x: curve.gx, y: curve.gy })
+                  : '— click a point'}
             </span>
+            {!selectedP && operation === 'scalar' && curve.plottable && (
+              <span className="block text-xs text-zinc-500 dark:text-zinc-500">
+                base point G (nothing selected)
+              </span>
+            )}
           </div>
 
           {operation === 'add' && (

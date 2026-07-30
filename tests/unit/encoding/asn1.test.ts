@@ -163,10 +163,21 @@ describe('parseDer — universal types', () => {
     expect(node.warnings.some((w) => /Non-minimal INTEGER/.test(w))).toBe(true)
   })
 
-  it('renders a long INTEGER as decimal plus hex and a bit length', () => {
+  it('renders a long INTEGER as decimal plus hex and its significant bit width', () => {
+    // 9 content bytes, but the leading 0x00 is DER's sign pad, not magnitude,
+    // so the value is 64 bits wide rather than 72.
     const node = parseDer(hexToBytes('0209' + '00ffffffffffffffff')).nodes[0]
     expect(node.value).toContain('18446744073709551615')
-    expect(node.value).toContain('72 bits')
+    expect(node.value).toContain('64 bits')
+    expect(node.value).not.toContain('72 bits')
+  })
+
+  it('reports a 2048-bit RSA modulus as 2048 bits, not 2056', () => {
+    // 257 content bytes: one 0x00 sign pad plus 256 bytes of magnitude.
+    const modulus = '00' + 'ff'.repeat(256)
+    const node = parseDer(hexToBytes('02820101' + modulus)).nodes[0]
+    expect(node.contentLength).toBe(257)
+    expect(node.value).toContain('2048 bits')
   })
 
   it('decodes NULL and flags content where there should be none', () => {
@@ -186,6 +197,14 @@ describe('parseDer — universal types', () => {
   it('flags a BIT STRING claiming more than 7 unused bits', () => {
     const node = parseDer(hexToBytes('03020800')).nodes[0]
     expect(node.warnings.some((w) => /maximum is 7/.test(w))).toBe(true)
+  })
+
+  it('never reports a negative bit count for an empty BIT STRING payload', () => {
+    // 03 01 05 — the unused-bits byte only, declaring 5 unused bits.
+    const node = parseDer(hexToBytes('030105')).nodes[0]
+    expect(node.value).toContain('0 bits')
+    expect(node.value).not.toContain('-')
+    expect(node.warnings.some((w) => /requires an empty BIT STRING to declare 0/.test(w))).toBe(true)
   })
 
   it('decodes the string types', () => {
@@ -283,7 +302,46 @@ describe('parseDer — structure', () => {
   it('flags an unsorted SET', () => {
     // SET { INTEGER 2, INTEGER 1 } — descending, which DER forbids.
     const node = parseDer(hexToBytes('3106020102020101')).nodes[0]
-    expect(node.warnings.some((w) => /ascending encoded order/.test(w))).toBe(true)
+    expect(node.warnings.some((w) => /ascending order by their complete encoding/.test(w))).toBe(
+      true
+    )
+  })
+
+  it('accepts a correctly sorted SET', () => {
+    const node = parseDer(hexToBytes('3106020101020102')).nodes[0]
+    expect(node.warnings).toHaveLength(0)
+  })
+
+  it('orders SET members by their full encoding, not just their content', () => {
+    // Two members with identical content (0x01) but different tags:
+    // BOOLEAN (0x01) then INTEGER (0x02) is ascending; the reverse is not.
+    // Comparing content alone would see both as equal and miss the violation.
+    const sorted = parseDer(hexToBytes('3106010101020101')).nodes[0]
+    expect(sorted.warnings).toHaveLength(0)
+
+    const unsorted = parseDer(hexToBytes('3106020101010101')).nodes[0]
+    expect(unsorted.children![0].contentHex).toBe(unsorted.children![1].contentHex)
+    expect(unsorted.warnings.some((w) => /complete encoding/.test(w))).toBe(true)
+  })
+
+  it('exposes the tag length separately, so a multi-byte tag is not mistaken for length bytes', () => {
+    // Single-byte tag, single-byte length.
+    const simple = parseDer(hexToBytes('020101')).nodes[0]
+    expect(simple.tagLength).toBe(1)
+    expect(simple.headerLength).toBe(2)
+
+    // 0x1F escape with a two-byte tag number, then a one-byte length.
+    const highTag = parseDer(hexToBytes('1f810000')).nodes[0]
+    expect(highTag.tagNumber).toBe(128)
+    expect(highTag.tagLength).toBe(3)
+    expect(highTag.headerLength).toBe(4)
+  })
+
+  it('records each element complete encoding', () => {
+    const seq = parseDer(hexToBytes('3006020101020102')).nodes[0]
+    expect(seq.encodingHex).toBe('3006020101020102')
+    expect(seq.children![0].encodingHex).toBe('020101')
+    expect(seq.children![1].encodingHex).toBe('020102')
   })
 
   it('reports trailing bytes after the last complete element', () => {

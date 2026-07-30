@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { decodeAsn1, type Asn1Node, type Asn1ParseResult } from '@/lib/encoding/asn1'
 
 /** A self-signed RSA-2048 certificate. Certificates are public by definition. */
@@ -117,12 +117,12 @@ export default function Asn1Decoder() {
     const roles: ByteRole[] = new Array(result.byteLength).fill('none')
     if (!selectedNode) return roles
 
-    const { offset, headerLength, contentLength, tagByte } = selectedNode
-    // Tag occupies 1 byte unless the high-tag-number form was used.
-    const tagBytes = (tagByte & 0x1f) === 0x1f ? headerLength - 1 : 1
+    const { offset, tagLength, headerLength, contentLength } = selectedNode
 
+    // tagLength comes from the parser, so a multi-byte tag alongside a
+    // multi-byte length is split correctly rather than guessed at.
     for (let i = 0; i < headerLength; i++) {
-      if (offset + i < roles.length) roles[offset + i] = i < tagBytes ? 'tag' : 'length'
+      if (offset + i < roles.length) roles[offset + i] = i < tagLength ? 'tag' : 'length'
     }
     for (let i = 0; i < contentLength; i++) {
       const index = offset + headerLength + i
@@ -147,6 +147,100 @@ export default function Asn1Decoder() {
     })
   }
 
+  /**
+   * The nodes a keyboard user can currently reach, in visual order. Children of
+   * a collapsed node are excluded, which is what ArrowUp/ArrowDown must follow.
+   */
+  const visibleNodes = useMemo(() => {
+    const out: Asn1Node[] = []
+    const walk = (nodes: Asn1Node[]) => {
+      for (const node of nodes) {
+        out.push(node)
+        if (node.children?.length && !collapsed.has(node.offset)) walk(node.children)
+      }
+    }
+    if (result) walk(result.nodes)
+    return out
+  }, [result, collapsed])
+
+  // Roving tabindex: exactly one treeitem is in the tab order at a time, and
+  // the arrow keys move focus within the tree. This is the ARIA tree pattern —
+  // without it, role="tree" would be a promise the widget does not keep.
+  const rowRefs = useRef(new Map<number, HTMLLIElement>())
+  const [focusedOffset, setFocusedOffset] = useState<number | null>(null)
+
+  const activeOffset =
+    focusedOffset !== null && visibleNodes.some((n) => n.offset === focusedOffset)
+      ? focusedOffset
+      : (visibleNodes[0]?.offset ?? null)
+
+  function focusOffset(offset: number) {
+    setFocusedOffset(offset)
+    rowRefs.current.get(offset)?.focus()
+  }
+
+  function handleTreeKeyDown(event: React.KeyboardEvent, node: Asn1Node) {
+    const index = visibleNodes.findIndex((n) => n.offset === node.offset)
+    if (index === -1) return
+
+    const hasChildren = Boolean(node.children?.length)
+    const isCollapsed = collapsed.has(node.offset)
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault()
+        if (index + 1 < visibleNodes.length) focusOffset(visibleNodes[index + 1].offset)
+        break
+
+      case 'ArrowUp':
+        event.preventDefault()
+        if (index > 0) focusOffset(visibleNodes[index - 1].offset)
+        break
+
+      case 'ArrowRight':
+        event.preventDefault()
+        if (hasChildren && isCollapsed) toggleCollapsed(node.offset)
+        else if (hasChildren && index + 1 < visibleNodes.length) {
+          focusOffset(visibleNodes[index + 1].offset)
+        }
+        break
+
+      case 'ArrowLeft':
+        event.preventDefault()
+        if (hasChildren && !isCollapsed) {
+          toggleCollapsed(node.offset)
+        } else {
+          // Walk back to the nearest shallower node — this node's parent.
+          for (let i = index - 1; i >= 0; i--) {
+            if (visibleNodes[i].depth < node.depth) {
+              focusOffset(visibleNodes[i].offset)
+              break
+            }
+          }
+        }
+        break
+
+      case 'Home':
+        event.preventDefault()
+        if (visibleNodes.length > 0) focusOffset(visibleNodes[0].offset)
+        break
+
+      case 'End':
+        event.preventDefault()
+        if (visibleNodes.length > 0) focusOffset(visibleNodes[visibleNodes.length - 1].offset)
+        break
+
+      case 'Enter':
+      case ' ':
+        event.preventDefault()
+        setSelectedOffset(selectedOffset === node.offset ? null : node.offset)
+        break
+
+      default:
+        break
+    }
+  }
+
   function renderNode(node: Asn1Node, index: number): React.ReactNode {
     const hasChildren = Boolean(node.children?.length)
     const isCollapsed = collapsed.has(node.offset)
@@ -155,9 +249,24 @@ export default function Asn1Decoder() {
     return (
       <li
         key={`${node.offset}-${index}`}
+        ref={(element) => {
+          if (element) rowRefs.current.set(node.offset, element)
+          else rowRefs.current.delete(node.offset)
+        }}
         role="treeitem"
         aria-selected={isSelected}
         aria-expanded={hasChildren ? !isCollapsed : undefined}
+        aria-level={node.depth + 1}
+        tabIndex={activeOffset === node.offset ? 0 : -1}
+        onKeyDown={(event) => handleTreeKeyDown(event, node)}
+        onFocus={() => setFocusedOffset(node.offset)}
+        onClick={(event) => {
+          // Only act on this row, not on a click bubbling up from a descendant.
+          event.stopPropagation()
+          setSelectedOffset(isSelected ? null : node.offset)
+          focusOffset(node.offset)
+        }}
+        className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
       >
         <div
           className={`flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded px-2 py-1 ${
@@ -165,29 +274,25 @@ export default function Asn1Decoder() {
           }`}
           style={{ marginLeft: `${node.depth * 1.25}rem` }}
         >
-          {hasChildren ? (
-            <button
-              onClick={() => toggleCollapsed(node.offset)}
-              aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${node.typeName} at byte ${node.offset}`}
-              className="w-4 shrink-0 font-mono text-xs text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400"
-            >
-              {isCollapsed ? '▸' : '▾'}
-            </button>
-          ) : (
-            <span className="w-4 shrink-0" aria-hidden="true" />
-          )}
-
-          <button
-            onClick={() => setSelectedOffset(isSelected ? null : node.offset)}
-            className="text-left"
+          <span
+            className="w-4 shrink-0 font-mono text-xs text-zinc-400"
+            aria-hidden="true"
+            onClick={(event) => {
+              if (!hasChildren) return
+              event.stopPropagation()
+              toggleCollapsed(node.offset)
+              focusOffset(node.offset)
+            }}
           >
-            <span className="font-mono text-sm font-semibold text-teal-700 dark:text-teal-400">
-              {node.typeName}
-            </span>
-            <span className="ml-2 font-mono text-xs text-zinc-400">
-              @{node.offset} · hdr {node.headerLength} · len {node.contentLength}
-            </span>
-          </button>
+            {hasChildren ? (isCollapsed ? '▸' : '▾') : ''}
+          </span>
+
+          <span className="font-mono text-sm font-semibold text-teal-700 dark:text-teal-400">
+            {node.typeName}
+          </span>
+          <span className="font-mono text-xs text-zinc-400">
+            @{node.offset} · hdr {node.headerLength} · len {node.contentLength}
+          </span>
 
           {node.value !== undefined && (
             <span className="break-all font-mono text-xs text-zinc-700 dark:text-zinc-300">
@@ -316,6 +421,16 @@ export default function Asn1Decoder() {
               Select any element to highlight its exact bytes in the hex dump below — tag, length
               and content are tinted separately. That mapping is the whole idea: DER is nothing but
               these three fields, nested.
+            </p>
+            <p className={`mb-4 ${MUTED}`}>
+              Keyboard: <kbd className="rounded border border-zinc-300 px-1 text-xs dark:border-zinc-700">↑</kbd>{' '}
+              <kbd className="rounded border border-zinc-300 px-1 text-xs dark:border-zinc-700">↓</kbd> move,{' '}
+              <kbd className="rounded border border-zinc-300 px-1 text-xs dark:border-zinc-700">→</kbd> expand,{' '}
+              <kbd className="rounded border border-zinc-300 px-1 text-xs dark:border-zinc-700">←</kbd> collapse
+              or go to parent,{' '}
+              <kbd className="rounded border border-zinc-300 px-1 text-xs dark:border-zinc-700">Home</kbd>/
+              <kbd className="rounded border border-zinc-300 px-1 text-xs dark:border-zinc-700">End</kbd> jump,{' '}
+              <kbd className="rounded border border-zinc-300 px-1 text-xs dark:border-zinc-700">Enter</kbd> select.
             </p>
 
             <ul role="tree" aria-label="ASN.1 structure" className="space-y-0.5 overflow-x-auto">

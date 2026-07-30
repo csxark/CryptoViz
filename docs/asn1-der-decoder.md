@@ -52,17 +52,26 @@ modulus so often starts with `00`: without it, the high bit would make the value
 negative. `02 02 00 80` is 128; `02 01 80` is −128.
 
 **BIT STRING** — the first content byte is the count of unused bits in the final
-byte (0–7). A `BIT STRING` with 0 unused bits very often wraps another complete
-DER structure; that is exactly how `SubjectPublicKeyInfo` carries a key, and the
-decoder parses the payload and nests it when it parses cleanly.
+byte (0–7). An empty `BIT STRING` must declare 0 unused bits (X.690 §8.6.2.3);
+anything else is flagged, since the bit count would otherwise be negative.
+
+What those bits *mean* is algorithm-defined, not universal. In a
+`SubjectPublicKeyInfo` the `BIT STRING` holds whatever that algorithm's own
+encoding specifies: for RSA it is a DER `RSAPublicKey SEQUENCE`, while for
+Ed25519 (RFC 8410) it is 32 raw key bytes with no ASN.1 structure at all. The
+decoder therefore *attempts* to re-parse the payload and nests it only when the
+parse consumes it exactly — so the RSA case nests and the Ed25519 case correctly
+stays opaque.
 
 **BOOLEAN** — DER requires TRUE to be `0xFF` exactly. BER allows any non-zero
 byte, so `01 01 01` is flagged.
 
 **NULL** — must have zero content bytes.
 
-**SET** — DER requires members to be sorted by their encoding, so that a given
-set has exactly one representation. Unsorted members are flagged.
+**SET** — DER requires members to be sorted by their **complete** encoding — tag
+and length included, not content alone — with shorter encodings zero-padded on
+the right for the comparison. That is what makes a given set have exactly one
+representation. Unsorted members are flagged.
 
 **PrintableString** — restricted to `A–Z a–z 0–9` and `' ( ) + , - . / : = ?`
 plus space. An `@` in a PrintableString is a common real-world bug; the correct
@@ -74,7 +83,11 @@ type is `UTF8String`.
 ## Object identifiers
 
 An OID is a base-128 varint sequence with one special case at the front: the
-first byte packs two arcs as `40 × arc1 + arc2`, with arc1 capped at 2.
+**first subidentifier** packs two arcs as `40 × arc1 + arc2`, with arc1 capped
+at 2. That subidentifier is itself base-128 encoded and can span several octets
+— `2.999`, for instance, encodes `40×2 + 999 = 1079` across two bytes. It fits
+in a single octet only when the combined value is below 128, which happens to be
+true of the example below and of most OIDs in common use.
 
 ```text
 06 09 2A 86 48 86 F7 0D 01 01 0B

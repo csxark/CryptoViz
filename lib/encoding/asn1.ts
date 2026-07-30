@@ -32,6 +32,8 @@ export interface Asn1Node {
   tagNumber: number
   /** Human-readable type, e.g. 'SEQUENCE' or '[0]'. */
   typeName: string
+  /** Bytes consumed by the tag field alone — more than 1 for high tag numbers. */
+  tagLength: number
   /** Bytes consumed by the tag and length fields together. */
   headerLength: number
   /** Bytes of content. */
@@ -40,6 +42,11 @@ export interface Asn1Node {
   totalLength: number
   /** Raw content bytes as hex. */
   contentHex: string
+  /**
+   * The element's complete encoding (tag + length + content) as hex. DER SET OF
+   * ordering is defined over full encodings, not content alone (X.690 §11.6).
+   */
+  encodingHex: string
   /** Type-appropriate rendering of the content, when one is available. */
   value?: string
   /** Resolved OID name, for OBJECT IDENTIFIER nodes with a known OID. */
@@ -374,7 +381,12 @@ function decodeInteger(bytes: Uint8Array, warnings: string[]): string {
 
   // Long integers (RSA moduli, serial numbers) are more legible as hex.
   if (bytes.length > 8) {
-    return `${value.toString()} (0x${bytesToHex(bytes)}, ${bytes.length * 8} bits)`
+    // Report the significant bit width of the magnitude, not the byte count:
+    // DER's leading zero sign-pad would otherwise report a 2048-bit RSA modulus
+    // as 2056 bits.
+    const magnitude = value < 0n ? -value : value
+    const bitWidth = magnitude === 0n ? 0 : magnitude.toString(2).length
+    return `${value.toString()} (0x${bytesToHex(bytes)}, ${bitWidth} bits)`
   }
   return value.toString()
 }
@@ -405,7 +417,18 @@ function decodeBitString(bytes: Uint8Array, warnings: string[]): string {
   }
 
   const payload = bytes.slice(1)
-  const bitCount = payload.length * 8 - Math.min(unusedBits, 7)
+
+  // An empty BIT STRING must declare 0 unused bits (X.690 §8.6.2.3); otherwise
+  // the bit count would come out negative.
+  if (payload.length === 0 && unusedBits !== 0) {
+    warnings.push(
+      `BIT STRING has no payload but declares ${unusedBits} unused bits. X.690 §8.6.2.3 ` +
+        `requires an empty BIT STRING to declare 0 unused bits.`
+    )
+    return `0 bits, ${unusedBits} unused (invalid) — (empty payload)`
+  }
+
+  const bitCount = Math.max(0, payload.length * 8 - Math.min(unusedBits, 7))
   return `${bitCount} bits, ${unusedBits} unused — ${bytesToHex(payload)}`
 }
 
@@ -442,6 +465,8 @@ interface Header {
   tagClass: TagClass
   constructed: boolean
   tagNumber: number
+  /** Bytes the tag field itself occupies. */
+  tagLength: number
   headerLength: number
   contentLength: number
   indefinite: boolean
@@ -483,6 +508,9 @@ function readHeader(bytes: Uint8Array, start: number): Header {
       if ((byte & 0x80) === 0) break
     }
   }
+
+  // The tag field ends here; everything after this is the length field.
+  const tagLength = cursor - start
 
   if (cursor >= bytes.length) {
     throw new CipherError(
@@ -544,6 +572,7 @@ function readHeader(bytes: Uint8Array, start: number): Header {
     tagClass,
     constructed,
     tagNumber,
+    tagLength,
     headerLength: cursor - start,
     contentLength,
     indefinite,
@@ -615,10 +644,12 @@ function parseElements(bytes: Uint8Array, start: number, end: number, depth: num
       constructed: header.constructed,
       tagNumber: header.tagNumber,
       typeName: typeNameFor(header),
+      tagLength: header.tagLength,
       headerLength: header.headerLength,
       contentLength,
       totalLength,
       contentHex: bytesToHex(content),
+      encodingHex: bytesToHex(bytes.slice(cursor, cursor + totalLength)),
       warnings,
       depth,
     }
@@ -763,14 +794,24 @@ function attachNested(node: Asn1Node, payload: Uint8Array, depth: number): void 
   }
 }
 
-/** DER requires the elements of a SET OF to be sorted by their encoding. */
+/**
+ * DER requires the elements of a SET OF to be sorted by their **complete**
+ * encoding — tag and length included, not content alone — with shorter
+ * encodings zero-padded on the right for the comparison (X.690 §11.6).
+ * Comparing content only would miss members that differ solely by tag.
+ */
 function checkSetOrdering(node: Asn1Node, warnings: string[]): void {
   const children = node.children ?? []
+
   for (let i = 1; i < children.length; i++) {
-    if (children[i - 1].contentHex > children[i].contentHex) {
+    const previous = children[i - 1].encodingHex
+    const current = children[i].encodingHex
+    const width = Math.max(previous.length, current.length)
+
+    if (previous.padEnd(width, '0') > current.padEnd(width, '0')) {
       warnings.push(
-        'SET members are not in ascending encoded order. DER requires SET OF to be sorted ' +
-          'so that the same set has exactly one encoding (X.690 §11.6).'
+        'SET members are not in ascending order by their complete encoding. DER requires ' +
+          'SET OF to be sorted so that the same set has exactly one encoding (X.690 §11.6).'
       )
       return
     }

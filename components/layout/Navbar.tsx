@@ -58,6 +58,7 @@ export default function Navbar() {
     { name: 'Avalanche', href: '/avalanche' },
     { name: 'Merkle Tree', href: '/merkle' },
     { name: 'Padding', href: '/padding' },
+    { name: 'TOTP / HOTP', href: '/otp' },
     { name: 'Challenge', href: '/challenge' },
     { name: 'Docs', href: '/docs' },
     { name: 'Offline', href: '/offline' },

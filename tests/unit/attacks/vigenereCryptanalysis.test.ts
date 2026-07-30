@@ -151,7 +151,30 @@ describe('averageIoCForKeyLength', () => {
   it('reports one IoC per coset and the smallest coset size', () => {
     const score = averageIoCForKeyLength(normaliseText(ENGLISH_SAMPLE), 4)
     expect(score.perCoset).toHaveLength(4)
+    expect(score.scorable).toHaveLength(4)
+    expect(score.scorable.every(Boolean)).toBe(true)
     expect(score.smallestCoset).toBeGreaterThan(0)
+  })
+
+  it('counts a genuine IoC of 0 in the mean rather than mistaking it for "unscorable"', () => {
+    // Coset 0 is A B C D, all distinct, so its IoC is exactly 0 — a real score,
+    // not a missing one. Coset 1 is A A A A, scoring 1. The mean must be 0.5;
+    // treating 0 as a sentinel would drop coset 0 and wrongly report 1.
+    const score = averageIoCForKeyLength('AABACADA', 2)
+
+    expect(score.scorable).toEqual([true, true])
+    expect(score.perCoset[0]).toBeCloseTo(0, 10)
+    expect(score.perCoset[1]).toBeCloseTo(1, 10)
+    expect(score.averageIoC).toBeCloseTo(0.5, 10)
+  })
+
+  it('marks a coset of fewer than two letters as unscorable and omits it from the mean', () => {
+    // 3 letters across 2 cosets leaves coset 1 holding a single letter.
+    const score = averageIoCForKeyLength('AAA', 2)
+
+    expect(score.scorable).toEqual([true, false])
+    expect(score.smallestCoset).toBe(1)
+    expect(score.averageIoC).toBeCloseTo(1, 10)
   })
 })
 
@@ -276,6 +299,36 @@ describe('breakVigenere', () => {
     const result = breakVigenere(encryptVigenere(ENGLISH_SAMPLE, 'CRYPT'), { maxKeyLength: 4 })
     expect(result.electedKeyLength).toBeLessThanOrEqual(4)
     expect(result.iocScores.every((s) => s.keyLength <= 4)).toBe(true)
+  })
+
+  it('warns when a short ciphertext forces the key-length search to be clamped', () => {
+    // 48 letters caps the search at floor(48 / 8) = 6, well under the requested 16.
+    const shortSample = 'The quick brown fox jumps over the lazy dog again today'
+    const result = breakVigenere(encryptVigenere(shortSample, 'KEY'), { maxKeyLength: 16 })
+
+    expect(result.iocScores.length).toBeLessThan(16)
+    expect(result.warnings.some((w) => /capped at key length/.test(w))).toBe(true)
+  })
+
+  it('does not warn about clamping when the requested search space fits', () => {
+    const result = breakVigenere(encryptVigenere(ENGLISH_SAMPLE, 'CRYPT'), { maxKeyLength: 8 })
+
+    expect(result.iocScores).toHaveLength(8)
+    expect(result.warnings.some((w) => /capped at key length/.test(w))).toBe(false)
+  })
+
+  it('rejects a non-finite or out-of-range maxKeyLength instead of silently misbehaving', () => {
+    const ciphertext = encryptVigenere(ENGLISH_SAMPLE, 'CRYPT')
+
+    expect(() => breakVigenere(ciphertext, { maxKeyLength: Number.NaN })).toThrowError(
+      /finite number of at least 1/
+    )
+    expect(() => breakVigenere(ciphertext, { maxKeyLength: 0 })).toThrowError(
+      /finite number of at least 1/
+    )
+    expect(() => breakVigenere(ciphertext, { maxKeyLength: -3 })).toThrowError(
+      /finite number of at least 1/
+    )
   })
 
   it('reports high confidence on a long sample', () => {

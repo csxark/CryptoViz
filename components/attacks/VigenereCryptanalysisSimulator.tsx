@@ -26,6 +26,10 @@ const CARD =
 const HEADING = 'mb-3 text-lg font-semibold text-zinc-900 dark:text-white'
 const MUTED = 'text-sm text-zinc-600 dark:text-zinc-400'
 
+/** Bounds for the "max key length" control, matching the input's min/max. */
+const MIN_MAX_KEY_LENGTH = 2
+const MAX_MAX_KEY_LENGTH = 20
+
 type Stage = 'kasiski' | 'ioc' | 'columns'
 
 const STAGES: { id: Stage; label: string; caption: string }[] = [
@@ -124,10 +128,21 @@ export default function VigenereCryptanalysisSimulator() {
             <input
               id="vigenere-maxlen"
               type="number"
-              min={2}
-              max={20}
+              min={MIN_MAX_KEY_LENGTH}
+              max={MAX_MAX_KEY_LENGTH}
               value={maxKeyLength}
-              onChange={(e) => setMaxKeyLength(Number(e.target.value))}
+              onChange={(e) => {
+                // Number('') is 0 and Number('1e') is NaN. Either would reach the
+                // engine and produce a confusing failure, so clamp on the way in.
+                const parsed = Number(e.target.value)
+                if (e.target.value === '' || !Number.isFinite(parsed)) {
+                  setMaxKeyLength(MIN_MAX_KEY_LENGTH)
+                  return
+                }
+                setMaxKeyLength(
+                  Math.min(MAX_MAX_KEY_LENGTH, Math.max(MIN_MAX_KEY_LENGTH, Math.floor(parsed)))
+                )
+              }}
               className="w-20 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
             />
           </div>

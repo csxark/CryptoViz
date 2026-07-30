@@ -67,10 +67,15 @@ export interface FactorTally {
 
 export interface IoCScore {
   keyLength: number
-  /** Mean Index of Coincidence across the m cosets. */
+  /** Mean Index of Coincidence across the scorable cosets. */
   averageIoC: number
-  /** IoC of each individual coset, in coset order. */
+  /** IoC of each individual coset, in coset order; 0 where the coset was unscorable. */
   perCoset: number[]
+  /**
+   * Which cosets were long enough to score. A coset of fewer than 2 letters has
+   * no defined IoC, and must not be confused with one that genuinely scored 0.
+   */
+  scorable: boolean[]
   /** Smallest coset size — small values make this score unreliable. */
   smallestCoset: number
 }
@@ -329,24 +334,43 @@ export function splitIntoCosets(normalised: string, keyLength: number): string[]
   return cosets
 }
 
-/** Mean IoC across the m cosets, ignoring any coset too short to score. */
+/**
+ * Mean IoC across the m cosets, ignoring any coset too short to score.
+ *
+ * Scorability is tracked as its own flag rather than inferred from a zero
+ * value. A coset whose letters happen to be all distinct has a genuine IoC of
+ * exactly 0, and silently dropping it from the mean would inflate the average
+ * for wrong key lengths — which is precisely the number the election threshold
+ * reads.
+ */
 export function averageIoCForKeyLength(normalised: string, keyLength: number): IoCScore {
   const cosets = splitIntoCosets(normalised, keyLength)
   const perCoset: number[] = []
+  const scorable: boolean[] = []
+  const scored: number[] = []
   let smallestCoset = Number.POSITIVE_INFINITY
 
   for (const coset of cosets) {
     smallestCoset = Math.min(smallestCoset, coset.length)
-    perCoset.push(coset.length >= 2 ? indexOfCoincidence(coset) : 0)
+
+    if (coset.length >= 2) {
+      const ioc = indexOfCoincidence(coset)
+      perCoset.push(ioc)
+      scorable.push(true)
+      scored.push(ioc)
+    } else {
+      perCoset.push(0)
+      scorable.push(false)
+    }
   }
 
-  const scored = perCoset.filter((v) => v > 0)
   const averageIoC = scored.length === 0 ? 0 : scored.reduce((a, b) => a + b, 0) / scored.length
 
   return {
     keyLength,
     averageIoC,
     perCoset,
+    scorable,
     smallestCoset: smallestCoset === Number.POSITIVE_INFINITY ? 0 : smallestCoset,
   }
 }
@@ -497,12 +521,32 @@ export function breakVigenere(
     )
   }
 
-  // Never consider a key length that would leave cosets too short to score.
-  const lengthCeiling = Math.max(1, Math.floor(normalised.length / MIN_LETTERS_PER_COSET))
-  const maxKeyLength = Math.max(1, Math.min(options.maxKeyLength ?? 16, lengthCeiling))
-
   const steps: CryptanalysisStep[] = []
   const warnings: string[] = []
+
+  // Never consider a key length that would leave cosets too short to score.
+  const requestedMaxKeyLength = options.maxKeyLength ?? 16
+  if (!Number.isFinite(requestedMaxKeyLength) || requestedMaxKeyLength < 1) {
+    throw new CipherError(
+      'INVALID_INPUT',
+      `maxKeyLength must be a finite number of at least 1 — got ${requestedMaxKeyLength}.`
+    )
+  }
+
+  const lengthCeiling = Math.max(1, Math.floor(normalised.length / MIN_LETTERS_PER_COSET))
+  const maxKeyLength = Math.max(1, Math.min(Math.floor(requestedMaxKeyLength), lengthCeiling))
+
+  // A silent clamp would guarantee a wrong answer for any longer key with
+  // nothing in the output explaining why, so say so explicitly.
+  if (maxKeyLength < Math.floor(requestedMaxKeyLength)) {
+    warnings.push(
+      `The search was capped at key length ${maxKeyLength} rather than the requested ` +
+        `${Math.floor(requestedMaxKeyLength)}: with ${normalised.length} letters, anything longer ` +
+        `would leave cosets under ${MIN_LETTERS_PER_COSET} letters and make the per-column ` +
+        `statistics meaningless. If the real key is longer than ${maxKeyLength}, this result is ` +
+        `wrong — supply a longer ciphertext sample.`
+    )
+  }
 
   /* Stage 1 — Kasiski --------------------------------------------------- */
 

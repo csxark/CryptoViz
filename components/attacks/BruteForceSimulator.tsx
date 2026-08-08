@@ -489,7 +489,7 @@ export default function BruteForceSimulator() {
                   const isLocked = index < simLockedCount || simStatus === "success";
                   return (
                     <div
-                      key={index}
+                      key={`char-${index}-${char}`} // character position + value is unique
                       className={cn(
                         "flex h-12 w-10 items-center justify-center rounded-lg border text-lg font-black font-mono transition-all duration-150",
                         isLocked
@@ -520,7 +520,7 @@ export default function BruteForceSimulator() {
               {/* Scrolling Console log */}
               <div className="mt-4 w-full rounded-lg bg-black/60 p-3 font-mono text-[10px] text-teal-400/80 leading-relaxed border border-white/5 max-h-24 overflow-y-auto">
                 {simLog.map((logLine, idx) => (
-                  <div key={idx}>{logLine}</div>
+                  <div key={`log-${idx}-${logLine.slice(0, 20)}`}>{logLine}</div>
                 ))}
               </div>
             </div>

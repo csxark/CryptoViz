@@ -94,7 +94,7 @@ export default function SessionEnvironmentComparison({
           const Icon = row.icon;
           return (
             <div
-              key={idx}
+              key={row.label} // static list, label is unique
               className={`grid grid-cols-12 items-center px-5 py-3 transition-colors ${
                 row.highlightDiff
                   ? "bg-teal-50/50 dark:bg-teal-950/20"

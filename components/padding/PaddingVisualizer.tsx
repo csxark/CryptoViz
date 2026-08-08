@@ -40,7 +40,7 @@ export default function PaddingVisualizer({ scheme, inputString = 'SECRET', bloc
             const isPadding = scheme === 'pkcs7' && i >= inputBytes.length
             return (
               <div 
-                key={i}
+                key={i} // static byte positions, index key is safe
                 title={isPadding ? `Padding Byte: 0x${b.toString(16).padStart(2, '0')}` : `Data Byte: ${String.fromCharCode(b)}`}
                 className={`
                   flex aspect-square items-center justify-center rounded-md font-mono text-xs sm:text-sm font-semibold tabular-nums

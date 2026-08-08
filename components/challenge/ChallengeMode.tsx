@@ -1054,7 +1054,7 @@ export default function ChallengeMode() {
                     <div className="mt-2 text-sm font-semibold text-zinc-900 dark:text-white">{challengeExplanation.title}</div>
                     <ul className="mt-2 list-disc pl-5 text-sm text-zinc-700 dark:text-zinc-200">
                       {challengeExplanation.details.map((d, idx) => (
-                        <li key={idx} className="mt-1">{d}</li>
+                        <li key={`${idx}-${d}`} className="mt-1">{d}</li>
                       ))}
                     </ul>
                   </div>
@@ -1090,7 +1090,7 @@ export default function ChallengeMode() {
             <div className="mt-4 flex h-2 w-full gap-1">
               {Array.from({ length: questionCount }).map((_, i) => (
                 <div
-                  key={i}
+                  key={i} // static progress bar, index key is safe
                   className={`h-full flex-1 rounded-full transition-colors ${
                     i < currentQuestionIndex
                       ? 'bg-teal-500 dark:bg-teal-400'

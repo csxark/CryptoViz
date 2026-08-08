@@ -163,7 +163,7 @@ function GcmTamperDemoInner() {
                 const changed = sealed.originalCtHex.slice(i * 2, i * 2 + 2) !== b
                 return (
                   <button
-                    key={i}
+                    key={`byte-${i}-${b}`}
                     onClick={() => flipByte(i)}
                     className={`rounded px-1.5 py-1 font-mono text-xs transition-colors ${
                       changed

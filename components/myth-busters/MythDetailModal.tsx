@@ -81,8 +81,8 @@ export default function MythDetailModal({ myth, isOpen, onClose }: MythDetailMod
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1.5 pt-2">
-          {myth.tags.map((tag, idx) => (
-            <span key={idx} className="rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs text-zinc-600 dark:text-zinc-400">
+          {myth.tags.map((tag) => (
+            <span key={tag} className="rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs text-zinc-600 dark:text-zinc-400">
               #{tag}
             </span>
           ))}

@@ -621,9 +621,9 @@ export default React.memo(function ComparisonChart({
 
         <p className="font-semibold text-zinc-800 dark:text-zinc-200 mb-2">Active Ciphers (sorted by average time):</p>
         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-2">
-          {filteredData.map((item, index) => (
+          {filteredData.map((item) => (
             <div
-              key={index}
+              key={item.fullName}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-50 border border-zinc-200 text-[11px] text-zinc-700 dark:bg-zinc-900/60 dark:border-zinc-800 dark:text-zinc-300 animate-fade-in"
             >
               <div

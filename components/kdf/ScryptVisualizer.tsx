@@ -239,7 +239,7 @@ export default function ScryptVisualizer() {
           </h2>
           <ol className="space-y-4">
             {stages.map((step, i) => (
-              <li key={i} className="flex gap-4 border-l-2 border-teal-500 pl-4 py-0.5">
+              <li key={`step-${i}-${step.label}`} className="flex gap-4 border-l-2 border-teal-500 pl-4 py-0.5">
                 <div className="flex-1">
                   <h4 className="text-sm font-bold text-zinc-900 dark:text-white">
                     {step.label}

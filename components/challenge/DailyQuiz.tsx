@@ -144,14 +144,14 @@ export default function DailyQuiz() {
       <fieldset>
         <legend className="sr-only">Choose the correct plaintext</legend>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Multiple choice options">
-          {dailyData.options.map((option, idx) => {
+          {dailyData.options.map((option) => {
             const isSelected = selectedAnswer === option;
             const isCorrect = isSelected && feedback === 'correct';
             const isWrong = isSelected && feedback === 'incorrect';
             
             return (
               <button
-                key={idx}
+                key={option}
                 type="button"
                 role="radio"
                 aria-checked={isSelected}
@@ -201,7 +201,7 @@ export default function DailyQuiz() {
             <h4 className="text-sm font-bold text-red-800 dark:text-red-400 mb-2">{explanation.title}</h4>
             <ul className="list-disc list-inside space-y-1 text-sm text-red-700 dark:text-red-300">
               {explanation.details.map((detail, i) => (
-                <li key={i}>{detail}</li>
+                <li key={`${i}-${detail.slice(0, 20)}`}>{detail}</li>
               ))}
             </ul>
             <div className="mt-4 text-center">

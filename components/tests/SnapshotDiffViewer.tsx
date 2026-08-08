@@ -48,7 +48,7 @@ export default function SnapshotDiffViewer({
 
           return (
             <div
-              key={idx}
+              key={`line-${line.lineNumber}-${line.type}`}
               className={`flex items-start gap-3 py-0.5 px-2 font-mono leading-relaxed transition-colors ${
                 isAdded
                   ? "bg-emerald-950/70 text-emerald-300 font-semibold"

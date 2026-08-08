@@ -53,19 +53,19 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
           elements.push(val);
         } else if (groupType === 1) {
           // comment
-          elements.push(<span key={idx} className="text-zinc-500 dark:text-zinc-500 italic">{val}</span>);
+          elements.push(<span key={`comment-${idx}`} className="text-zinc-500 dark:text-zinc-500 italic">{val}</span>);
         } else if (groupType === 2) {
           // string
-          elements.push(<span key={idx} className="text-emerald-650 dark:text-emerald-400">{val}</span>);
+          elements.push(<span key={`string-${idx}`} className="text-emerald-650 dark:text-emerald-400">{val}</span>);
         } else if (groupType === 3) {
           // keyword
-          elements.push(<span key={idx} className="text-teal-600 dark:text-teal-400 font-bold">{val}</span>);
+          elements.push(<span key={`keyword-${idx}`} className="text-teal-600 dark:text-teal-400 font-bold">{val}</span>);
         } else if (groupType === 4) {
           // builtin
-          elements.push(<span key={idx} className="text-cyan-600 dark:text-cyan-400">{val}</span>);
+          elements.push(<span key={`builtin-${idx}`} className="text-cyan-600 dark:text-cyan-400">{val}</span>);
         } else if (groupType === 5) {
           // number
-          elements.push(<span key={idx} className="text-amber-500 dark:text-amber-400 font-mono">{val}</span>);
+          elements.push(<span key={`number-${idx}`} className="text-amber-500 dark:text-amber-400 font-mono">{val}</span>);
         }
       }
       idx++;
@@ -110,7 +110,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
         <table className="w-full border-collapse">
           <tbody>
             {lines.map((line, idx) => (
-              <tr key={idx} className="hover:bg-zinc-200/30 dark:hover:bg-zinc-900/40 group/row transition-colors">
+              <tr key={idx} className="hover:bg-zinc-200/30 dark:hover:bg-zinc-900/40 group/row transition-colors"> {/* static list, index key is safe */}
                 <td className="w-9 select-none text-right pr-3 text-zinc-400 dark:text-zinc-600 font-mono text-[10px] border-r border-zinc-200/50 dark:border-zinc-800/50 py-0.5">
                   {idx + 1}
                 </td>

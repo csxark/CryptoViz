@@ -64,8 +64,8 @@ export default function OfflinePackDrawer({
             Topics & Concepts Covered
           </h3>
           <div className="flex flex-wrap gap-2">
-            {pack.topics.map((t, i) => (
-              <span key={i} className="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-800 dark:text-zinc-200">
+            {pack.topics.map((t) => (
+              <span key={t} className="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-800 dark:text-zinc-200">
                 {t}
               </span>
             ))}
@@ -79,8 +79,8 @@ export default function OfflinePackDrawer({
             Included Documentation Articles ({pack.docItems.length})
           </h3>
           <div className="space-y-2.5">
-            {pack.docItems.map((doc, idx) => (
-              <div key={idx} className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/50 p-3.5">
+            {pack.docItems.map((doc) => (
+              <div key={doc.slug} className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/50 p-3.5">
                 <div className="font-semibold text-sm text-zinc-900 dark:text-white">{doc.title}</div>
                 <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{doc.description}</div>
               </div>
@@ -95,8 +95,8 @@ export default function OfflinePackDrawer({
             Included Visualizer Algorithms ({pack.cipherItems.length})
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {pack.cipherItems.map((cipher, idx) => (
-              <div key={idx} className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/50 p-3">
+            {pack.cipherItems.map((cipher) => (
+              <div key={cipher.id} className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/50 p-3">
                 <div className="font-semibold text-xs text-zinc-900 dark:text-white">{cipher.name}</div>
                 <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">{cipher.description}</div>
               </div>

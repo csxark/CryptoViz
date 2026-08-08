@@ -252,8 +252,8 @@ const StepAnimator = memo(function StepAnimator({
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {step.table.map((row, idx) => (
-                  <tr key={idx} className="bg-white dark:bg-zinc-900/10">
+                {step.table.map((row) => (
+                  <tr key={row.key} className="bg-white dark:bg-zinc-900/10">
                     <td className="px-3 py-1.5 font-medium text-zinc-500 dark:text-zinc-400">
                       {row.key}
                     </td>

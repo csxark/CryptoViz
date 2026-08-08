@@ -68,9 +68,9 @@ export default function OfflinePackCard({
 
         {/* Topic Pills */}
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {pack.topics.slice(0, 4).map((topic, i) => (
+          {pack.topics.slice(0, 4).map((topic) => (
             <span
-              key={i}
+              key={topic}
               className="rounded-md bg-zinc-100 dark:bg-zinc-800/80 px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300"
             >
               {topic}

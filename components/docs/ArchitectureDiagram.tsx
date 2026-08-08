@@ -55,7 +55,7 @@ export const ArchitectureDiagram: React.FC = () => {
         <div className="flex items-center gap-1.5">
           {STEPS.map((_, idx) => (
             <button
-              key={idx}
+              key={idx} // static steps, index key is safe
               onClick={() => setActiveStep(idx)}
               className={`w-3 h-3 rounded-full transition-all ${
                 activeStep === idx

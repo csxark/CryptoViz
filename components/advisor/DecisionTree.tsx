@@ -77,7 +77,7 @@ export default function DecisionTree() {
           
           <ul className="space-y-3">
             {history.map((step, index) => (
-              <li key={index} className="flex items-start gap-3">
+              <li key={`step-${index}-${step.summary.slice(0, 20)}`} className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[10px] font-bold text-teal-700 dark:bg-teal-900/50 dark:text-teal-400">
                   ✓
                 </span>

@@ -286,7 +286,7 @@ export default function AvalancheVisualizer() {
                 const active = index === safeCharIndex
                 return (
                   <button
-                    key={index}
+                    key={`char-${index}-${char}`}
                     type="button"
                     onClick={() => setCharIndex(index)}
                     aria-pressed={active}

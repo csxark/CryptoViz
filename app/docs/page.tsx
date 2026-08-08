@@ -250,18 +250,18 @@ export default function DocumentationPage() {
         if (isCode) {
           node = (
             <code
-              key={idx}
+              key={`code-${idx}-${part}`}
               className="bg-zinc-200/60 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-1.5 py-0.5 rounded font-mono text-xs text-rose-600 dark:text-rose-455"
             >
               {node}
             </code>
           );
         } else if (typeof part === "string") {
-          node = <GlossaryTextRenderer key={idx} content={part} />;
+          node = <GlossaryTextRenderer key={`text-${idx}-${part}`} content={part} />;
           if (isBold) {
             node = (
               <strong
-                key={idx}
+                key={`bold-${idx}-${part}`}
                 className="font-semibold text-zinc-900 dark:text-white"
               >
                 {node}
@@ -271,7 +271,7 @@ export default function DocumentationPage() {
         } else if (isBold) {
           node = (
             <strong
-              key={idx}
+              key={`bold-obj-${idx}`}
               className="font-semibold text-zinc-900 dark:text-white"
             >
               {node}
@@ -282,7 +282,7 @@ export default function DocumentationPage() {
         if (isHighlight) {
           node = (
             <mark
-              key={`hl-${idx}`}
+              key={`hl-${idx}-${typeof node === 'string' ? node.slice(0, 10) : 'object'}`}
               className="bg-yellow-200/80 dark:bg-yellow-500/35 text-zinc-950 dark:text-yellow-100 px-0.5 rounded shadow-xs font-semibold"
             >
               {node}
@@ -520,7 +520,7 @@ export default function DocumentationPage() {
             if (paragraph.startsWith("•")) {
               return (
                 <div
-                  key={idx}
+                  key={`bullet-${idx}-${paragraph.slice(0, 20)}`}
                   className="flex items-center gap-3 pl-2 py-1 text-zinc-650 dark:text-zinc-300 font-sans"
                 >
                   <span className="h-1.5 w-1.5 rounded-full bg-teal-500 flex-shrink-0" />
@@ -541,7 +541,7 @@ export default function DocumentationPage() {
             ) {
               return (
                 <div
-                  key={idx}
+                  key={`command-${idx}-${paragraph.slice(0, 20)}`}
                   className="bg-zinc-50 dark:bg-zinc-950 rounded-lg p-4 border border-zinc-200 dark:border-zinc-800 font-mono text-xs text-teal-600 dark:text-teal-400 flex justify-between items-center group shadow-sm dark:shadow-inner my-4 transition-colors"
                 >
                   <code className="break-all select-text">{paragraph}</code>
@@ -594,7 +594,7 @@ export default function DocumentationPage() {
             }
 
             return (
-              <p key={idx} className="whitespace-pre-line">
+              <p key={`paragraph-${idx}-${paragraph.slice(0, 20)}`} className="whitespace-pre-line">
                 {renderFormattedText(paragraph, activeQuery)}
               </p>
             );
@@ -632,7 +632,7 @@ export default function DocumentationPage() {
           <MathBlock formula={cipher.mathematics.decryptionFormula} />
           <ul className="list-disc list-inside space-y-2 mt-4 text-zinc-500 dark:text-zinc-400">
             {cipher.mathematics.explanation.map((exp, idx) => (
-              <li key={idx} className="pl-1">
+              <li key={`math-exp-${idx}-${exp.slice(0, 20)}`} className="pl-1">
                 {renderFormattedText(exp, activeQuery)}
               </li>
             ))}
@@ -664,7 +664,7 @@ export default function DocumentationPage() {
               </h4>
               <ul className="space-y-2">
                 {cipher.securityAnalysis.advantages.map((adv, idx) => (
-                  <li key={idx} className="flex gap-2 items-start">
+                  <li key={`adv-${idx}-${adv.slice(0, 20)}`} className="flex gap-2 items-start">
                     <span className="text-teal-500 select-none">✓</span>
                     <span className="text-zinc-600 dark:text-zinc-400 text-xs">
                       {renderFormattedText(adv, activeQuery)}
@@ -679,7 +679,7 @@ export default function DocumentationPage() {
               </h4>
               <ul className="space-y-2">
                 {cipher.securityAnalysis.weaknesses.map((weak, idx) => (
-                  <li key={idx} className="flex gap-2 items-start">
+                  <li key={`weak-${idx}-${weak.slice(0, 20)}`} className="flex gap-2 items-start">
                     <span className="text-red-500 select-none">✗</span>
                     <span className="text-zinc-600 dark:text-zinc-400 text-xs">
                       {renderFormattedText(weak, activeQuery)}
@@ -694,7 +694,7 @@ export default function DocumentationPage() {
         <DocumentationSection title="Real-world Applications">
           <ul className="list-disc list-inside space-y-2 text-zinc-550 dark:text-zinc-400">
             {cipher.realWorldApplications.map((app, idx) => (
-              <li key={idx} className="pl-1">
+              <li key={`app-${idx}-${app.slice(0, 20)}`} className="pl-1">
                 {renderFormattedText(app, activeQuery)}
               </li>
             ))}
@@ -725,6 +725,329 @@ export default function DocumentationPage() {
     );
   };
 
+  return (
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-teal-200 dark:selection:bg-teal-500 selection:text-zinc-900 flex flex-col transition-colors duration-300">
+      {/* Search Overlay / Command Palette */}
+      {searchOpen && (
+        <div
+          className="fixed inset-0 bg-zinc-900/60 dark:bg-black/80 backdrop-blur-xs z-50 flex items-start justify-center pt-20 px-4"
+          onClick={() => setSearchOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[500px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Input Row */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+              <svg
+                className="w-4 h-4 text-zinc-400 dark:text-zinc-500 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                ref={searchInputRef}
+                type="text"
+                role="combobox"
+                aria-expanded={searchOpen}
+                aria-controls="search-listbox"
+                aria-activedescendant={searchResults.length > 0 ? `search-option-${activeIndex}` : undefined}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setActiveIndex(0);
+                }}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search documentation (ciphers, setups, architectures)..."
+                className="w-full text-sm font-sans bg-transparent border-0 outline-none text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500"
+              />
+              <span className="text-[10px] font-mono font-semibold text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-800 px-1.5 py-0.5 rounded shrink-0 select-none">
+                ESC
+              </span>
+            </div>
+
+            {/* Results list */}
+            <div className="overflow-y-auto flex-1 py-2">
+              {searchResults.length > 0 ? (
+                <div id="search-listbox" role="listbox" className="px-2 space-y-1">
+                  {searchResults.map((item, idx) => {
+                    const isFocused = idx === activeIndex;
+                    return (
+                      <button
+                        key={`${item.category.title}-${item.field}-${item.snippet.slice(0, 20)}`}
+                        id={`search-option-${idx}`}
+                        role="option"
+                        aria-selected={isFocused}
+                        onClick={() => handleSelectResult(item)}
+                        className={`w-full text-left p-3 rounded-lg flex flex-col gap-1 transition-all ${
+                          isFocused
+                            ? "bg-teal-500/10 border-l-2 border-teal-500 dark:bg-teal-500/5 pl-4"
+                            : "hover:bg-zinc-100 dark:hover:bg-zinc-800/40 border-l-2 border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono font-bold text-teal-650 dark:text-teal-400 uppercase tracking-wider">
+                            {item.category.title}
+                          </span>
+                          <span className="text-[9px] font-mono text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-800/80 px-1 py-0.2 rounded bg-zinc-50 dark:bg-zinc-950 uppercase">
+                            {item.field}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-sans line-clamp-2">
+                          {renderFormattedText(item.snippet, searchQuery)}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : searchQuery.trim().length >= 2 ? (
+                <div className="py-8 text-center text-zinc-400 dark:text-zinc-500 font-sans text-xs">
+                  No matching documentation articles found.
+                </div>
+              ) : (
+                <div className="py-8 text-center text-zinc-400 dark:text-zinc-500 font-sans text-xs flex flex-col gap-2 justify-center items-center select-none">
+                  <svg
+                    className="w-6 h-6 text-zinc-300 dark:text-zinc-700"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                  </svg>
+                  <span>Type at least 2 characters to search...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Keyboard guidance footer */}
+            <div className="px-4 py-2 border-t border-zinc-200 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
+              <div className="flex gap-2">
+                <span>↑↓ to navigate</span>
+                <span>•</span>
+                <span>Enter to select</span>
+              </div>
+              <span>CryptoViz Docs Search</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header bar */}
+      <div className="w-full h-14 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-850 px-6 flex items-center justify-between sticky top-0 z-40 transition-colors">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="text-xs font-mono text-zinc-500 hover:text-teal-500 transition-colors cursor-pointer"
+          >
+            ← Home
+          </Link>
+          <span className="font-mono text-xs text-teal-650 dark:text-teal-400 font-bold tracking-widest uppercase">
+            CryptoViz // Docs
+          </span>
+          <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-800">
+            v1.0.0
+          </span>
+        </div>
+
+        {/* Trigger Search Box */}
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 text-zinc-400 dark:text-zinc-500 text-xs font-mono hover:border-teal-500/50 hover:text-zinc-650 dark:hover:text-zinc-300 transition-all cursor-pointer select-none"
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          <span className="hidden sm:inline">Search...</span>
+          <kbd className="hidden md:inline bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-1 py-0.2 rounded text-[10px] text-zinc-400 dark:text-zinc-500">
+            Ctrl + K
+          </kbd>
+        </button>
+      </div>
+
+      <div className="flex-1 w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row">
+        {/* Navigation Sidebar */}
+        <aside className="w-full lg:w-64 bg-zinc-50 dark:bg-zinc-900/40 border-b lg:border-b-0 lg:border-r border-zinc-200 dark:border-zinc-850 p-6 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] overflow-y-auto shrink-0 flex flex-col gap-8 transition-colors">
+          <div>
+            {hasLoaded && (
+              <div className="mb-8">
+                <LearningProgressPanel
+                  completedCount={progress.completed.length}
+                  bookmarkedCount={progress.bookmarks.length}
+                  totalCount={docCategories.length}
+                  percent={percent}
+                  onClear={() => {
+                    if (
+                      window.confirm(
+                        "Clear all documentation bookmarks and completion progress?",
+                      )
+                    ) {
+                      clear();
+                    }
+                  }}
+                />
+              </div>
+            )}
+            <h3 className="text-xs font-mono font-bold text-zinc-450 dark:text-zinc-550 uppercase tracking-widest mb-3 px-2">
+              Overview
+            </h3>
+            <nav className="space-y-1">
+              {generalDocs.map((category) => {
+                const isSelected = activeSection.title === category.title;
+                const slug = getDocSlug(category.title);
+                const bookmarked = progress.bookmarks.includes(slug);
+                const completed = progress.completed.includes(slug);
+
+                return (
+                  <button
+                    key={category.title}
+                    type="button"
+                    onClick={() => {
+                      setActiveSection(category);
+                      setActiveQuery("");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                      isSelected
+                        ? "bg-teal-500/10 font-semibold text-teal-700 dark:text-teal-300"
+                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100"
+                    }`}
+                  >
+                    <span className="flex w-full items-center justify-between gap-2">
+                      <span>{category.title}</span>
+                      <span
+                        className="flex shrink-0 gap-1"
+                        aria-label="Article status"
+                      >
+                        {bookmarked && (
+                          <span title="Bookmarked" aria-label="Bookmarked">
+                            ★
+                          </span>
+                        )}
+                        {completed && (
+                          <span
+                            title="Completed"
+                            aria-label="Completed"
+                            className="text-emerald-600 dark:text-emerald-400"
+                          >
+                            ✓
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-mono font-bold text-zinc-450 dark:text-zinc-550 uppercase tracking-widest mb-3 px-2">
+              Ciphers
+            </h3>
+            <nav className="space-y-1">
+              {cipherDocs.map((category) => {
+                const isSelected = activeSection.title === category.title;
+                const slug = getDocSlug(category.title);
+                const bookmarked = progress.bookmarks.includes(slug);
+                const completed = progress.completed.includes(slug);
+
+                return (
+                  <button
+                    key={category.title}
+                    type="button"
+                    onClick={() => {
+                      setActiveSection(category);
+                      setActiveQuery("");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                      isSelected
+                        ? "bg-teal-500/10 font-semibold text-teal-700 dark:text-teal-300"
+                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100"
+                    }`}
+                  >
+                    <span className="flex w-full items-center justify-between gap-2">
+                      <span>{category.title}</span>
+                      <span
+                        className="flex shrink-0 gap-1"
+                        aria-label="Article status"
+                      >
+                        {bookmarked && (
+                          <span title="Bookmarked" aria-label="Bookmarked">
+                            ★
+                          </span>
+                        )}
+                        {completed && (
+                          <span
+                            title="Completed"
+                            aria-label="Completed"
+                            className="text-emerald-600 dark:text-emerald-400"
+                          >
+                            ✓
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-10 w-full max-w-none lg:max-w-3xl overflow-y-auto">
+          {/* Highlight indicator banner */}
+          {activeQuery && (
+            <div className="mb-6 px-4 py-2.5 bg-yellow-500/10 border border-yellow-500/25 rounded-lg flex items-center justify-between text-xs font-sans text-yellow-800 dark:text-yellow-250 transition-all">
+              <span className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                </span>
+                Highlighting matching search term: &ldquo;
+                <strong className="font-semibold">{activeQuery}</strong>&rdquo;
+              </span>
+              <button
+                onClick={() => setActiveQuery("")}
+                className="text-[10px] font-mono bg-white dark:bg-zinc-900 border border-yellow-500/20 hover:border-yellow-500 text-yellow-800 dark:text-yellow-400 px-2 py-0.5 rounded cursor-pointer transition-all"
+              >
+                Clear Highlights
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 dark:text-zinc-500 mb-6 select-none">
+            <span>Docs</span>
+            <span>/</span>
+            <span>
+              {activeSection.type === "cipher" ? "Ciphers" : "Architecture"}
+            </span>
+            <span>/</span>
+            <span className="text-teal-655 dark:text-teal-400">
+              {activeSection.title}
+            </span>
+          </div>
+
+          <h1 className="text-3xl font-mono font-bold text-zinc-900 dark:text-white tracking-tight mb-2 select-text">
+            {activeSection.title}
+          </h1>
+          <p className="text-sm font-sans text-zinc-550 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6 leading-relaxed select-text">
+            {renderFormattedText(activeSection.description, activeQuery)}
+          </p>
 export const metadata: Metadata = {
   title: "Documentation | CryptoViz",
   description:

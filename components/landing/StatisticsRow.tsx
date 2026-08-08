@@ -12,7 +12,7 @@ export default function StatisticsRow() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {stats.map((stat, idx) => (
-            <div key={idx} className="flex flex-col items-center justify-center text-center">
+            <div key={idx} className="flex flex-col items-center justify-center text-center"> {/* static list, index key is safe */}
               <div className="text-4xl font-extrabold text-zinc-900 dark:text-[#F5F5F5] tracking-tight">
                 <StatCounter value={stat.value} duration={2} />
                 <span className="text-teal-600 dark:text-[#00C2AE]">{stat.suffix}</span>

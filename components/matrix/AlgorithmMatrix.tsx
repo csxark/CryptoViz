@@ -109,9 +109,9 @@ export default function AlgorithmMatrix() {
                     </td>
                     <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400">
                       <div className="flex flex-wrap gap-1">
-                        {entry.applications.map((app, idx) => (
+                        {entry.applications.map((app) => (
                           <span
-                            key={idx}
+                            key={app}
                             className="inline-block rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 whitespace-nowrap"
                           >
                             {app}

@@ -81,8 +81,8 @@ export default function GlossaryModal({ term, isOpen, onClose }: GlossaryModalPr
         {/* Tags */}
         <div className="flex items-center gap-2 flex-wrap pt-2">
           <Tag className="h-3.5 w-3.5 text-zinc-400" />
-          {term.tags.map((tag, idx) => (
-            <span key={idx} className="rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs text-zinc-600 dark:text-zinc-400">
+          {term.tags.map((tag) => (
+            <span key={tag} className="rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs text-zinc-600 dark:text-zinc-400">
               #{tag}
             </span>
           ))}

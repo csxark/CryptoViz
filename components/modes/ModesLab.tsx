@@ -123,7 +123,7 @@ export default function ModesLab() {
             <div className="flex flex-wrap gap-1">
               {row.changed.map((b, i) => (
                 <span
-                  key={i}
+                  key={`byte-${i}-${b}`}
                   className={`rounded px-1 py-0.5 font-mono text-[11px] ${
                     row.diff[i]
                       ? 'bg-amber-200 text-zinc-900 dark:bg-amber-500/40 dark:text-amber-100'

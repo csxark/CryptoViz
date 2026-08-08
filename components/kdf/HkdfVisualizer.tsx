@@ -96,13 +96,13 @@ export default function HkdfVisualizer() {
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">HKDF Key Derivation Setup</h2>
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Presets:</span>
-            {RFC_5869_PRESETS.map((preset, idx) => (
+            {RFC_5869_PRESETS.map((preset) => (
               <button
-                key={idx}
-                onClick={() => applyPreset(idx)}
+                key={preset.name}
+                onClick={() => applyPreset(RFC_5869_PRESETS.indexOf(preset))}
                 className="rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
               >
-                RFC Test {idx + 1}
+                RFC Test {RFC_5869_PRESETS.indexOf(preset) + 1}
               </button>
             ))}
           </div>
@@ -203,7 +203,7 @@ export default function HkdfVisualizer() {
           <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">HKDF Stage Analysis</h2>
           <ol className="space-y-4">
             {stages.map((step, i) => (
-              <li key={i} className="border-l-2 border-teal-500 pl-4">
+              <li key={`stage-${i}-${step.label}`} className="border-l-2 border-teal-500 pl-4">
                 <p className="text-sm font-semibold text-zinc-900 dark:text-white">{step.label}</p>
                 <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{step.detail}</p>
               </li>
@@ -217,9 +217,9 @@ export default function HkdfVisualizer() {
         <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">Detailed Round Traces</h2>
           <div className="space-y-4">
-            {cipherResult.steps.map((s, idx) => (
+            {cipherResult.steps.map((s) => (
               <div
-                key={idx}
+                key={s.index}
                 className="rounded-lg border border-zinc-100 bg-zinc-50 p-4 transition-colors dark:border-zinc-800/80 dark:bg-zinc-950/50"
               >
                 <div className="mb-2 flex items-center justify-between">
@@ -239,8 +239,8 @@ export default function HkdfVisualizer() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs font-mono">
                       <tbody>
-                        {s.table.map((row, rIdx) => (
-                          <tr key={rIdx} className="border-b border-zinc-200/50 dark:border-zinc-800/50">
+                        {s.table.map((row) => (
+                          <tr key={row.key} className="border-b border-zinc-200/50 dark:border-zinc-800/50">
                             <td className="py-1.5 pr-4 font-semibold text-zinc-700 dark:text-zinc-300">{row.key}</td>
                             <td className="break-all py-1.5 text-zinc-900 dark:text-zinc-100">{row.value}</td>
                           </tr>

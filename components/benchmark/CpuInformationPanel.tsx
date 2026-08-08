@@ -30,7 +30,7 @@ export default function CpuInformationPanel({ deviceInfo }: CpuInformationPanelP
           <div className="mt-3 grid grid-cols-4 gap-1 sm:grid-cols-8">
             {Array.from({ length: Math.min(cores, 64) }).map((_, i) => (
               <div key={i} className="h-2 rounded bg-teal-500/80 dark:bg-teal-400/80" title={`Core ${i + 1}`} />
-            ))}
+            ))} {/* static core visualization, index key is safe */}
           </div>
         </div>
 

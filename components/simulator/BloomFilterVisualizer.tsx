@@ -95,10 +95,10 @@ export default function BloomFilterVisualizer() {
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Bloom Filter Simulator Controls</h2>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Presets:</span>
-            {BLOOM_FILTER_PRESETS.map((preset, idx) => (
+            {BLOOM_FILTER_PRESETS.map((preset) => (
               <button
-                key={idx}
-                onClick={() => applyPreset(idx)}
+                key={preset.name}
+                onClick={() => applyPreset(BLOOM_FILTER_PRESETS.indexOf(preset))}
                 className="rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
               >
                 {preset.name}
@@ -220,7 +220,7 @@ export default function BloomFilterVisualizer() {
             const isHit = activeHits.includes(idx)
             return (
               <div
-                key={idx}
+                key={idx} // static list, index key is safe - bit positions are fixed
                 className={`relative flex flex-col items-center justify-center rounded-lg border py-2 font-mono text-xs transition-all ${
                   isHit
                     ? 'border-amber-500 bg-amber-50 text-amber-900 ring-2 ring-amber-400 dark:border-amber-400 dark:bg-amber-950/60 dark:text-amber-200'
@@ -329,7 +329,7 @@ export default function BloomFilterVisualizer() {
             <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
               {insertedList.map((item, idx) => (
                 <span
-                  key={idx}
+                  key={`${item}-${idx}`}
                   className="rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 font-mono text-xs font-medium text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
                 >
                   {item}
@@ -344,8 +344,8 @@ export default function BloomFilterVisualizer() {
       <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
         <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">How Bloom Filters Work</h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          {conceptSteps.map((step, idx) => (
-            <div key={idx} className="rounded-lg border border-zinc-100 bg-zinc-50 p-4 dark:border-zinc-800/60 dark:bg-zinc-950/40">
+          {conceptSteps.map((step) => (
+            <div key={step.title} className="rounded-lg border border-zinc-100 bg-zinc-50 p-4 dark:border-zinc-800/60 dark:bg-zinc-950/40">
               <h4 className="text-sm font-semibold text-teal-600 dark:text-teal-400">{step.title}</h4>
               <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{step.description}</p>
             </div>

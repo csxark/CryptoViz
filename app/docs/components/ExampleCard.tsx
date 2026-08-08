@@ -29,7 +29,7 @@ export const ExampleCard: React.FC<ExampleCardProps> = ({ plaintext, parameters,
       {/* Steps */}
       <div className="p-4 space-y-3">
         {steps.map((step, index) => (
-          <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm font-mono pb-3 border-b border-zinc-200 dark:border-zinc-800/50 last:border-0 last:pb-0 transition-colors">
+          <div key={`step-${index}-${step.description.slice(0, 20)}`} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm font-mono pb-3 border-b border-zinc-200 dark:border-zinc-800/50 last:border-0 last:pb-0 transition-colors">
             <span className="text-zinc-400 dark:text-zinc-500 min-w-[24px]">
               {(index + 1).toString().padStart(2, '0')}
             </span>

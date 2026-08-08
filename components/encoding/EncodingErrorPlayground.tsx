@@ -239,8 +239,8 @@ export default function EncodingErrorPlayground() {
 
             {errors.length > 0 ? (
               <div className="space-y-3">
-                {errors.map((err, idx) => (
-                  <div key={idx} className="rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20 p-3.5 text-xs text-red-700 dark:text-red-300 flex items-start gap-3">
+                {errors.map((err) => (
+                  <div key={`${err.index}-${err.reason}`} className="rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20 p-3.5 text-xs text-red-700 dark:text-red-300 flex items-start gap-3">
                     <span className="font-mono bg-red-500/20 px-2 py-0.5 rounded font-bold shrink-0">
                       Offset [{err.index}]
                     </span>

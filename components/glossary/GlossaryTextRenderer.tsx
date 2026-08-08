@@ -26,11 +26,11 @@ export default function GlossaryTextRenderer({
     <span className={className}>
       {tokens.map((token, idx) => {
         if (token.type === 'text') {
-          return <React.Fragment key={idx}>{token.content}</React.Fragment>;
+          return <React.Fragment key={`text-${idx}-${token.content.slice(0, 10)}`}>{token.content}</React.Fragment>;
         }
         return (
           <GlossaryTermTooltip
-            key={idx}
+            key={`term-${idx}-${token.term.id}`}
             term={token.term}
             matchedText={token.content}
             onTermClick={onTermClick}

@@ -112,7 +112,7 @@ export default function LengthExtensionSimulator() {
           <h2 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-white">3. Attack trace</h2>
           <ol className="space-y-3">
             {steps.map((step, i) => (
-              <li key={i} className="border-l-2 border-teal-500 pl-3">
+              <li key={`step-${i}-${step.label}`} className="border-l-2 border-teal-500 pl-3">
                 <p className="text-sm font-medium text-zinc-900 dark:text-white">{step.label}</p>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">{step.detail}</p>
               </li>

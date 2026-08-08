@@ -396,7 +396,7 @@ export default function BirthdayAttackSimulator() {
                 <div className="grid gap-1 bg-slate-950 p-4 rounded-2xl border border-white/5 max-w-sm mx-auto" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
                   {gridHits.map((hits, index) => (
                     <div
-                      key={index}
+                      key={index} // static grid positions, index key is safe
                       className={cn(
                         "aspect-square rounded-sm border transition-all duration-100",
                         hits === 0
@@ -430,7 +430,7 @@ export default function BirthdayAttackSimulator() {
                   const isCollision = line.includes("COLLISION") || line.includes("matched");
                   return (
                     <div
-                      key={idx}
+                      key={`log-${idx}-${line.slice(0, 20)}`}
                       className={cn(
                         isCollision ? "text-rose-400 font-bold border-l-2 border-rose-500 pl-2 my-1" : "text-teal-400/80",
                       )}

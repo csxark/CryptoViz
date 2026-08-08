@@ -155,6 +155,7 @@ export type CipherName =
   | 'shamir-secret-sharing'
   | 'sidh'
   | 'ntru'
+  | 'gost-r34-10'
   | 'mceliece'
   | 'ed25519'
   | 'rabin'

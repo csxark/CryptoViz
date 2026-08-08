@@ -1086,7 +1086,17 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: 'Public key (encrypt) or Private key (decrypt)',
   },
-    {
+  {
+    id: 'gost-r34-10',
+    name: 'GOST R 34.10-2012',
+    category: 'asymmetric',
+    description: 'Russian national elliptic-curve signature standard (RFC 7091). Uses Streebog-256 and an addition-based signing equation with a unique e=0 -> e=1 edge case. Completes the GOST/Kuznyechik/Streebog Russian suite.',
+    defaultKey: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    defaultInput: 'message',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Private key (sign) or Public key (verify)',
+  },
+  {
     id: 'mceliece',
     name: 'Classic McEliece',
     category: 'asymmetric',

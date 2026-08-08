@@ -900,6 +900,19 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: '',
     securityStatus: 'secure',
   },
+  {
+    id: 'haval',
+    name: 'HAVAL',
+    category: 'hash',
+    description: 'Configurable hash (1992). Unique in offering independent control over round count (3/4/5 passes) and output length (128-256 bits). Status: legacy (weaker at 3-pass/128-bit, stronger at 5-pass/256-bit).',
+    defaultKey: '',
+    defaultInput: '',
+    securityStatus: 'legacy',
+    options: [
+      { name: 'Passes (Rounds)', id: 'passes', type: 'select', default: 5, choices: [{label: '3', value: 3}, {label: '4', value: 4}, {label: '5', value: 5}] },
+      { name: 'Output Length (bits)', id: 'outputBits', type: 'select', default: 256, choices: [{label: '128', value: 128}, {label: '160', value: 160}, {label: '192', value: 192}, {label: '224', value: 224}, {label: '256', value: 256}] }
+    ]
+  },
   // Asymmetric
   {
     id: "rsa",

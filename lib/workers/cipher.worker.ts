@@ -536,6 +536,10 @@ async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
       const mod = await import("../cipher/hash/jh");
       return { encrypt: mod.encrypt, decrypt: mod.decrypt };
     }
+    case "haval": {
+      const mod = await import("../cipher/hash/haval");
+      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
+    }
     case "pbkdf2": {
       return {
         encrypt: (input, _key, options) => deriveKey(input, {

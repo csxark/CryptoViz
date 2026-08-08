@@ -568,6 +568,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '128-bit key as 32 hex chars',
   },
   {
+    id: 'square',
+    name: 'Square',
+    category: 'symmetric',
+    description: 'Direct historical predecessor to Rijndael (AES) by Daemen & Rijmen (1997). Structurally defined the AES template but uses a distinct S-box and matrix. Status: BROKEN by the "Square attack" (integral cryptanalysis).',
+    defaultKey: '00000000000000000000000000000000',
+    defaultInput: '00000000000000000000000000000000',
+    securityStatus: 'broken',
+    keyPlaceholder: '128-bit key as 32 hex chars',
+  },
+  {
     id: 'feal',
     name: 'FEAL-8',
     category: 'symmetric',

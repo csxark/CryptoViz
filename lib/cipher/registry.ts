@@ -1096,4 +1096,14 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: 'Public key (encrypt) or Private key (decrypt)',
   },
+  {
+    id: 'sm2',
+    name: 'SM2',
+    category: 'asymmetric',
+    description: 'Chinese national elliptic-curve signature standard (GB/T 32918). Uses a distinct ZA hash prefix incorporating the signer ID and curve parameters before hashing the message. Completes the SM2+SM3+SM4 Chinese suite.',
+    defaultKey: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    defaultInput: 'message',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Private key (sign) or Public key (verify)',
+  },
 ];

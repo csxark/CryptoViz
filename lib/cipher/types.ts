@@ -156,6 +156,7 @@ export type CipherName =
   | 'sidh'
   | 'ntru'
   | 'mceliece'
+  | 'sm2'
   | 'ed25519'
   | 'rabin'
   | 'x25519'

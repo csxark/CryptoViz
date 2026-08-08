@@ -18,7 +18,9 @@ import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVecto
 
 const METADATA: CipherMetadata = {
   name: 'ElGamal',
-  securityStatus: 'secure', // secure at sufficient key sizes; demo mode uses toy primes for teaching
+  securityStatus: 'secure',
+  securityWarning:
+    'Demo mode uses Math.random() for ephemeral key generation. Not suitable for real encryption.',
   yearDesigned: 1985,
   standardBody: 'Discrete Logarithm Problem (DLP)',
 }
@@ -144,22 +146,33 @@ export function encrypt(input: string, key: string = '', options: CipherOptions 
     : Array.from(new TextEncoder().encode(input)).map((b) => BigInt(b))
 
   const steps: CipherStep[] = []
-  if (options.instrument) {
-    steps.push({
-      index: 0,
-      label: 'Key setup',
-      inputState: '',
-      outputState: '',
-      table: [
-        { key: 'p (prime modulus)', value: p.toString() },
-        { key: 'g (generator)', value: g.toString() },
-        { key: 'y (public key)', value: y.toString() },
-        { key: 'k (ephemeral, this message only)', value: k.toString() },
-      ],
-      note: 'c1 = g^k mod p, c2 = m * y^k mod p. A fresh k should be used for every message in real usage.',
-      isMilestone: true,
-    })
-  }
+if (options.instrument) {
+  steps.push({
+    index: 0,
+    label: 'Key setup',
+    inputState: '',
+    outputState: '',
+    table: [
+      { key: 'p (prime modulus)', value: p.toString() },
+      { key: 'g (generator)', value: g.toString() },
+      { key: 'y (public key)', value: y.toString() },
+      { key: 'k (ephemeral, this message only)', value: k.toString() },
+    ],
+    note:
+      'c1 = g^k mod p, c2 = m * y^k mod p. A fresh k should be used for every message in real usage.',
+    isMilestone: true,
+  })
+
+  steps.push({
+    index: steps.length,
+    label: 'Security warning',
+    inputState: '',
+    outputState: '',
+    note:
+      '⚠️ This educational demo uses Math.random() for the ephemeral key k. Production ElGamal must use a cryptographically secure random number generator (CSPRNG); predictable k values can allow recovery of the private key.',
+    isMilestone: true,
+  })
+}
 
   const outputs: string[] = []
   for (let i = 0; i < blocks.length; i++) {

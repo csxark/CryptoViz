@@ -578,6 +578,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '64-bit key as 16 hex chars',
   },
   {
+    id: 'safer-plus',
+    name: 'SAFER+',
+    category: 'symmetric',
+    description: 'AES candidate (1998) and original Bluetooth pairing cipher. Byte-oriented SPN using modular exponentiation (45^x mod 257) for non-linearity and an Armenian Pseudo-Hadamard Transform network for diffusion.',
+    defaultKey: '00000000000000000000000000000000',
+    defaultInput: '00000000000000000000000000000000',
+    securityStatus: 'legacy',
+    keyPlaceholder: '128-bit key as 32 hex chars',
+  },
+  {
     id: 'aria',
     name: 'ARIA',
     category: 'symmetric',

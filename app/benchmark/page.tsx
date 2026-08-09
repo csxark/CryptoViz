@@ -8,7 +8,7 @@ import type {
 } from "@/types/benchmark";
 import { BenchmarkEngine, isWebCryptoSupported } from "@/lib/utils/benchmark";
 import { getDeviceInfo } from "@/lib/utils/deviceInfo";
-import { useCipherWorker } from "@/lib/hooks/useCipherWorker";
+import { useCipherWorker } from "@/hooks/useCipherWorker";
 import {
   addBenchmarkSession,
   loadBenchmarkHistory,

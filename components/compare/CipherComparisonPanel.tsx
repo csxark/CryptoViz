@@ -6,7 +6,7 @@ import type {
   CipherDirection,
   CipherResult,
 } from '../../lib/cipher/types'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
+import { useCipherWorker } from '../../hooks/useCipherWorker'
 import CipherLifecycleBadge from '../cipher/CipherLifecycleBadge'
 import {
   type CipherWorkerOptions,

@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { useCipherWorker, clearCipherWorkerCache } from '@/lib/hooks/useCipherWorker'
+import { useCipherWorker, clearCipherWorkerCache } from '@/hooks/useCipherWorker'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 // Mock Worker class

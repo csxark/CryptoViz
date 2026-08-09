@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
+import { useCipherWorker } from '../../hooks/useCipherWorker'
 import { generateChallengeData, type ChallengeData, type ChallengeDifficulty } from '../../lib/challenge/generator'
 import { getWrongAnswerExplanation } from '../../lib/challenge/explain'
 import { CIPHER_REGISTRY } from '../../lib/cipher/registry'

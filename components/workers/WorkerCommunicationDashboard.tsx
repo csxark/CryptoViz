@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useCipherWorker } from "@/lib/hooks/useCipherWorker";
+import { useCipherWorker } from "@/hooks/useCipherWorker";
 
 interface LogEntry {
   id: string;

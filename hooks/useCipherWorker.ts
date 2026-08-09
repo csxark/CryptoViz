@@ -7,9 +7,9 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import type { CipherResult } from '../cipher/types'
-import type { WorkerRequest, WorkerResponse } from '../../types/worker'
-import type { CipherErrorCode } from '../utils/errors'
+import type { CipherResult } from '../lib/cipher/types'
+import type { WorkerRequest, WorkerResponse } from '../types/worker'
+import type { CipherErrorCode } from '../lib/utils/errors'
 
 
 const MAX_CACHE_SIZE = 200
@@ -144,7 +144,7 @@ export function useCipherWorker() {
 
 
     const worker = new Worker(
-      new URL('../workers/cipher.worker.ts', import.meta.url)
+      new URL('../lib/workers/cipher.worker.ts', import.meta.url)
     )
 
 
@@ -232,7 +232,7 @@ export function useCipherWorker() {
 
       return new Promise<CipherResult>((resolve, reject) => {
         const id = Math.random().toString(36).substring(2, 11)
-        
+
         // Mark this as the latest request. Any older in-flight requests will be considered stale
         // and their eventual worker responses will be ignored.
         latestRequestIdRef.current = id

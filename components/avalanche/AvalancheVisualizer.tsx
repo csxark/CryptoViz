@@ -12,7 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CipherResult } from '../../lib/cipher/types'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
+import { useCipherWorker } from '../../hooks/useCipherWorker'
 import {
   computeByteCells,
   diffStats,

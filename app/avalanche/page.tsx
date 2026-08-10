@@ -1,8 +1,7 @@
 'use client'
 
 import Navbar from '../../components/layout/Navbar'
-import Breadcrumbs from '../../components/layout/Breadcrumbs'
-
+import ReferencePageTemplate from "@/components/layout/ReferencePageTemplate";
 import AvalancheVisualizer from '../../components/avalanche/AvalancheVisualizer'
 
 export default function AvalanchePage() {
@@ -10,25 +9,19 @@ export default function AvalanchePage() {
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100">
       <Navbar />
 
-      <main className="mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
-        <Breadcrumbs items={[{ label: "Learn" }, { label: "Avalanche Effect" }]} />
-        <header className="max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-600 dark:text-teal-400">
-            Diffusion workspace
-          </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            Avalanche-effect visualizer
-          </h1>
-          <p className="mt-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Type an input, flip a single bit, and watch the output cascade. A
-            strong primitive turns that 1-bit change into roughly a 50% output
-            change — the avalanche effect. Weak constructions diffuse unevenly,
-            which the per-byte heatmap and Hamming-distance meter make tangible.
-          </p>
-        </header>
+      <ReferencePageTemplate
+        title="Avalanche-effect visualizer"
+        description="Type an input, flip a single bit, and watch the output cascade. A strong primitive turns that 1-bit change into roughly a 50% output change — the avalanche effect."
+        eyebrow="Diffusion workspace"
+        breadcrumbs={[
+          { label: "Reference" },
+          { label: "Avalanche Effect" },
+        ]}
+        className="max-w-4xl"
+      >
 
         <AvalancheVisualizer />
-      </main>
+      </ReferencePageTemplate>
     </div>
   )
 }

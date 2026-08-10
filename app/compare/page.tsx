@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useMemo, useState } from 'react'
-import Breadcrumbs from '../../components/layout/Breadcrumbs'
+import PracticePageTemplate from "@/components/layout/PracticePageTemplate";
 import { useSearchParams } from 'next/navigation'
 import WorkspaceLayout from '../../components/layout/WorkspaceLayout'
 import CipherComparisonPanel from '../../components/compare/CipherComparisonPanel'
@@ -119,47 +119,15 @@ function CompareContent() {
 
   return (
     <WorkspaceLayout activeCipherId={leftCipherId}>
-
-      <main className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <header className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-600 dark:text-teal-400">
-              Comparison workspace
-            </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-              Compare two ciphers side by side
-            </h1>
-            <p className="mt-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-              Run the same input through two algorithms while keeping separate
-              keys, directions, options, results, loading states, and errors.
-            </p>
-          </header>
-
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={!leftResult && !rightResult}
-            className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export Results
-          </button>
-        </div>
-        <Breadcrumbs items={[{ label: "Practice" }, { label: "Compare Ciphers" }]} />
-        <header className="max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-600 dark:text-teal-400">
-            Comparison workspace
-          </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            Compare two ciphers side by side
-          </h1>
-          <p className="mt-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Run the same input through two algorithms while keeping separate
-            keys, directions, options, results, loading states, and errors.
-          </p>
-        </header>
+<PracticePageTemplate
+    title="Compare two ciphers side by side"
+    description="Run the same input through two algorithms while keeping separate keys, directions, options, results, loading states, and errors."
+    eyebrow="Comparison workspace"
+    breadcrumbs={[
+      { label: "Practice" },
+      { label: "Compare Ciphers" },
+    ]}
+  >
 
         <ComparisonControls
           ciphers={CIPHER_REGISTRY}
@@ -216,7 +184,7 @@ function CompareContent() {
             onResult={setRightResult}
           />
         </section>
-      </main>
+      </PracticePageTemplate>
     </WorkspaceLayout>
   )
 }

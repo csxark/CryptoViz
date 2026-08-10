@@ -618,6 +618,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '128-bit key as 32 hex chars',
   },
   {
+    id: '3way',
+    name: '3-Way',
+    category: 'symmetric',
+    description: 'Joan Daemen\'s first cipher (1994). 96-bit block/key, 11 rounds. Defines three-fold cyclic symmetry where every sub-transform commutes with word rotation. Direct predecessor to Square and AES. Status: BROKEN.',
+    defaultKey: '000000000000000000000000',
+    defaultInput: '000000000000000000000000',
+    securityStatus: 'broken',
+    keyPlaceholder: '96-bit key as 24 hex chars',
+  },
+  {
     id: "sha256",
     name: "SHA-256",
     category: "hash",
@@ -921,6 +931,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
   },
   {
+    id: 'ripemd128',
+    name: 'RIPEMD-128',
+    category: 'hash',
+    description: '128-bit output sibling of RIPEMD-160. Dual-parallel-line MD4-family design with distinct tables from its 160-bit counterpart. Status: legacy (128-bit output too short for modern collision resistance).',
+    defaultKey: '',
+    defaultInput: '',
+    securityStatus: 'legacy',
+  },
+  {
     id: 'haval',
     name: 'HAVAL',
     category: 'hash',
@@ -932,6 +951,15 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
       { name: 'Passes (Rounds)', id: 'passes', type: 'select', default: 5, choices: [{label: '3', value: 3}, {label: '4', value: 4}, {label: '5', value: 5}] },
       { name: 'Output Length (bits)', id: 'outputBits', type: 'select', default: 256, choices: [{label: '128', value: 128}, {label: '160', value: 160}, {label: '192', value: 192}, {label: '224', value: 224}, {label: '256', value: 256}] }
     ]
+  },
+  {
+    id: 'gost-r34-11-94',
+    name: 'GOST R 34.11-94',
+    category: 'hash',
+    description: 'Original Russian national hash standard (1994-2013). Uses GOST 28147-89 block cipher internally with a distinctive P-transformation key-mixing step. Superseded by Streebog. Status: legacy.',
+    defaultKey: '',
+    defaultInput: '',
+    securityStatus: 'legacy',
   },
   // Asymmetric
   {
@@ -1140,12 +1168,32 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: 'Public key (encrypt) or Private key (decrypt)',
   },
   {
+    id: 'cramer-shoup',
+    name: 'Cramer-Shoup',
+    category: 'asymmetric',
+    description: 'First practical IND-CCA2-secure public-key scheme in the standard model (1998). Extends ElGamal with 5 secret exponents and a hash-based integrity check that rejects tampered ciphertexts.',
+    defaultKey: 'mock_keys',
+    defaultInput: '0000000000000001',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Public key (encrypt) or Private key (decrypt)',
+  },
+  {
     id: 'sm2',
     name: 'SM2',
     category: 'asymmetric',
     description: 'Chinese national elliptic-curve signature standard (GB/T 32918). Uses a distinct ZA hash prefix incorporating the signer ID and curve parameters before hashing the message. Completes the SM2+SM3+SM4 Chinese suite.',
     defaultKey: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
     defaultInput: 'message',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Private key (sign) or Public key (verify)',
+  },
+  {
+    id: 'kcdsa',
+    name: 'KCDSA',
+    category: 'asymmetric',
+    description: 'Korean national digital signature standard. DSA-family but hashes Message || w (commitment) instead of just Message. Note: Uses LSH-256 as a modernized substitute for the original HAS-160 pairing. Completes the Korean national suite.',
+    defaultKey: '1234567890abcdef',
+    defaultInput: '616263',
     securityStatus: 'secure',
     keyPlaceholder: 'Private key (sign) or Public key (verify)',
   },

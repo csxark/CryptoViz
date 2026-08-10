@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import Breadcrumbs from '../../components/layout/Breadcrumbs'
 
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/footer';
+import LearnPageTemplate from "@/components/layout/LearnPageTemplate";
 import CipherLifecycleBadge, { BADGE_CONFIG, SecurityStatus } from '@/components/cipher/CipherLifecycleBadge';
 import { CIPHER_REGISTRY } from '@/lib/cipher/registry';
 import Link from 'next/link';
@@ -49,8 +49,18 @@ export default function CipherLifecyclePage() {
     <div className="min-h-screen flex flex-col bg-white dark:bg-[#060816] text-zinc-900 dark:text-white transition-colors duration-300">
       <Navbar />
 
-      <main id="main-content" className="flex-1 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-12">
-        <Breadcrumbs items={[{ label: "Learn" }, { label: "Cipher Lifecycle" }]} />
+      
+      <LearnPageTemplate
+        title="Cryptographic Security Lifecycle"
+        description="Standardized security classification badges for every algorithm in CryptoViz based on NIST SP 800-57 guidelines and modern cryptanalysis standards."
+        eyebrow="CIPHER LIFECYCLE BADGES #496"
+        breadcrumbs={[
+          { label: "Learn" },
+          { label: "Cipher Lifecycle" },
+        ]}
+        hideHeader
+      >
+
         {/* Hero Header */}
         <section aria-labelledby="lifecycle-hero-title" className="relative overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-gradient-to-br from-teal-500/10 via-emerald-500/5 to-transparent p-8 sm:p-12 backdrop-blur-2xl">
           <div className="max-w-3xl space-y-4">
@@ -218,7 +228,7 @@ export default function CipherLifecyclePage() {
             </div>
           )}
         </section>
-      </main>
+      </LearnPageTemplate>
 
       <Footer />
     </div>

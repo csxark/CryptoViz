@@ -81,6 +81,19 @@ describe('Columnar Transposition — instrumented path', () => {
     const result = encrypt('HELLOWORLD', 'KEY', { instrument: true })
     expect(result.steps.length).toBeGreaterThan(0)
   })
+  it('documents trailing X padding ambiguity in decrypt steps', () => {
+  const result = decrypt('EOHLLLX', 'KEY', { instrument: true })
+
+  const outputStep = result.steps.find(
+    (step) => step.label === 'Plaintext output',
+  )
+
+  expect(outputStep).toBeDefined()
+  expect(outputStep?.note).toContain("Trailing 'X' padding characters stripped.")
+  expect(outputStep?.note).toContain(
+    "trailing 'X' characters in the original plaintext are indistinguishable from padding and may be lost.",
+  )
+})
 
   it('first step is key rank assignment milestone', () => {
     const result = encrypt('HELLOWORLD', 'KEY', { instrument: true })

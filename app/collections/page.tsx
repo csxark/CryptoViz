@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/footer'
+import ReferencePageTemplate from "@/components/layout/ReferencePageTemplate";
 import { CIPHER_COLLECTIONS, CipherCollection } from '../../lib/cipher/collections'
 import { CIPHER_REGISTRY, CipherDefinition } from '../../lib/cipher/registry'
 import {
@@ -36,20 +37,16 @@ export default function CollectionsPage() {
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors duration-300">
       <Navbar />
-
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-10">
-        {/* Header */}
-        <header className="max-w-3xl space-y-4">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-600 dark:text-teal-400">
-            Curated Showcases
-          </p>
-          <Heading as="h1" className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Cipher Collections
-          </Heading>
-          <Text size="lg" secondary>
-            Explore closely related cryptographic algorithm families. Contrast security levels, block sizes, and operation behaviors side-by-side.
-          </Text>
-        </header>
+      
+ <ReferencePageTemplate
+        title="Cipher Collections"
+        description="Explore closely related cryptographic algorithm families. Contrast security levels, block sizes, and operation behaviors side-by-side."
+        eyebrow="Curated Showcases"
+        breadcrumbs={[
+          { label: "Reference" },
+          { label: "Collections" },
+        ]}
+      >
 
         {/* Collections Selector & Detail Grid */}
         <div className="grid gap-8 lg:grid-cols-12 items-start">
@@ -186,7 +183,7 @@ export default function CollectionsPage() {
             )}
           </div>
         </div>
-      </main>
+      </ReferencePageTemplate>
 
       <Footer />
     </div>

@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import Breadcrumbs from '../../components/layout/Breadcrumbs'
 
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/footer';
+import ReferencePageTemplate from "@/components/layout/ReferencePageTemplate";
 import GlossaryModal from '@/components/glossary/GlossaryModal';
 import { searchGlossaryTerms } from '@/lib/glossary/glossaryData';
 import { GlossaryTerm, TermCategory } from '@/lib/glossary/types';
@@ -45,81 +45,93 @@ export default function GlossaryPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-[#060816] text-zinc-900 dark:text-white transition-colors duration-300">
       <Navbar />
-
-      <main id="main-content" className="flex-1 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-10">
-        <Breadcrumbs items={[{ label: "Reference" }, { label: "Glossary" }]} />
-        {/* Hero Section */}
-        <section aria-labelledby="glossary-hero-title" className="relative overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-gradient-to-br from-teal-500/10 via-cyan-500/5 to-transparent p-8 sm:p-12 backdrop-blur-2xl">
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-bold text-teal-600 dark:text-teal-400">
-              <Sparkles className="h-3.5 w-3.5" />
-              INTERACTIVE TERMINOLOGY & GLOSSARY #509
-            </div>
-            <h1 id="glossary-hero-title" className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-900 dark:text-white">
-              Cryptography <span className="text-teal-500">Glossary Explorer</span>
-            </h1>
-            <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              Explore essential concepts, mathematical formulas, and definitions. All CryptoViz documentation articles automatically cross-link terminology to this explorer.
-            </p>
-          </div>
-        </section>
-
+         <ReferencePageTemplate
+        title="Glossary"
+        description="Explore essential concepts, mathematical formulas, and definitions. All CryptoViz documentation articles automatically cross-link terminology to this explorer."
+        eyebrow="INTERACTIVE TERMINOLOGY & GLOSSARY #509"
+        breadcrumbs={[
+          { label: 'Reference' },
+          { label: 'Glossary' },
+        ]}
+      >
         {/* Search & Category Filter */}
-        <section aria-labelledby="glossary-filter-heading" className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <section
+          aria-labelledby="glossary-filter-heading"
+          className="space-y-6"
+        >
+          <h2 id="glossary-filter-heading" className="sr-only">
+            Glossary Search and Filters
+          </h2>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+
               <input
                 type="text"
                 placeholder="Search cryptographic terms..."
                 value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value);
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
                   setSelectedLetter(null);
                 }}
                 aria-label="Search cryptographic terms"
-                className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-10 pr-4 py-2.5 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors"
+                className="w-full rounded-2xl border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white"
               />
             </div>
 
             {/* Category Pills */}
-            <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Glossary category filter">
-              {categories.map(cat => (
+            <div
+              className="flex flex-wrap items-center gap-2"
+              role="tablist"
+              aria-label="Glossary category filter"
+            >
+              {categories.map((category) => (
                 <button
-                  key={cat}
+                  key={category}
+                  type="button"
                   role="tab"
-                  aria-selected={selectedCategory === cat}
-                  onClick={() => setSelectedCategory(cat)}
+                  aria-selected={selectedCategory === category}
+                  onClick={() => setSelectedCategory(category)}
                   className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                    selectedCategory === cat
+                    selectedCategory === category
                       ? 'bg-teal-500 text-black shadow-md shadow-teal-500/20'
-                      : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                      : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:text-zinc-300 dark:hover:bg-zinc-800'
                   }`}
                 >
-                  {cat}
+                  {category}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Alphabet Index Jumper */}
-          <div className="flex flex-wrap items-center justify-center gap-1 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 p-3">
+          <div className="flex flex-wrap items-center justify-center gap-1 rounded-2xl border border-zinc-200/80 bg-zinc-50/50 p-3 dark:border-zinc-800/80 dark:bg-zinc-900/50">
             <button
+              type="button"
               onClick={() => setSelectedLetter(null)}
               className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
-                selectedLetter === null ? 'bg-teal-500 text-black' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                selectedLetter === null
+                  ? 'bg-teal-500 text-black'
+                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
               }`}
             >
               ALL
             </button>
-            {alphabet.map(letter => (
+
+            {alphabet.map((letter) => (
               <button
                 key={letter}
-                onClick={() => setSelectedLetter(selectedLetter === letter ? null : letter)}
-                className={`h-7 w-7 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
+                type="button"
+                onClick={() =>
+                  setSelectedLetter(
+                    selectedLetter === letter ? null : letter,
+                  )
+                }
+                className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold transition-all ${
                   selectedLetter === letter
                     ? 'bg-teal-500 text-black shadow-sm'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'
+                    : 'text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white'
                 }`}
               >
                 {letter}
@@ -130,19 +142,23 @@ export default function GlossaryPage() {
 
         {/* Terms Grid */}
         <section aria-labelledby="terms-grid-heading">
-          <h2 id="terms-grid-heading" className="sr-only">Glossary Terms</h2>
+          <h2 id="terms-grid-heading" className="sr-only">
+            Glossary Terms
+          </h2>
+
           {filteredTerms.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTerms.map(term => (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredTerms.map((term) => (
                 <div
                   key={term.id}
-                  className="group flex flex-col justify-between rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/70 p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-teal-500/50 hover:shadow-xl hover:shadow-teal-500/10"
+                  className="group flex flex-col justify-between rounded-2xl border border-zinc-200/80 bg-white/70 p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-teal-500/50 hover:shadow-xl hover:shadow-teal-500/10 dark:border-zinc-800/80 dark:bg-zinc-900/70"
                 >
                   <div>
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="rounded-full bg-teal-500/10 px-3 py-0.5 text-xs font-bold text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-0.5 text-xs font-bold text-teal-600 dark:text-teal-400">
                         {term.category}
                       </span>
+
                       {term.relatedCipherId && (
                         <span className="text-[11px] font-semibold text-emerald-500 dark:text-emerald-400">
                           ⚡ Interactive Visualizer
@@ -150,24 +166,26 @@ export default function GlossaryPage() {
                       )}
                     </div>
 
-                    <h3 className="text-xl font-bold text-zinc-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    <h3 className="text-xl font-bold text-zinc-900 transition-colors group-hover:text-teal-600 dark:text-white dark:group-hover:text-teal-400">
                       {term.term}
                     </h3>
-                    <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                       {term.summary}
                     </p>
 
                     {term.formula && (
-                      <div className="mt-3 rounded-xl bg-zinc-950 p-2.5 font-mono text-xs text-emerald-400 border border-zinc-800 word-break break-all">
+                      <div className="mt-3 break-all rounded-xl border border-zinc-800 bg-zinc-950 p-2.5 font-mono text-xs text-emerald-400">
                         {term.formula}
                       </div>
                     )}
                   </div>
 
-                  <div className="mt-6 border-t border-zinc-100 dark:border-zinc-800/60 pt-4 flex items-center justify-between gap-2">
+                  <div className="mt-6 flex items-center justify-between gap-2 border-t border-zinc-100 pt-4 dark:border-zinc-800/60">
                     <button
+                      type="button"
                       onClick={() => setSelectedTerm(term)}
-                      className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-3.5 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                      className="rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >
                       Read Full Definition
                     </button>
@@ -175,7 +193,7 @@ export default function GlossaryPage() {
                     {term.relatedCipherId && (
                       <Link
                         href={`/visualizer/${term.relatedCipherId}`}
-                        className="flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline"
+                        className="flex items-center gap-1 text-xs font-bold text-teal-600 hover:underline dark:text-teal-400"
                       >
                         Visualizer
                         <ArrowRight className="h-3.5 w-3.5" />
@@ -186,13 +204,16 @@ export default function GlossaryPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-12 text-center">
-              <BookOpen className="mx-auto h-8 w-8 text-zinc-400 mb-2" />
-              <p className="text-zinc-500 dark:text-zinc-400 font-medium">
+            <div className="rounded-2xl border border-dashed border-zinc-300 p-12 text-center dark:border-zinc-800">
+              <BookOpen className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
+
+              <p className="font-medium text-zinc-500 dark:text-zinc-400">
                 No glossary terms found matching your query.
               </p>
+
               <button
-                onClick={() => {
+                type="button"
+                 onClick={() => {
                   setSearchQuery('');
                   setSelectedCategory('All');
                   setSelectedLetter(null);
@@ -204,7 +225,7 @@ export default function GlossaryPage() {
             </div>
           )}
         </section>
-      </main>
+      </ReferencePageTemplate>
 
       <GlossaryModal
         term={selectedTerm}

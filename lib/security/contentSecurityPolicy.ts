@@ -69,6 +69,7 @@ function createFallbackNonce(): string {
     }
   }
 
+     globalThis.crypto.getRandomValues(randomValues);
   return btoa(String.fromCharCode(...randomValues))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")

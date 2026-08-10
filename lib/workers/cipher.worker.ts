@@ -70,7 +70,6 @@ import { encrypt as threefishEncrypt, decrypt as threefishDecrypt } from '../cip
 import { encrypt as xchacha20Encrypt, decrypt as xchacha20Decrypt } from '../cipher/symmetric/xchacha20';
 import { encrypt as gostEncrypt, decrypt as gostDecrypt } from '../cipher/symmetric/gost';
 import { encrypt as enigmaEncrypt, decrypt as enigmaDecrypt } from '../cipher/symmetric/enigma';
-import { encrypt as xsalsa20Encrypt, decrypt as xsalsa20Decrypt } from '../cipher/symmetric/xsalsa20'
 import { encrypt as xsalsa20Encrypt, decrypt as xsalsa20Decrypt } from '../cipher/symmetric/xsalsa20';
 import { encrypt as teaEncrypt, decrypt as teaDecrypt } from '../cipher/symmetric/tea';
 import { encrypt as chacha20Encrypt, decrypt as chacha20Decrypt } from "../cipher/symmetric/chacha20";
@@ -341,6 +340,10 @@ async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
       const mod = await import("../cipher/symmetric/kasumi");
       return { encrypt: mod.encrypt, decrypt: mod.decrypt };
     }
+    case "3way": {
+      const mod = await import("../cipher/symmetric/3way");
+      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
+    }
     case "rsa": {
       const mod = await import("../cipher/asymmetric/rsa");
       return { encrypt: mod.encrypt, decrypt: mod.decrypt };
@@ -413,8 +416,16 @@ async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
       const mod = await import("../cipher/asymmetric/mceliece");
       return { encrypt: mod.encrypt, decrypt: mod.decrypt };
     }
+    case "cramer-shoup": {
+      const mod = await import("../cipher/asymmetric/cramer-shoup");
+      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
+    }
     case "sm2": {
       const mod = await import("../cipher/asymmetric/sm2");
+      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
+    }
+    case "kcdsa": {
+      const mod = await import("../cipher/asymmetric/kcdsa");
       return { encrypt: mod.encrypt, decrypt: mod.decrypt };
     }
     case "ed25519": {
@@ -553,8 +564,16 @@ async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
       const mod = await import("../cipher/hash/jh");
       return { encrypt: mod.encrypt, decrypt: mod.decrypt };
     }
+    case "ripemd128": {
+      const mod = await import("../cipher/hash/ripemd128");
+      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
+    }
     case "haval": {
       const mod = await import("../cipher/hash/haval");
+      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
+    }
+    case "gost-r34-11-94": {
+      const mod = await import("../cipher/hash/gost-r34-11-94");
       return { encrypt: mod.encrypt, decrypt: mod.decrypt };
     }
     case "pbkdf2": {

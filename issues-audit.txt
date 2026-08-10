@@ -511,3 +511,22 @@
 [#860] (open) by @csxark: Fix Affine cipher modular inverse silent fallback when multiplier is not coprime to 26
 [#859] (open) by @csxark: Clarify RSA φ(n) vs λ(n) mathematical inconsistency between Key Wizard and Cipher Engine
 [#858] (open) by @csxark: Fix incorrect Columnar Transposition ZEBRAS test vector
+
+=== Audited 2026-08-10 09:50 UTC (17 new) ===
+[#986] (open) by @Aakif-Kohari: [FEATURE] Add MD2 hash function (RFC 1319, 1989, earliest MD-family member, byte-oriented Fibonacci-derived S-box)
+[#985] (open) by @Aakif-Kohari: [FEATURE] Add Snefru hash function (Merkle, 1990, S-box-based compression, direct historical link before the Tiger/MD lineage)
+[#984] (open) by @Aakif-Kohari: [FEATURE] Add Goldwasser-Micali probabilistic encryption (1982, first semantically-secure public-key scheme, origin of IND-CPA security)
+[#983] (open) by @Aakif-Kohari: [FEATURE] Add Grain-128 stream cipher (eSTREAM hardware profile finalist, NLFSR+LFSR combination, completes eSTREAM hardware coverage)
+[#982] (open) by @Aakif-Kohari: [FEATURE] Add Lucifer block cipher (Horst Feistel, IBM, direct predecessor to DES, the original Feistel network)
+[#971] (open) by @csxark: CSP module unreachable code and duplicate return
+[#970] (open) by @csxark: Permissions-Policy discrepancy between middleware and vercel.json
+[#969] (open) by @csxark: SECURITY.md is GitHub template placeholder
+[#968] (open) by @csxark: Skipjack implementation fails published official NSA sample vector and key size error check
+[#967] (open) by @csxark: `dangerouslySetInnerHTML` used in finite-field page
+[#966] (open) by @csxark: Middleware CSP is dead code under static export
+[#965] (open) by @csxark: Embedded RSA 2048-bit private key in source code
+[#964] (open) by @csxark: `vercel.json` CSP allows `unsafe-inline` for scripts
+[#963] (open) by @csxark: `lib/security/contentSecurityPolicy.ts` has syntax error rendering CSP module inoperable
+[#962] (open) by @csxark: `components/cipher-sandbox/CipherSandbox.tsx` missing closing brace
+[#961] (open) by @csxark: `app/not-found.tsx` has unclosed JSX expression causing compilation failure
+[#960] (open) by @csxark: `app/docs/page.tsx` has stray `]` causing 27 cascading TypeScript errors

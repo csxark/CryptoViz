@@ -17,3 +17,11 @@ index 1a2b3c4..5d6e7f8 100644
          <section>
              <h2>Home Page Content</h2>
              <p>This is the home page of the application.</p>
+--- a/apps/cli/main.py
+@@ -30,7 +30,8 @@ def api_get():
+     response = requests.get('https://api.example.com/data')
+     data = response.json()
+ 
+-    return data
++    time.sleep(1.5)  # Simulate a 1.5s delay
++    return data

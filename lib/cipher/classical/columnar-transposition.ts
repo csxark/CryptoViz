@@ -136,9 +136,11 @@ function decryptFast(input: string, key: string): string {
     }
   }
 
-  // Strip trailing PAD_CHAR
-  let result = parts.join('')
-  while (result.endsWith(PAD_CHAR)) result = result.slice(0, -1)
+// Strip trailing PAD_CHAR padding. Because 'X' is also a valid plaintext
+// character, legitimate trailing X characters are indistinguishable from
+// padding and may be lost during decryption.
+let result = parts.join('')
+while (result.endsWith(PAD_CHAR)) result = result.slice(0, -1)
   return result
 }
 
@@ -287,7 +289,7 @@ function decryptInstrumented(input: string, key: string): CipherStep[] {
     label: 'Plaintext output',
     inputState: parts.join(''),
     outputState: result,
-    note: `Read rows left-to-right. Trailing '${PAD_CHAR}' padding characters stripped.`,
+    note: `Read rows left-to-right. Trailing '${PAD_CHAR}' padding characters stripped. Note: trailing '${PAD_CHAR}' characters in the original plaintext are indistinguishable from padding and may be lost.`,
     isMilestone: true,
   })
 

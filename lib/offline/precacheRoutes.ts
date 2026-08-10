@@ -1,6 +1,6 @@
 /**
  * Auto-generated precache routes manifest.
- * Last Generated: 2026-08-09T08:04:07.634Z
+ * Last Generated: 2026-08-10T01:09:00.578Z
  */
 export const PRECACHE_ROUTES: string[] = [
   "/",
@@ -35,6 +35,7 @@ export const PRECACHE_ROUTES: string[] = [
   "/case-studies/rsa/",
   "/case-studies/sha256/",
   "/case-studies/vigenere/",
+  "/certificate-validation/",
   "/challenge/",
   "/cipher-lifecycle/",
   "/cipher-loader/",

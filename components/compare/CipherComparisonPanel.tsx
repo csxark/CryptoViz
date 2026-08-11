@@ -6,7 +6,7 @@ import type {
   CipherDirection,
   CipherResult,
 } from '../../lib/cipher/types'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
+import { useCipherWorker } from '../../hooks/useCipherWorker'
 import CipherLifecycleBadge from '../cipher/CipherLifecycleBadge'
 import {
   type CipherWorkerOptions,
@@ -21,6 +21,7 @@ interface CipherComparisonPanelProps {
   sharedInput: string
   panelLabel: string
   resetToken: number
+  onResult?: (result: CipherResult | null) => void
 }
 
 export default function CipherComparisonPanel({
@@ -28,6 +29,7 @@ export default function CipherComparisonPanel({
   sharedInput,
   panelLabel,
   resetToken,
+  onResult,
 }: CipherComparisonPanelProps) {
   const { runCipher, loading, error: workerError } = useCipherWorker()
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -51,6 +53,7 @@ export default function CipherComparisonPanel({
     setOptions(defaults.options)
     setResult(null)
     setError(null)
+    onResult?.(null)
   }
 
   useEffect(() => {
@@ -92,6 +95,7 @@ export default function CipherComparisonPanel({
 
       if (!controller.signal.aborted) {
         setResult(nextResult)
+        onResult?.(nextResult)
       }
     } catch (runError) {
       if (
@@ -102,6 +106,7 @@ export default function CipherComparisonPanel({
       }
 
       setResult(null)
+      onResult?.(null)
       setError(
         runError instanceof Error
           ? runError.message
@@ -136,6 +141,29 @@ export default function CipherComparisonPanel({
         <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
           {cipher.description}
         </p>
+
+        {(cipher.keySize || cipher.practicalUseCases) && (
+          <div className="mt-4 grid gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800/80">
+            {cipher.keySize && (
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Key Size</dt>
+                <dd className="mt-0.5 text-sm font-medium text-zinc-900 dark:text-zinc-200">{cipher.keySize}</dd>
+              </div>
+            )}
+            {cipher.practicalUseCases && (
+              <div>
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Practical Use Cases</dt>
+                <dd className="mt-0.5 text-sm font-medium text-zinc-900 dark:text-zinc-200">
+                  <ul className="list-inside list-disc">
+                    {cipher.practicalUseCases.map((useCase, idx) => (
+                      <li key={idx}>{useCase}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <div className="flex flex-1 flex-col gap-4 p-5">

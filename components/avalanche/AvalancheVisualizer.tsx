@@ -12,7 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CipherResult } from '../../lib/cipher/types'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
+import { useCipherWorker } from '../../hooks/useCipherWorker'
 import {
   computeByteCells,
   diffStats,
@@ -286,7 +286,7 @@ export default function AvalancheVisualizer() {
                 const active = index === safeCharIndex
                 return (
                   <button
-                    key={index}
+                    key={`char-${index}-${char}`}
                     type="button"
                     onClick={() => setCharIndex(index)}
                     aria-pressed={active}

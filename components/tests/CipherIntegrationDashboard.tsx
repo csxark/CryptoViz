@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { runCipherIntegrationTests, TestSuiteSummary } from "@/lib/utils/cipherTestRunner";
-import { useCipherWorker } from "@/lib/hooks/useCipherWorker";
+import { useCipherWorker } from "@/hooks/useCipherWorker";
 
 export const CipherIntegrationDashboard: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);

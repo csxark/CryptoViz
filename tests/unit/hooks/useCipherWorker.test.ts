@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { useCipherWorker, clearCipherWorkerCache } from '@/lib/hooks/useCipherWorker'
+import { useCipherWorker, clearCipherWorkerCache } from '@/hooks/useCipherWorker'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 // Mock Worker class
@@ -223,9 +223,9 @@ describe('useCipherWorker', () => {
     await promise1!
 
     // Run second time with bypassCache: true (should call worker again)
-    let promise2: Promise<any>
+    let _promise2: Promise<any>
     act(() => {
-      promise2 = result.current.runCipher('encrypt', 'caesar', 'hello', '3', { bypassCache: true })
+      _promise2 = result.current.runCipher('encrypt', 'caesar', 'hello', '3', { bypassCache: true })
     })
 
     expect(worker.postMessage).toHaveBeenCalledTimes(2) // Calls worker again
@@ -233,7 +233,7 @@ describe('useCipherWorker', () => {
 
   it('respects the LRU cache limit and evicts the oldest items', async () => {
     const { result } = renderHook(() => useCipherWorker())
-    const worker = MockWorker.lastInstance()!
+    const _worker = MockWorker.lastInstance()!
 
     // Populate the cache with MAX_CACHE_SIZE (200) items
     for (let i = 0; i <= 200; i++) {
@@ -274,9 +274,9 @@ describe('useCipherWorker', () => {
     expect(activeWorker.postMessage).not.toHaveBeenCalled() // Retained in cache!
 
     // Querying index 0 (first item) should NOT be cached and call worker:
-    let promiseEvicted: Promise<any>
+    let _promiseEvicted: Promise<any>
     act(() => {
-      promiseEvicted = result.current.runCipher('encrypt', 'caesar', 'input-0', '3')
+      _promiseEvicted = result.current.runCipher('encrypt', 'caesar', 'input-0', '3')
     })
     expect(activeWorker.postMessage).toHaveBeenCalledTimes(1) // Evicted and called worker!
   })

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useCipherWorker } from "@/lib/hooks/useCipherWorker";
+import { useCipherWorker } from "@/hooks/useCipherWorker";
 
 interface LogEntry {
   id: string;
@@ -39,8 +39,8 @@ export const WorkerCommunicationDashboard: React.FC = () => {
       setLatency(Number(duration.toFixed(2)));
 
       addLog("received", `RECV message <- Worker: Output: '${res.output}' (${duration.toFixed(2)} ms)`);
-    } catch (err: any) {
-      addLog("error", `ERROR <- Worker: ${err?.message || "Communication failed"}`);
+    } catch (err: unknown) {
+      addLog("error", `ERROR <- Worker: ${err instanceof Error ? err.message : "Communication failed"}`);
     } finally {
       setIsRunning(false);
     }

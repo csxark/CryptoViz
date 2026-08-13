@@ -71,6 +71,41 @@ const SPECIAL_DISPATCHERS: Record<string, () => Promise<CipherDispatcher>> = {
       decrypt: requireExport(mod, "decrypt", "shake256"),
     };
   },
+  pbkdf2: async () => {
+    const { deriveKey } = await import("../kdf/pbkdf2");
+    return {
+      encrypt: async (input: string, _key: string, options?: any) => {
+        const result = await deriveKey(input, {
+          iterations: Number(options?.iterations ?? 10000),
+          hash: (options?.hash as "SHA-256" | "SHA-512") ?? "SHA-256",
+          keyLength: Number(options?.keyLength ?? 32) as 16 | 24 | 32,
+          salt: options?.salt,
+        });
+        return result as unknown as CipherResult;
+      },
+      decrypt: async () => {
+        throw new CipherError("ALGORITHM_UNSUPPORTED", "PBKDF2 is a KDF and cannot be decrypted.");
+      },
+    };
+  },
+  scrypt: async () => {
+    const { deriveScryptKey } = await import("../kdf/scrypt");
+    return {
+      encrypt: async (input: string, _key: string, options?: any) => {
+        const result = await deriveScryptKey(input, {
+          N: Number(options?.N ?? 16384),
+          r: Number(options?.r ?? 8),
+          p: Number(options?.p ?? 1),
+          dkLen: Number(options?.dkLen ?? 32),
+          salt: options?.salt,
+        });
+        return result as unknown as CipherResult;
+      },
+      decrypt: async () => {
+        throw new CipherError("ALGORITHM_UNSUPPORTED", "Scrypt is a KDF and cannot be decrypted.");
+      },
+    };
+  },
 };
 
 function getDefinition(cipherId: string) {

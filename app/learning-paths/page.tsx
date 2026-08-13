@@ -85,7 +85,7 @@ export default function LearningPathsPage() {
           </div>
 
           <div className="space-y-1">
-            <div className="text-xs font-medium text-slate-400">Badges Earned</div>
+            <div className="text-xs font-medium text-slate-400">Certificates & Badges</div>
             <div className="text-2xl font-black text-amber-400 flex items-center gap-1.5">
               <Award className="w-5 h-5 text-amber-400" />
               <span>{overall.completedPathsCount}</span>

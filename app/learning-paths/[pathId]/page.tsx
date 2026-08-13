@@ -53,6 +53,30 @@ export default function PathDetailPage({ params }: { params: Promise<{ pathId: s
           <span>Back to All Learning Paths</span>
         </Link>
 
+        {/* Path Completed Celebratory Banner */}
+        {progressPercentage === 100 && (
+          <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-amber-500/5">
+            <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
+              <div className="p-4 rounded-2xl bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 shrink-0">
+                <Award className="w-8 h-8 animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-amber-300">Path Fully Completed!</h3>
+                <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
+                  Congratulations! You have mastered all topics in <strong className="text-slate-200">{path.title}</strong> and unlocked your digital certificate of completion.
+                </p>
+              </div>
+            </div>
+            <Link
+              href={`/learning-paths/${path.id}/certificate`}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition-all border border-amber-400/20 hover:scale-[1.02] shrink-0"
+            >
+              <Award className="w-4 h-4 fill-slate-950" />
+              <span>Claim Certificate</span>
+            </Link>
+          </div>
+        )}
+
         {/* Path Hero Header */}
         <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 p-8 sm:p-10 space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

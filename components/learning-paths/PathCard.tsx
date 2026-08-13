@@ -23,7 +23,11 @@ export default function PathCard({ path, progressPercentage, isCompleted }: Path
   const IconComponent = ICON_MAP[path.icon] || Shield
 
   return (
-    <div className="group relative flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/80 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-slate-700 hover:shadow-2xl hover:shadow-cyan-500/5">
+    <div className={`group relative flex flex-col justify-between rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${
+      isCompleted
+        ? 'border-amber-500/20 bg-slate-900/90 hover:border-amber-500/40 hover:shadow-amber-500/5'
+        : 'border-slate-800 bg-slate-900/80 hover:border-slate-700 hover:shadow-cyan-500/5'
+    }`}>
       <div>
         {/* Header Row */}
         <div className="flex items-start justify-between gap-4 mb-4">
@@ -36,7 +40,7 @@ export default function PathCard({ path, progressPercentage, isCompleted }: Path
               {path.difficulty}
             </span>
             {isCompleted && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold animate-pulse">
                 <CheckCircle className="w-3.5 h-3.5" />
                 Completed
               </span>
@@ -70,20 +74,40 @@ export default function PathCard({ path, progressPercentage, isCompleted }: Path
           </div>
           <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 rounded-full"
+              className={`h-full transition-all duration-500 rounded-full ${
+                isCompleted ? 'bg-gradient-to-r from-amber-500 to-yellow-400' : 'bg-gradient-to-r from-cyan-500 to-blue-500'
+              }`}
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
         </div>
 
         {/* CTA Link */}
-        <Link
-          href={`/learning-paths/${path.id}`}
-          className="w-full mt-2 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-cyan-500/10 border border-slate-700 hover:border-cyan-500/40 text-slate-200 hover:text-cyan-300 font-semibold text-sm transition-all"
-        >
-          <span>{progressPercentage > 0 ? 'Continue Path' : 'Start Path'}</span>
-          <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-        </Link>
+        {isCompleted ? (
+          <div className="grid grid-cols-2 gap-2 w-full mt-2">
+            <Link
+              href={`/learning-paths/${path.id}`}
+              className="inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-slate-100 font-semibold text-xs transition-all"
+            >
+              <span>Review Path</span>
+            </Link>
+            <Link
+              href={`/learning-paths/${path.id}/certificate`}
+              className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 transition-all border border-amber-400/20 hover:scale-[1.02]"
+            >
+              <Award className="w-3.5 h-3.5 fill-slate-950" />
+              <span>Certificate</span>
+            </Link>
+          </div>
+        ) : (
+          <Link
+            href={`/learning-paths/${path.id}`}
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-cyan-500/10 border border-slate-700 hover:border-cyan-500/40 text-slate-200 hover:text-cyan-300 font-semibold text-sm transition-all"
+          >
+            <span>{progressPercentage > 0 ? 'Continue Path' : 'Start Path'}</span>
+            <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        )}
       </div>
     </div>
   )

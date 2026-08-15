@@ -212,6 +212,19 @@ export const PRESET_INPUT_SIZES = [
 ]
 
 /**
+ * Payload sizes for scaling benchmark sweeps
+ */
+export const SCALING_PAYLOAD_SIZES = [
+  { label: '64 B', value: 64 },
+  { label: '256 B', value: 256 },
+  { label: '1 KB', value: 1024 },
+  { label: '16 KB', value: 16384 },
+  { label: '64 KB', value: 65536 },
+  { label: '256 KB', value: 262144 },
+  { label: '1 MB', value: 1048576 },
+]
+
+/**
  * Get preset iteration counts
  */
 export const PRESET_ITERATIONS = [
@@ -220,3 +233,124 @@ export const PRESET_ITERATIONS = [
   { label: 'Thorough (500)', value: 500 },
   { label: 'Comprehensive (1000)', value: 1000 },
 ]
+
+/**
+ * Calculate throughput in MB/s from time and input size
+ */
+export function calculateThroughput(inputSize: number, averageTime: number): number {
+  if (averageTime <= 0) return 0
+  const sizeInMB = inputSize / (1024 * 1024)
+  const timeInSeconds = averageTime / 1000
+  return sizeInMB / timeInSeconds
+}
+
+/**
+ * Estimate algorithmic complexity from scaling data
+ */
+export function estimateComplexity(
+  data: Array<{ payloadSize: number; averageTime: number }>
+): "O(1)" | "O(n)" | "O(n log n)" | "O(n²)" | "O(n³)" {
+  if (data.length < 2) return "O(n)"
+
+  // Sort by payload size
+  const sorted = [...data].sort((a, b) => a.payloadSize - b.payloadSize)
+
+  // Calculate ratios between successive points
+  const ratios: number[] = []
+  for (let i = 1; i < sorted.length; i++) {
+    const sizeRatio = sorted[i].payloadSize / sorted[i - 1].payloadSize
+    const timeRatio = sorted[i].averageTime / sorted[i - 1].averageTime
+    if (sizeRatio > 0 && timeRatio > 0) {
+      ratios.push(timeRatio / sizeRatio)
+    }
+  }
+
+  if (ratios.length === 0) return "O(n)"
+
+  const avgRatio = ratios.reduce((sum, r) => sum + r, 0) / ratios.length
+
+  // Heuristic classification based on how time scales with input size
+  if (avgRatio < 0.5) return "O(1)" // Constant time
+  if (avgRatio < 1.5) return "O(n)" // Linear
+  if (avgRatio < 3) return "O(n log n)" // Near-linear
+  if (avgRatio < 10) return "O(n²)" // Quadratic
+  return "O(n³)" // Cubic or worse
+}
+
+/**
+ * Run scaling benchmark for a single cipher across multiple payload sizes
+ */
+export async function runScalingBenchmark(
+  cipherId: string,
+  payloadSizes: number[],
+  iterations: number,
+  runCipher: (direction: "encrypt" | "decrypt", cipherId: string, input: string, key: string, options?: Record<string, unknown>) => Promise<any>,
+  getBenchmarkParams: (cipherId: string, category: string, inputSize: number, defaultKey: string) => { input: string; key: string; options: Record<string, unknown> },
+  onProgress?: (current: number, total: number, currentSize: number) => void
+): Promise<Array<{ payloadSize: number; averageTime: number; throughput: number; operationsPerSecond: number }>> {
+  const cipherDef = CIPHER_REGISTRY.find((c) => c.id === cipherId)
+  if (!cipherDef) {
+    throw new Error(`Cipher not found: ${cipherId}`)
+  }
+
+  const results: Array<{ payloadSize: number; averageTime: number; throughput: number; operationsPerSecond: number }> = []
+
+  for (let i = 0; i < payloadSizes.length; i++) {
+    const payloadSize = payloadSizes[i]
+    if (onProgress) {
+      onProgress(i + 1, payloadSizes.length, payloadSize)
+    }
+
+    const cipherMeasurements: number[] = []
+    const { input, key, options } = getBenchmarkParams(
+      cipherId,
+      cipherDef.category,
+      payloadSize,
+      cipherDef.defaultKey,
+    )
+
+    // Warm-up
+    try {
+      await runCipher("encrypt", cipherId, input, key, {
+        ...options,
+        bypassCache: true,
+      })
+    } catch {
+      // Warm-up failures are handled by the measured iterations
+    }
+
+    // Actual measurements
+    for (let iteration = 0; iteration < iterations; iteration++) {
+      try {
+        const result = await runCipher("encrypt", cipherId, input, key, {
+          ...options,
+          bypassCache: true,
+        })
+        cipherMeasurements.push(BenchmarkEngine.measureCipherTime(result))
+      } catch (iterationError) {
+        console.error(
+          `Iteration ${iteration + 1} failed for ${cipherId} at ${payloadSize} bytes:`,
+          iterationError,
+        )
+      }
+    }
+
+    if (cipherMeasurements.length > 0) {
+      const stats = BenchmarkEngine.calculateStats(cipherMeasurements)
+      const throughput = calculateThroughput(payloadSize, stats.average)
+      const operationsPerSecond = stats.average > 0 ? 1000 / stats.average : 0
+
+      results.push({
+        payloadSize,
+        averageTime: stats.average,
+        throughput,
+        operationsPerSecond,
+      })
+    }
+
+    // Yield to event loop to prevent UI freezing, especially for large payloads
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+
+  return results
+}

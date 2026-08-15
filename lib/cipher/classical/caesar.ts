@@ -45,27 +45,35 @@ function transformChar(char: string, shift: number, decrypt: boolean): string {
 function caesarInstrumented(
   input: string,
   key: string,
-  decrypt: boolean
+  decrypt: boolean,
+  options: CipherOptions
 ): CipherResult {
   const start = performance.now()
   const shift = validateCaesarKey(key)
 
   const steps: CipherStep[] = []
   const direction = decrypt ? 'backward' : 'forward'
+  let output = ''
+  let startIdx = 0
 
-  // Step 0: Key setup (milestone)
-  steps.push({
-    index: 0,
-    label: 'Key setup',
-    inputState: `KEY: ${key}`,
-    outputState: `SHIFT: ${decrypt ? '-' : '+'}${shift}`,
-    note: `Each letter will be shifted ${shift} positions ${direction} in the alphabet.${shift === 13 ? ' (This is ROT13 — self-inverse.)' : ''}`,
-    isMilestone: true,
-  })
+  if (options.incrementalCache && input.startsWith(options.incrementalCache.input)) {
+    startIdx = options.incrementalCache.input.length
+    output = options.incrementalCache.result.output
+    steps.push(...options.incrementalCache.result.steps)
+  } else {
+    // Step 0: Key setup (milestone)
+    steps.push({
+      index: 0,
+      label: 'Key setup',
+      inputState: `KEY: ${key}`,
+      outputState: `SHIFT: ${decrypt ? '-' : '+'}${shift}`,
+      note: `Each letter will be shifted ${shift} positions ${direction} in the alphabet.${shift === 13 ? ' (This is ROT13 — self-inverse.)' : ''}`,
+      isMilestone: true,
+    })
+  }
 
   // Steps 1..n: one per character
-  let output = ''
-  for (let i = 0; i < input.length; i++) {
+  for (let i = startIdx; i < input.length; i++) {
     const char = input[i]
     const result = transformChar(char, shift, decrypt)
     output += result
@@ -95,12 +103,19 @@ function caesarInstrumented(
   }
 }
 
-function caesarFast(input: string, key: string, decrypt: boolean): CipherResult {
+function caesarFast(input: string, key: string, decrypt: boolean, options: CipherOptions): CipherResult {
   const start = performance.now()
   const shift = validateCaesarKey(key)
 
   let output = ''
-  for (let i = 0; i < input.length; i++) {
+  let startIdx = 0
+
+  if (options.incrementalCache && input.startsWith(options.incrementalCache.input)) {
+    startIdx = options.incrementalCache.input.length
+    output = options.incrementalCache.result.output
+  }
+
+  for (let i = startIdx; i < input.length; i++) {
     output += transformChar(input[i], shift, decrypt)
   }
 
@@ -119,8 +134,8 @@ export function encrypt(
   options: CipherOptions = {}
 ): CipherResult {
   validateInput(input)
-  if (options.instrument) return caesarInstrumented(input, key, false)
-  return caesarFast(input, key, false)
+  if (options.instrument) return caesarInstrumented(input, key, false, options)
+  return caesarFast(input, key, false, options)
 }
 
 export function decrypt(
@@ -129,8 +144,8 @@ export function decrypt(
   options: CipherOptions = {}
 ): CipherResult {
   validateInput(input)
-  if (options.instrument) return caesarInstrumented(input, key, true)
-  return caesarFast(input, key, true)
+  if (options.instrument) return caesarInstrumented(input, key, true, options)
+  return caesarFast(input, key, true, options)
 }
 
 export const TEST_VECTORS: TestVector[] = [

@@ -16,3 +16,31 @@ diff --git a/apps/cli/main.py b/apps/cli/main.py
 -    return data
 +    time.sleep(1.5)  # Simulate a 1.5s delay
 +    return data
+
++--- a/apps/cli/main.py
++@@ -1,6 +1,8 @@
++ import click
++ from .cryptography_utils import (
++     generate_polyalphabetic_tableau,
++-    transpose_matrix
+++    transpose_matrix,
+++    visualize_tableau,
++ )
++ 
++ @click.group()
++@@ -20,6 +22,7 @@ def cli():
++         "--key", required=True, help="Key to use for encryption or decryption."
++     ):
++         print(generate_polyalphabetic_tableau(key))
+++
++     with click.option(
++         "-i", "--input", type=click.File("r"), required=True, help="Input file containing the data."
++     ),
++@@ -30,6 +33,7 @@ def cli():
++         print(transpose_matrix(input_data))
++ 
++ @cli.command()
+++@click.option("--key", required=True, help="Key to use for visualization.")
++ def visualize_tableau(key):
++-    visualize_tableau(key)
+++    click.echo(f"Visualizing polyalphabetic tableau with key: {key}")

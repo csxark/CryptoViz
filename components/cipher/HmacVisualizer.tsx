@@ -18,13 +18,14 @@ export default function HmacVisualizer({ currentStep, result }: HmacVisualizerPr
   // Helper to check if a block in the flow should be highlighted for the current step
   const isHighlighted = (blocks: number[]) => blocks.includes(currentStep)
 
-  // Extract values from step states
-  const _originalKey = steps[0].inputState
-  const preparedKey = steps[0].outputState
-  const innerKey = steps[1].outputState
-  const innerHash = steps[2].outputState
-  const outerKey = steps[3].outputState
-  const finalHmac = steps[4].outputState
+  // Extract values from step states — guard against fewer than 5 steps
+  // (contract bug fix: #1119 — steps[n] may be undefined if result is partial)
+  const _originalKey = steps[0]?.inputState ?? ''
+  const preparedKey = steps[0]?.outputState ?? ''
+  const innerKey = steps[1]?.outputState ?? ''
+  const innerHash = steps[2]?.outputState ?? ''
+  const outerKey = steps[3]?.outputState ?? ''
+  const finalHmac = steps[4]?.outputState ?? ''
 
   const formatHex = (hex: string, length = 16) => {
     if (!hex) return ''

@@ -4,6 +4,16 @@
  * @see CIPHER_ENGINE.md "Shared types" section
  */
 
+// Re-export diagnostic functions for centralized error handling
+export {
+  diagnoseError,
+  hasDiagnosticSupport,
+  getAllDiagnosticCodes,
+  type Diagnostic,
+  type DiagnosticCode,
+  type RemediationOption,
+} from './cryptoDiagnostics'
+
 export type CipherErrorCode =
   | 'INPUT_REQUIRED'
   | 'INPUT_TOO_LONG'

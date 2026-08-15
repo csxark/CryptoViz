@@ -211,6 +211,20 @@ export function homomorphicAdd(c1: string, c2: string, publicKeyStr: string): st
   return sum.toString()
 }
 
+/**
+ * Homomorphic scalar multiplication: raise a ciphertext to the power k mod n².
+ * Decrypting the result yields k * m mod n (E(m)^k = E(k·m)).
+ */
+export function homomorphicScalarMul(c: string, k: string, publicKeyStr: string): string {
+  const pub = parsePublicKey(publicKeyStr)
+  const n2 = pub.n * pub.n
+  const scalar = BigInt(k)
+  if (scalar < 0n) {
+    throw new CipherError('INVALID_INPUT', 'Scalar multiplier k must be non-negative.')
+  }
+  return modPow(BigInt(c), scalar, n2).toString()
+}
+
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '15',

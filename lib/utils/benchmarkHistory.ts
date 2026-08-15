@@ -1,11 +1,13 @@
-import type { BenchmarkSession } from "@/types/benchmark";
+import type { BenchmarkSession, ScalingBenchmarkResult } from "@/types/benchmark";
 import {
   safeGetItemJson,
   safeSetItemJson,
 } from "./storage";
 
 export const BENCHMARK_HISTORY_KEY = "cryptoviz-benchmark-history";
+export const SCALING_HISTORY_KEY = "cryptoviz-scaling-history";
 export const MAX_BENCHMARK_HISTORY = 20;
+export const MAX_SCALING_HISTORY = 20;
 
 function reviveSession(session: BenchmarkSession): BenchmarkSession {
   return {
@@ -55,4 +57,37 @@ export function formatBytes(bytes?: number): string {
     units.length - 1,
   );
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
+}
+
+function reviveScalingResult(result: ScalingBenchmarkResult): ScalingBenchmarkResult {
+  return {
+    ...result,
+    timestamp: new Date(result.timestamp),
+  };
+}
+
+export function loadScalingHistory(): ScalingBenchmarkResult[] {
+  const parsed = safeGetItemJson<ScalingBenchmarkResult[]>(
+    SCALING_HISTORY_KEY,
+    [],
+    (val): val is ScalingBenchmarkResult[] => Array.isArray(val),
+  );
+  return parsed.map(reviveScalingResult);
+}
+
+export function saveScalingHistory(results: ScalingBenchmarkResult[]): void {
+  safeSetItemJson(
+    SCALING_HISTORY_KEY,
+    results.slice(0, MAX_SCALING_HISTORY),
+  );
+}
+
+export function addScalingResult(
+  history: ScalingBenchmarkResult[],
+  result: ScalingBenchmarkResult,
+): ScalingBenchmarkResult[] {
+  return [result, ...history.filter((item) => item.cipherId !== result.cipherId)].slice(
+    0,
+    MAX_SCALING_HISTORY,
+  );
 }

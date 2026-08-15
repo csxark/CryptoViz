@@ -28,6 +28,8 @@ export interface BenchmarkResult {
   implementation?: "WebCrypto" | "JavaScript";
   status?: "success" | "unsupported" | "error";
   errorMessage?: string;
+  /** Estimated algorithmic complexity class */
+  complexityClass?: "O(1)" | "O(n)" | "O(n log n)" | "O(n²)" | "O(n³)";
 }
 
 export interface BenchmarkComparison {
@@ -71,4 +73,18 @@ export interface BrowserCapabilityReport {
   supportedAlgorithms: string[];
   benchmarkResults: BenchmarkResult[];
   timestamp: number;
+}
+
+export interface ScalingBenchmarkResult {
+  cipherId: string;
+  cipherName: string;
+  category: CipherCategory;
+  results: Array<{
+    payloadSize: number;
+    averageTime: number;
+    throughput: number; // MB/s
+    operationsPerSecond: number;
+  }>;
+  estimatedComplexity: "O(1)" | "O(n)" | "O(n log n)" | "O(n²)" | "O(n³)";
+  timestamp: Date;
 }

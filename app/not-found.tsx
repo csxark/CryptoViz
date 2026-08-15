@@ -237,42 +237,42 @@ export default function NotFound() {
                             </div>
 
                             {/* Countdown ring + text */}
-                                    <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                                    <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true" className="-rotate-90">
-                                        <circle
-                                            cx="24" cy="24" r="20"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="3"
-                                            className="text-zinc-200 dark:text-zinc-800"
-                                        />
-                                        <circle
-                                            cx="24" cy="24" r="20"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="3"
-                                            strokeDasharray={circumference}
-                                            strokeDashoffset={circumference - progress}
-                                            strokeLinecap="round"
-                                            className="text-teal-500 transition-all duration-1000 ease-linear dark:text-teal-400"
-                                        />
-                                        <text
-                                            x="24" y="24"
-                                            textAnchor="middle"
-                                            dominantBaseline="central"
-                                            className="rotate-90 fill-zinc-900 dark:fill-white font-mono font-bold"
-                                            style={{ transform: 'rotate(90deg)', transformOrigin: '24px 24px', fontSize: '14px', fontFamily: 'monospace', fontWeight: 700 }}
-                                        >
-                                            {countdown}
-                                        </text>
-                                    </svg>
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                        Redirecting to Home in{' '}
-                                        <span className="font-mono font-semibold text-teal-600 dark:text-teal-400">
-                                            {countdown}s
-                                        </span>
-                                    </p>
-                                </div>
+                            <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-950/50">
+                                <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true" className="-rotate-90">
+                                    <circle
+                                        cx="24" cy="24" r="20"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="3"
+                                        className="text-zinc-200 dark:text-zinc-800"
+                                    />
+                                    <circle
+                                        cx="24" cy="24" r="20"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="3"
+                                        strokeDasharray={circumference}
+                                        strokeDashoffset={circumference - progress}
+                                        strokeLinecap="round"
+                                        className="text-teal-500 transition-all duration-1000 ease-linear dark:text-teal-400"
+                                    />
+                                    <text
+                                        x="24" y="24"
+                                        textAnchor="middle"
+                                        dominantBaseline="central"
+                                        className="rotate-90 fill-zinc-900 dark:fill-white font-mono font-bold"
+                                        style={{ transform: 'rotate(90deg)', transformOrigin: '24px 24px', fontSize: '14px', fontFamily: 'monospace', fontWeight: 700 }}
+                                    >
+                                        {countdown}
+                                    </text>
+                                </svg>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                    Redirecting to Home in{' '}
+                                    <span className="font-mono font-semibold text-teal-600 dark:text-teal-400">
+                                        {countdown}s
+                                    </span>
+                                </p>
+                            </div>
 
                             {/* CTA Button */}
                             <button

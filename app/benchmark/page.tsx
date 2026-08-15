@@ -7,22 +7,30 @@ import type {
   BenchmarkResult,
   BenchmarkSession,
   DeviceInfo,
+  ScalingBenchmarkResult,
 } from "@/types/benchmark";
-import { BenchmarkEngine, isWebCryptoSupported } from "@/lib/utils/benchmark";
+import { BenchmarkEngine, isWebCryptoSupported, SCALING_PAYLOAD_SIZES, runScalingBenchmark, estimateComplexity } from "@/lib/utils/benchmark";
 import { getDeviceInfo } from "@/lib/utils/deviceInfo";
 import { useCipherWorker } from "@/lib/hooks/useCipherWorker";
 import {
   addBenchmarkSession,
   loadBenchmarkHistory,
   saveBenchmarkHistory,
+  loadScalingHistory,
+  saveScalingHistory,
+  addScalingResult,
 } from "@/lib/utils/benchmarkHistory";
 import dynamic from 'next/dynamic'
 import AlgorithmSelector from "@/components/benchmark/AlgorithmSelector";
 import BenchmarkControls from "@/components/benchmark/BenchmarkControls";
 import PerformanceMetrics from "@/components/benchmark/PerformanceMetrics";
-const ComparisonChart = dynamic(() => import('@/components/benchmark/ComparisonChart'), { 
-  ssr: false, 
-  loading: () => <div className="h-96 flex items-center justify-center rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"><p className="text-zinc-500 dark:text-zinc-400">Loading chart components...</p></div> 
+const ComparisonChart = dynamic(() => import('@/components/benchmark/ComparisonChart'), {
+  ssr: false,
+  loading: () => <div className="h-96 flex items-center justify-center rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"><p className="text-zinc-500 dark:text-zinc-400">Loading chart components...</p></div>
+});
+const ThroughputScalingChart = dynamic(() => import('@/components/benchmark/ThroughputScalingChart'), {
+  ssr: false,
+  loading: () => <div className="h-96 flex items-center justify-center rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"><p className="text-zinc-500 dark:text-zinc-400">Loading scaling chart...</p></div>
 });
 import CpuInformationPanel from "@/components/benchmark/CpuInformationPanel";
 import DeviceInfoDisplay from "@/components/benchmark/DeviceInfoDisplay";
@@ -94,7 +102,7 @@ const getBenchmarkParams = (
 function BenchmarkContent() {
   const searchParams = useSearchParams()
   const urlAlgorithms = searchParams.get('algorithms')
-  
+
   const [selectedAlgorithms, setSelectedAlgorithms] = useState<string[]>(urlAlgorithms ? urlAlgorithms.split(",") : []);
   const [selectedCategory, setSelectedCategory] = useState<Category>("all");
   const [inputSize, setInputSize] = useState(1024);
@@ -109,11 +117,14 @@ function BenchmarkContent() {
   const [error, setError] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState("");
   const [webCryptoAvailable, setWebCryptoAvailable] = useState<boolean>(false);
+  const [scalingResults, setScalingResults] = useState<ScalingBenchmarkResult[]>([]);
+  const [showScalingChart, setShowScalingChart] = useState(false);
   const { runCipher } = useCipherWorker();
 
   useEffect(() => {
     setDeviceInfo(getDeviceInfo());
     setHistory(loadBenchmarkHistory());
+    setScalingResults(loadScalingHistory());
     setWebCryptoAvailable(isWebCryptoSupported());
   }, []);
 
@@ -260,6 +271,93 @@ function BenchmarkContent() {
     setSelectedHistoryIds([]);
   };
 
+  const handleScalingBenchmarkStart = useCallback(async () => {
+    if (!selectedAlgorithms.length) {
+      setError("Please select at least one algorithm to benchmark");
+      return;
+    }
+
+    setIsRunning(true);
+    setError(null);
+    setScalingResults([]);
+    setShowScalingChart(true);
+    setProgressMessage("");
+
+    try {
+      const scalingBenchmarkResults: ScalingBenchmarkResult[] = [];
+      const payloadSizes = SCALING_PAYLOAD_SIZES.map((s) => s.value);
+
+      for (let index = 0; index < selectedAlgorithms.length; index += 1) {
+        const cipherId = selectedAlgorithms[index];
+        const cipherDef = CIPHER_REGISTRY.find(
+          (cipher) => cipher.id === cipherId,
+        );
+        if (!cipherDef) continue;
+
+        setProgressMessage(
+          `Scaling benchmark ${index + 1}/${selectedAlgorithms.length}: ${cipherDef.name}...`,
+        );
+
+        try {
+          const scalingData = await runScalingBenchmark(
+            cipherId,
+            payloadSizes,
+            Math.max(10, Math.floor(iterations / 10)), // Use fewer iterations for scaling to save time
+            runCipher as any,
+            getBenchmarkParams,
+            (current, total, currentSize) => {
+              const sizeFormatted = currentSize >= 1024 * 1024
+                ? `${(currentSize / (1024 * 1024)).toFixed(1)} MB`
+                : currentSize >= 1024
+                ? `${(currentSize / 1024).toFixed(0)} KB`
+                : `${currentSize} B`;
+              setProgressMessage(
+                `Scaling benchmark ${index + 1}/${selectedAlgorithms.length}: ${cipherDef.name} - ${current}/${total} (${sizeFormatted})...`,
+              );
+            },
+          );
+
+          if (scalingData.length > 0) {
+            const estimatedComplexity = estimateComplexity(scalingData);
+            const scalingResult: ScalingBenchmarkResult = {
+              cipherId,
+              cipherName: cipherDef.name,
+              category: cipherDef.category,
+              results: scalingData,
+              estimatedComplexity,
+              timestamp: new Date(),
+            };
+            scalingBenchmarkResults.push(scalingResult);
+          }
+        } catch (cipherError) {
+          console.error(`Scaling benchmark failed for ${cipherId}:`, cipherError);
+          setError(
+            (current) =>
+              `${current ?? ""}Scaling benchmark failed for ${cipherDef.name}. `,
+          );
+        }
+
+        // Yield to event loop
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      setScalingResults(scalingBenchmarkResults);
+
+      // Save to history
+      setScalingResults((current) => {
+        const next = scalingBenchmarkResults.reduce(
+          (acc, result) => addScalingResult(acc, result),
+          current,
+        );
+        saveScalingHistory(next);
+        return next;
+      });
+    } finally {
+      setProgressMessage("");
+      setIsRunning(false);
+    }
+  }, [selectedAlgorithms, iterations, runCipher]);
+
   return (
     <WorkspaceLayout activeCipherId={urlAlgorithms ? urlAlgorithms.split(",")[0] : undefined}>
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -356,6 +454,8 @@ function BenchmarkContent() {
               onInputSizeChange={setInputSize}
               onIterationsChange={setIterations}
               onBenchmarkStart={handleBenchmarkStart}
+              onScalingBenchmarkStart={handleScalingBenchmarkStart}
+              enableScaling={true}
             />
             {deviceInfo && (
               <div className="space-y-6">
@@ -407,6 +507,24 @@ function BenchmarkContent() {
               <ComparisonChart results={results} chartType={chartType} />
             </section>
           </>
+        )}
+
+        {scalingResults.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">
+                Payload Scaling Analysis
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowScalingChart(!showScalingChart)}
+                className="rounded-lg px-4 py-2 text-sm font-medium border border-zinc-200 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
+              >
+                {showScalingChart ? 'Hide' : 'Show'} Scaling Chart
+              </button>
+            </div>
+            {showScalingChart && <ThroughputScalingChart results={scalingResults} />}
+          </section>
         )}
 
         {!results.length && !isRunning && (

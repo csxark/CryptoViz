@@ -107,10 +107,7 @@ export function saveFavoriteCipherIds(ids: string[]): string[] {
   const normalized = normalizeFavoriteCipherIds(ids)
 
   writeStorage(normalized)
-
-  if (isBrowser()) {
-    dispatchFavoriteChange(normalized)
-  }
+  dispatchFavoriteChange(normalized)
 
   return normalized
 }

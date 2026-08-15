@@ -1,62 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import Navbar from '../../components/layout/Navbar'
+import GaloisFieldLab from '../../components/math/GaloisFieldLab'
 
 export default function FiniteFieldPage() {
-  const [polyA, setPolyA] = useState<string>('57') // Default hex values often used in AES examples (e.g. {57} * {83} = {c1})
-  const [polyB, setPolyB] = useState<string>('83')
-  const [activeTab, setActiveTab] = useState<'calc' | 'aes' | 'docs'>('calc')
-
-  // Helper to parse hex string safely
-  const parseHex = (val: string) => {
-    const clean = val.replace(/^0x/, '')
-    const num = parseInt(clean, 16)
-    return isNaN(num) ? 0 : num & 0xFF
-  }
-
-  const aVal = parseHex(polyA)
-  const bVal = parseHex(polyB)
-
-  // GF(2^8) Addition is simply XOR
-  const gfAdd = aVal ^ bVal
-
-  // GF(2^8) Multiplication using Rijndael's finite field multiplication algorithm
-  const gfMul = (a: number, b: number) => {
-    let p = 0
-    let hiBit = 0
-    let tempA = a
-    let tempB = b
-    for (let i = 0; i < 8; i++) {
-      if ((tempB & 1) !== 0) {
-        p ^= tempA
-      }
-      hiBit = tempA & 0x80
-      tempA = (tempA << 1) & 0xFF
-      if (hiBit !== 0) {
-        tempA ^= 0x1b // AES irreducible polynomial x^8 + x^4 + x^3 + x + 1 (0x1B)
-      }
-      tempB >>= 1
-    }
-    return p
-  }
-
-  const mulResult = gfMul(aVal, bVal)
-
-  // Convert number to binary polynomial representation string
-  const toPolynomialString = (n: number) => {
-    const terms = []
-    for (let i = 7; i >= 0; i--) {
-      if ((n & (1 << i)) !== 0) {
-        if (i === 0) terms.push('1')
-        else if (i === 1) terms.push('x')
-        else terms.push(`x<sup>${i}</sup>`)
-      }
-    }
-    return terms.length > 0 ? terms.join(' + ') : '0'
-  }
-
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100">
       <Navbar />
@@ -76,133 +25,25 @@ export default function FiniteFieldPage() {
           </p>
         </header>
 
-        {/* Input Controls */}
-        <section aria-label="Field Controls" className="grid grid-cols-1 gap-6 md:grid-cols-2 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-          <div>
-            <label htmlFor="polyA" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Polynomial A (Hexadecimal, e.g., 57)
-            </label>
-            <div className="mt-2 flex items-center space-x-2">
-              <span className="text-zinc-500 font-mono">0x</span>
-              <input
-                id="polyA"
-                type="text"
-                maxLength={2}
-                value={polyA}
-                onChange={(e) => setPolyA(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm uppercase font-mono focus:border-teal-500 focus:outline-none dark:border-zinc-700"
-              />
-            </div>
-            <p className="mt-1 text-xs text-zinc-500">Binary: {aVal.toString(2).padStart(8, '0')}</p>
-          </div>
-
-          <div>
-            <label htmlFor="polyB" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Polynomial $B$ (Hexadecimal, e.g., 83)
-            </label>
-            <div className="mt-2 flex items-center space-x-2">
-              <span className="text-zinc-500 font-mono">0x</span>
-              <input
-                id="polyB"
-                type="text"
-                maxLength={2}
-                value={polyB}
-                onChange={(e) => setPolyB(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm uppercase font-mono focus:border-teal-500 focus:outline-none dark:border-zinc-700"
-              />
-            </div>
-            <p className="mt-1 text-xs text-zinc-500">Binary: {bVal.toString(2).padStart(8, '0')}</p>
-          </div>
+        {/* Educational Context */}
+        <section className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+          <h3 className="text-lg font-bold">Understanding GF(2^8)</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            In cryptography, particularly AES, we operate in the finite field GF(2<sup>8</sup>). 
+            This means elements are represented as polynomials of maximum degree 7 with coefficients in GF(2) (0 or 1).
+            A byte like 0x57 translates to the polynomial: $x^6 + x^4 + x^2 + x + 1$.
+          </p>
+          <ul className="list-disc list-inside text-sm text-zinc-600 dark:text-zinc-400 space-y-2 mt-2">
+            <li><strong>Addition (A ⊕ B):</strong> Field addition corresponds to coefficient-wise addition modulo 2, implemented via bitwise XOR.</li>
+            <li><strong>Multiplication (A ⊗ B):</strong> Polynomial multiplication modulo an irreducible polynomial $m(x)$.</li>
+            <li><strong>Irreducible Polynomials:</strong> AES uses $m(x) = x^8 + x^4 + x^3 + x + 1$ (0x11B). Anubis uses 0x11D, and Twofish uses 0x12D.</li>
+          </ul>
         </section>
 
-        {/* Navigation Tabs */}
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800">
-          <button
-            onClick={() => setActiveTab('calc')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              activeTab === 'calc'
-                ? 'border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400'
-            }`}
-          >
-            Field Operations
-          </button>
-          <button
-            onClick={() => setActiveTab('aes')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              activeTab === 'aes'
-                ? 'border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400'
-            }`}
-          >
-            AES Context
-          </button>
-          <button
-            onClick={() => setActiveTab('docs')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              activeTab === 'docs'
-                ? 'border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400'
-            }`}
-          >
-            Documentation
-          </button>
-        </div>
-
-        {/* Tab Content: Calculations */}
-        {activeTab === 'calc' && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
-              <h3 className="text-lg font-bold">Addition (A ⊕ B)</h3>
-              <p className="text-xs text-zinc-500">In GF(2^8), addition corresponds to coefficient-wise addition modulo 2, which is implemented via the bitwise XOR operation.</p>
-              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 font-mono text-sm space-y-2">
-                <p>Hex Result: <span className="font-bold text-teal-600 dark:text-teal-400">0x{gfAdd.toString(16).toUpperCase().padStart(2, '0')}</span></p>
-                <p>Decimal: {gfAdd}</p>
-                <p>Binary: {gfAdd.toString(2).padStart(8, '0')}</p>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
-              <h3 className="text-lg font-bold">Multiplication ($A \otimes B$)</h3>
-              <p className="text-xs text-zinc-500">Polynomial multiplication modulo the irreducible polynomial $m(x) = x^8 + x^4 + x^3 + x + 1$ (0x1B).</p>
-              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 font-mono text-sm space-y-2">
-                <p>Hex Result: <span className="font-bold text-teal-600 dark:text-teal-400">0x{mulResult.toString(16).toUpperCase().padStart(2, '0')}</span></p>
-                <p>Decimal: {mulResult}</p>
-                <p>Binary: {mulResult.toString(2).padStart(8, '0')}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab Content: AES Context */}
-        {activeTab === 'aes' && (
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
-            <h3 className="text-lg font-bold">Role in AES Encryption</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              AES uses bytes as elements of the finite field GF(2<sup>8</sup>). Each byte (b<sub>7</sub> b<sub>6</sub> b<sub>5</sub> b<sub>4</sub> b<sub>3</sub> b<sub>2</sub> b<sub>1</sub> b<sub>0</sub>) is interpreted as a polynomial:
-            </p>
-            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 font-mono text-sm">
-              <p>
-                A(x) = b<sub>7</sub>x<sup>7</sup> + b<sub>6</sub>x<sup>6</sup> + b<sub>5</sub>x<sup>5</sup> + b<sub>4</sub>x<sup>4</sup> + b<sub>3</sub>x<sup>3</sup> + b<sub>2</sub>x<sup>2</sup> + b<sub>1</sub>x + b<sub>0</sub>
-              </p>
-            </div>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Operations in this field ensure that all mixing steps in AES are fully reversible, maintaining cryptographic diffusion and confusion securely.
-            </p>
-          </div>
-        )}
-
-        {/* Tab Content: Docs */}
-        {activeTab === 'docs' && (
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
-            <h3 className="text-lg font-bold">Documentation & Specifications</h3>
-            <ul className="list-disc list-inside text-sm text-zinc-600 dark:text-zinc-400 space-y-2">
-              <li>Field Size: $2^8 = 256$ elements ($0x00$ to $0xFF$).</li>
-              <li>Irreducible Polynomial: $m(x) = x^8 + x^4 + x^3 + x + 1$ (represented as `0x1B`).</li>
-              <li>Additions & Subtractions are equivalent to XOR operations.</li>
-            </ul>
-          </div>
-        )}
+        {/* Interactive Lab */}
+        <section aria-label="Field Controls">
+          <GaloisFieldLab />
+        </section>
       </main>
     </div>
   )

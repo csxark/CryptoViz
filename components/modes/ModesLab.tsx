@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useState, useId } from 'react'
-import { encrypt, type AesMode } from '@/lib/cipher/symmetric/aes'
+import { useMemo, useState, useId, useEffect } from 'react'
+import { type AesMode } from '@/lib/cipher/symmetric/aes'
+import { cryptoWorkerClient } from '@/lib/workers/cryptoWorkerClient'
 
 // One plaintext, five modes, side by side — with a single plaintext byte flipped
 // so you can watch how far the change propagates through each mode's ciphertext.
@@ -17,19 +18,7 @@ const MODES: { id: AesMode; name: string; blurb: string }[] = [
 const KEY = '2b7e151628aed2a6abf7158809cf4f3c'
 const IV = '000102030405060708090a0b0c0d0e0f'
 
-// Encrypt to hex ciphertext, dropping the IV prefix that encrypt() prepends
-// for IV-based modes so all modes line up byte-for-byte.
-function ciphertextHex(mode: AesMode, text: string): string {
-  const options = mode === 'ECB' ? { mode } : { mode, iv: IV }
-  const out = encrypt(text, KEY, options).output
-  return mode === 'ECB' ? out : out.slice(32)
-}
 
-function hexToBytes(hex: string): string[] {
-  const pairs: string[] = []
-  for (let i = 0; i < hex.length; i += 2) pairs.push(hex.slice(i, i + 2))
-  return pairs
-}
 
 // Flip the character at `index` to a different one, keeping the string ASCII so
 // the byte length is preserved.
@@ -49,14 +38,38 @@ export default function ModesLab() {
   const safeIndex = Math.min(flipIndex, Math.max(0, text.length - 1))
   const flipped = useMemo(() => flipByte(text, safeIndex), [text, safeIndex])
 
-  const rows = useMemo(() => {
-    return MODES.map((m) => {
-      const original = hexToBytes(ciphertextHex(m.id, text))
-      const changed = hexToBytes(ciphertextHex(m.id, flipped))
-      const diff = original.map((b, i) => b !== changed[i])
-      const changedCount = diff.filter(Boolean).length
-      return { ...m, changed, diff, changedCount, total: changed.length }
-    })
+  const [rows, setRows] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    let active = true;
+    const calculate = async () => {
+      setLoading(true);
+      try {
+        const result = await cryptoWorkerClient.runCryptoOperation<any[]>("batchModesLab", {
+          text,
+          flipped,
+          key: KEY,
+          iv: IV,
+          modes: MODES.map(m => m.id)
+        });
+        
+        if (active) {
+          // Merge metadata back
+          const merged = MODES.map((m, i) => ({
+            ...m,
+            ...result[i]
+          }));
+          setRows(merged);
+        }
+      } catch (err) {
+        console.error("Worker failed:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    calculate();
+    return () => { active = false; };
   }, [text, flipped])
 
   return (

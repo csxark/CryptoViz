@@ -10,6 +10,8 @@ interface BenchmarkControlsProps {
   onInputSizeChange: (size: number) => void
   onIterationsChange: (iterations: number) => void
   onBenchmarkStart: () => void
+  onScalingBenchmarkStart?: () => void
+  enableScaling?: boolean
 }
 
 export default React.memo(function BenchmarkControls({
@@ -19,6 +21,8 @@ export default React.memo(function BenchmarkControls({
   onInputSizeChange,
   onIterationsChange,
   onBenchmarkStart,
+  onScalingBenchmarkStart,
+  enableScaling = false,
 }: BenchmarkControlsProps) {
   const handleCustomInputSize = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,6 +137,22 @@ className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outli
       </div>
 
       {/* Start Button */}
+      {enableScaling && onScalingBenchmarkStart && (
+        <button
+          onClick={onScalingBenchmarkStart}
+          disabled={isRunning}
+          className="w-full rounded-lg bg-purple-600 px-4 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.01] hover:bg-purple-700 hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 dark:bg-purple-500 dark:hover:bg-purple-600"
+        >
+          {isRunning ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              Running Scaling Sweep...
+            </div>
+          ) : (
+            'Start Payload Scaling Sweep'
+          )}
+        </button>
+      )}
       <button
         onClick={onBenchmarkStart}
         disabled={isRunning}

@@ -11,7 +11,7 @@ interface FormulaExplanation {
 
 interface MathBlockProps {
   formula: string;
-  explanation?: string[];
+  explanations?: FormulaExplanation[];
 }
 
 export const MathBlock: React.FC<MathBlockProps> = ({

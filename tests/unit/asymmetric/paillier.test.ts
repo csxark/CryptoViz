@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { encrypt, decrypt, homomorphicAdd, TEST_VECTORS } from '@/lib/cipher/asymmetric/paillier'
+import { encrypt, decrypt, homomorphicAdd, homomorphicScalarMul, TEST_VECTORS } from '@/lib/cipher/asymmetric/paillier'
 
 describe('Paillier cryptosystem', () => {
   it('matches the verified encrypt test vector', () => {
@@ -24,6 +24,17 @@ describe('Paillier cryptosystem', () => {
     const sum = homomorphicAdd(c1, c2, '221,222')
     expect(sum).toBe('45109')
     expect(decrypt(sum, '221,48,198').output).toBe('23') // 15 + 8 mod 221
+  })
+
+  it('demonstrates homomorphic scalar multiplication: Dec(Enc(a)^k mod n²) === k*a mod n', () => {
+    const c1 = encrypt('15', '221,222,7').output // = 4613
+    const scaled = homomorphicScalarMul(c1, '3', '221,222')
+    expect(decrypt(scaled, '221,48,198').output).toBe('45') // 3 * 15 mod 221
+  })
+
+  it('rejects a negative scalar multiplier', () => {
+    const c1 = encrypt('15', '221,222,7').output
+    expect(() => homomorphicScalarMul(c1, '-1', '221,222')).toThrow(/non-negative/)
   })
 
   it('rejects a plaintext outside [0, n)', () => {

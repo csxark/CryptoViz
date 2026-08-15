@@ -132,10 +132,9 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#09090B] text-zinc-900 dark:text-[#F5F5F5] font-sans antialiased">
+    <div className="min-h-screen bg-white dark:bg-[#09090B] text-zinc-900 dark:text-[#F5F5F7] selection:bg-teal-500/30 font-sans">
       <Navbar />
-
-
+      
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-white dark:bg-[#09090B]">
         {/* Unified Design System Vector Ambient Underlay */}

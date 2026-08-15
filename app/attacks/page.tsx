@@ -69,6 +69,26 @@ export const ATTACK_COLLECTION: AttackDemoItem[] = [
     educationalNote: 'Requires constant-time comparison implementations (`crypto.timingSafeEqual`) to prevent leaking key bytes byte-by-byte.',
     tags: ['Side-Channel', 'Execution Delay', 'Constant-Time'],
   },
+  {
+    id: 'dh-mitm',
+    slug: 'dh-mitm',
+    title: 'Diffie-Hellman Man-in-the-Middle Attack',
+    category: 'Protocol',
+    riskLevel: 'Critical',
+    summary: 'Eve intercepts and substitutes public keys in unauthenticated Diffie-Hellman, establishing dual shared secrets with Alice and Bob.',
+    educationalNote: 'Mitigated by authenticating public keys via digital signatures (Station-to-Station), PKI, or certificates so substitution attempts are detected.',
+    tags: ['Diffie-Hellman', 'Key Exchange', 'Key Substitution'],
+  },
+  {
+    id: 'bellcore-crt',
+    slug: 'bellcore-crt',
+    title: 'RSA-CRT Bellcore Fault Attack',
+    category: 'Cryptanalysis',
+    riskLevel: 'Critical',
+    summary: 'Exploiting hardware transient bit-flips during Chinese Remainder Theorem sub-ring calculations to instantly factor RSA modulus n via Euclidean GCD.',
+    educationalNote: 'Demonstrates why production crypto implementations require fault detection checks or randomized RSA blinding to prevent hardware fault injection attacks.',
+    tags: ['RSA', 'CRT', 'Fault Injection', 'GCD'],
+  },
 ];
 
 export default function AttackCollectionPage() {
@@ -95,7 +115,7 @@ export default function AttackCollectionPage() {
       <Navbar />
         <PracticePageTemplate
           title="Attack Simulator Collection"
-          description="Explore interactive, safe simulations of real-world cryptographic attacks (Brute-Force, Dictionary, ECB Pattern Leakage, Replay Attacks, and Timing Attacks). Understand vulnerabilities and learn industry-standard mitigations."
+          description="Explore interactive, safe simulations of real-world cryptographic attacks (Brute-Force, Dictionary, ECB Pattern Leakage, Replay Attacks, Timing Attacks, and RSA-CRT Fault Attacks). Understand vulnerabilities and learn industry-standard mitigations."
           eyebrow="SAFE EDUCATIONAL SIMULATORS"
           breadcrumbs={[
             { label: "Practice" },
@@ -115,7 +135,7 @@ export default function AttackCollectionPage() {
               Attack Simulator <span className="text-red-500">Collection</span>
             </h1>
             <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              Explore interactive, safe simulations of real-world cryptographic attacks (Brute-Force, Dictionary, ECB Pattern Leakage, Replay Attacks, and Timing Attacks). Understand vulnerabilities and learn industry-standard mitigations.
+              Explore interactive, safe simulations of real-world cryptographic attacks. Understand vulnerabilities and learn industry-standard mitigations.
             </p>
           </div>
         </section>

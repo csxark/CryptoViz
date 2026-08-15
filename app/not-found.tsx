@@ -141,7 +141,6 @@ export default function NotFound() {
     const router = useRouter()
     const [countdown, setCountdown] = useState(COUNTDOWN_START)
 
-    const [cancelled, _setCancelled] = useState(false)
     const redirectRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -164,7 +163,7 @@ export default function NotFound() {
             clearInterval(tickRef.current!)
             clearTimeout(redirectRef.current!)
         }
-    })
+    }, [router])
 
     const handleReturn = () => {
         clearInterval(tickRef.current!)
@@ -274,7 +273,6 @@ export default function NotFound() {
                                         </span>
                                     </p>
                                 </div>
-                            )}
 
                             {/* CTA Button */}
                             <button

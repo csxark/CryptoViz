@@ -1,6 +1,6 @@
 /**
  * Auto-generated precache routes manifest.
- * Last Generated: 2026-08-10T18:05:59.213Z
+ * Last Generated: 2026-08-15T05:08:12.497Z
  */
 export const PRECACHE_ROUTES: string[] = [
   "/",
@@ -42,6 +42,7 @@ export const PRECACHE_ROUTES: string[] = [
   "/cipher-sandbox/",
   "/collections/",
   "/compare/",
+  "/dashboard/",
   "/demo/reed-solomon/",
   "/docs/",
   "/docs/architecture/",
@@ -71,6 +72,7 @@ export const PRECACHE_ROUTES: string[] = [
   "/learning-paths/rot13/",
   "/learning-paths/rsa/",
   "/learning-paths/sha256/",
+  "/learning-paths/verify/",
   "/learning-paths/vigenere/",
   "/matrix/",
   "/merkle/",

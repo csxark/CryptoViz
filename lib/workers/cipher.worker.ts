@@ -377,55 +377,42 @@ workerScope.addEventListener(
         result = encryptMode ? ideaEncrypt(input, key, options) : ideaDecrypt(input, key, options);
         break;
       default:
-        throw new Error(`Unsupported cipher ID: ${cipherId}`);
+        throw new Error(`Unsupported cipher ID: ${cipherId}`)
     }
-      const dispatcher = await getDispatcher(cipherId);
-      const handler = type === "encrypt" ? dispatcher.encrypt : dispatcher.decrypt;
-      const result = (await handler(input, key, options)) as CipherResult;
 
-      const response: WorkerResponse = {
-        requestId,
-        success: true,
-        payload: { result },
-        timings: { durationMs: performance.now() - startTime },
-      };
-
-    const durationMs = performance.now() - startTime;
+    const durationMs = performance.now() - startTime
     const response: WorkerResponse = {
       requestId,
       success: true,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       payload: { result: result as any },
       timings: { durationMs },
-    };
-    workerScope.postMessage(response);
-  } catch (error: unknown) {
-    const durationMs = performance.now() - startTime;
-      workerScope.postMessage(response);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorCode =
-        error instanceof CipherError ? error.code : undefined;
-
-      const requestId =
-        typeof requestData === "object" &&
-        requestData !== null &&
-        "requestId" in requestData
-          ? (requestData as WorkerRequest).requestId
-          : "unknown";
-
-      const response: WorkerResponse = {
-        requestId,
-        success: false,
-        payload: {
-          error: errorMessage,
-          errorCode,
-          errorMessage,
-        },
-        timings: { durationMs: performance.now() - startTime },
-      };
-
-      workerScope.postMessage(response);
     }
+    workerScope.postMessage(response)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorCode =
+      error instanceof CipherError ? error.code : undefined
+
+    const requestId =
+      typeof requestData === 'object' &&
+      requestData !== null &&
+      'requestId' in requestData
+        ? (requestData as WorkerRequest).requestId
+        : 'unknown'
+
+    const response: WorkerResponse = {
+      requestId,
+      success: false,
+      payload: {
+        error: errorMessage,
+        errorCode,
+        errorMessage,
+      },
+      timings: { durationMs: performance.now() - startTime },
+    }
+
+    workerScope.postMessage(response)
+  }
   },
 );

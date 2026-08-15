@@ -81,7 +81,7 @@ describe("Worker Communication Suite", () => {
     expect(response.payload.errorCode).toBe("ALGORITHM_UNSUPPORTED");
     expect(response.payload.errorMessage).toContain("fake-cipher-123");
   });
-});
+
   describe("Dynamic Cipher Module Lazy-Loading", () => {
     it("dynamically imports and executes a classical cipher module (caesar)", async () => {
       const caesarMod = await import("@/lib/cipher/classical/caesar");

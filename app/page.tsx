@@ -134,8 +134,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090B] text-zinc-900 dark:text-[#F5F5F5] font-sans antialiased">
       <Navbar />
-      <Analytics />
-      
+
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-white dark:bg-[#09090B]">
         {/* Unified Design System Vector Ambient Underlay */}
@@ -143,7 +143,7 @@ export default function Home() {
           <div className="absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00C2AE]/5 blur-[200px]" />
           <div className="absolute -left-40 top-10 h-[450px] w-[450px] rounded-full bg-[#008A7C]/3 blur-[150px]" />
         </div>
- 
+
         {/* Architecture Grid Mesh */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -157,17 +157,17 @@ export default function Home() {
             animation: "gridMove 20s linear infinite",
           }}
         />
- 
+
         {/* Floating Particles & Ambient Glow */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00C2AE]/5 blur-[150px] animate-pulse duration-[6000ms]" />
           <div className="absolute right-[-10%] top-[10%] h-[500px] w-[500px] rounded-full bg-[#008A7C]/10 blur-[180px]" />
- 
+
           <div className="absolute left-10 top-24 h-1.5 w-1.5 rounded-full bg-[#00C2AE] animate-ping opacity-60" />
           <div className="absolute left-72 top-40 h-1 w-1 rounded-full bg-[#14D8C2] animate-pulse opacity-40" />
           <div className="absolute right-40 top-32 h-2 w-2 rounded-full bg-[#008A7C] animate-pulse opacity-50" />
         </div>
- 
+
         <div className="mx-auto max-w-[1400px] px-6 pb-20 lg:px-8 relative z-10">
           <div className="grid items-center gap-12 lg:grid-cols-[1fr_520px]">
             {/* Left Content Column */}
@@ -179,13 +179,13 @@ export default function Home() {
                   Cryptography
                 </span>
               </h1>
- 
+
               <p className="mt-6 max-w-xl text-base leading-relaxed text-zinc-600 dark:text-[#B3B3B8]">
                 Learn encryption, hashing and secure communication through
                 beautiful interactive visualisations designed for students,
                 developers and security enthusiasts.
               </p>
- 
+
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link
                   href="/visualizer/caesar/"
@@ -194,10 +194,10 @@ export default function Home() {
                   Open Playground
                   <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform duration-250" />
                 </Link>
- 
- 
+
+
               </div>
- 
+
               {/* Hero Mini Stats */}
               <div className="mt-8 flex gap-6 text-sm">
                 <div className="text-zinc-500 dark:text-[#8A8A94]">
@@ -210,7 +210,7 @@ export default function Home() {
                   <strong className="text-zinc-900 dark:text-[#F5F5F5]">100+</strong> Examples
                 </div>
               </div>
- 
+
               {/* Minimal Core Features */}
               <div className="mt-12 pt-6 grid grid-cols-3 gap-4">
                 <div className="group rounded-xl border border-zinc-200 dark:border-[#2A2A31] bg-white dark:bg-[#16161A] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#00C2AE]/40">
@@ -218,13 +218,13 @@ export default function Home() {
                   <h4 className="text-sm font-semibold text-zinc-900 dark:text-[#F5F5F5]">Interactive</h4>
                   <p className="mt-1 text-xs text-zinc-500 dark:text-[#8A8A94]">Live playground execution</p>
                 </div>
- 
+
                 <div className="group rounded-xl border border-zinc-200 dark:border-[#2A2A31] bg-white dark:bg-[#16161A] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#00C2AE]/40">
                   <ShieldCheck className="mb-3 text-[#00C2AE] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" size={20} />
                   <h4 className="text-sm font-semibold text-zinc-900 dark:text-[#F5F5F5]">Secure</h4>
                   <p className="mt-1 text-xs text-zinc-500 dark:text-[#8A8A94]">Standard algorithms</p>
                 </div>
- 
+
                 <div className="group rounded-xl border border-zinc-200 dark:border-[#2A2A31] bg-white dark:bg-[#16161A] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#00C2AE]/40">
                   <BookOpen className="mb-3 text-[#00C2AE] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" size={20} />
                   <h4 className="text-sm font-semibold text-zinc-900 dark:text-[#F5F5F5]">Learn</h4>
@@ -232,7 +232,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
- 
+
             {/* Right Side Illustration */}
             <div className="relative flex items-center justify-center overflow-visible">
               <HeroIllustration />
@@ -241,7 +241,7 @@ export default function Home() {
         </div>
       </section>
 
-  {/* Quick Entry Section */}
+      {/* Quick Entry Section */}
       <StartHereSection />
       {/* Library Grid Section */}
       <section className="w-full py-24 bg-zinc-50 dark:bg-[#101013] border-y border-zinc-200 dark:border-[#2A2A31] transition-colors duration-300">
@@ -250,7 +250,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-zinc-900 dark:text-[#F5F5F5]">Algorithm Library</h2>
             <p className="mt-4 text-zinc-500 dark:text-[#8A8A94]">Dive into our comprehensive collection of interactive cipher modules.</p>
           </div>
- 
+
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {isLoading
               ? Array.from({ length: 5 }).map((_, idx) => <SkeletonCard key={`skeleton-${idx}`} />) // static skeleton count, index key is safe

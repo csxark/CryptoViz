@@ -1,7 +1,6 @@
-import type { Metadata } from "next";
+'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-
 import Link from "next/link";
 import {
   docCategories,
@@ -32,12 +31,6 @@ interface SearchItem {
   snippet: string;
   score?: number;
 }
-
-export const metadata: Metadata = {
-  title: "Documentation | CryptoViz",
-  description:
-    "CryptoViz documentation styled with the same design system as the main website, including responsive navigation and themed docs cards.",
-};
 
 export default function DocumentationPage() {
   const [activeSection, setActiveSection] = useState<DocCategory>(

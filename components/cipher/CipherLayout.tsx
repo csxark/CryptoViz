@@ -702,6 +702,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
               title="Execution Error" 
               error={error || workerError?.message || workerError?.code || 'Unknown error'} 
               className="mt-4"
+              onRetry={() => void handleRun()}
             />
           )}
         </div>

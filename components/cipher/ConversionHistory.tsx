@@ -11,6 +11,8 @@ import {
   serializeConversionHistoryToJson,
   type ConversionHistoryEntry,
 } from '../../lib/utils/conversionHistory'
+import EmptyState from '../ui/EmptyState'
+import { History as HistoryIcon, SearchX } from 'lucide-react'
 
 interface ConversionHistoryProps {
   cipherId: string
@@ -120,13 +122,19 @@ export default function ConversionHistory({
       {message && <p role="status" className="mt-3 text-xs text-teal-700 dark:text-teal-400">{message}</p>}
 
       {history.length === 0 ? (
-        <div className="mt-4 rounded-lg border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-          No conversions saved yet. Run a cipher operation to create history.
-        </div>
+        <EmptyState 
+          title="No conversions saved yet"
+          description="Run a cipher operation to create history."
+          icon={<HistoryIcon className="h-6 w-6" />}
+          className="mt-4"
+        />
       ) : filteredHistory.length === 0 ? (
-        <div className="mt-4 rounded-lg border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-          No history entries match “{query}”.
-        </div>
+        <EmptyState 
+          title="No matches found"
+          description={`No history entries match “${query}”.`}
+          icon={<SearchX className="h-6 w-6" />}
+          className="mt-4"
+        />
       ) : (
         <ul className="mt-4 flex flex-col gap-3">
           {filteredHistory.map((entry) => (

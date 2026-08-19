@@ -36,6 +36,10 @@ import {
   traceToCipherResult,
   type CipherTraceFile,
 } from '../../lib/utils/cipherTrace'
+import LoadingState from '../ui/LoadingState'
+import EmptyState from '../ui/EmptyState'
+import ErrorState from '../ui/ErrorState'
+import { FileTerminal } from 'lucide-react'
 const StepAnimator = dynamic(() => import('./StepAnimator'), { ssr: false })
 const PlayfairGrid = dynamic(() => import('./PlayfairGrid'), { ssr: false })
 const RailFenceViz = dynamic(() => import('./RailFenceViz'), { ssr: false })
@@ -694,31 +698,11 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
           />
           {/* Errors Display */}
           {(error || workerError) && (
-            <div className="rounded-xl border border-red-100 bg-red-50 p-4 dark:border-red-950/40 dark:bg-red-950/10">
-              <div className="flex gap-2.5">
-                <svg
-                  className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-                <div className="flex flex-col gap-0.5">
-                  <h4 className="text-xs font-bold text-red-800 dark:text-red-300">
-                    Execution Error
-                  </h4>
-                  <p className="text-xs text-red-700 dark:text-red-400">
-                    {error || workerError?.message || workerError?.code || 'Unknown error'}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <ErrorState 
+              title="Execution Error" 
+              error={error || workerError?.message || workerError?.code || 'Unknown error'} 
+              className="mt-4"
+            />
           )}
         </div>
         {/* Output & Trace Column (Right) */}
@@ -756,19 +740,16 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 </span>
                 <div className="mt-2 min-h-[48px] rounded-lg bg-zinc-50 p-3 font-mono text-sm leading-relaxed break-all text-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-200">
                   {loading ? (
-                    <span className="flex items-center gap-1.5 text-zinc-400">
-                      <span className="h-1.5 w-1.5 animate-ping rounded-full bg-teal-500" />
-                      Computing...
-                    </span>
+                    <LoadingState message="Computing in Web Worker..." className="p-4" />
                   ) : result ? (
                     result.output
                   ) : (
-                    <span className="flex flex-col gap-1">
-                      <span className="italic text-zinc-400">No output yet</span>
-                      <span className="text-xs text-zinc-400/70 not-italic">
-                        Run a computation to see the encrypted / decrypted result.
-                      </span>
-                    </span>
+                    <EmptyState 
+                      title="No output yet"
+                      description="Run a computation to see the encrypted / decrypted result."
+                      icon={<FileTerminal className="h-6 w-6" />}
+                      className="border-none bg-transparent dark:bg-transparent shadow-none"
+                    />
                   )}
                 </div>
                 {result && result.durationMs !== undefined && (

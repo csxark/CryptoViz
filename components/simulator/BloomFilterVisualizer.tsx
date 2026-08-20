@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { BloomFilterEngine, type TestResult, type InsertResult } from '@/lib/simulator/bloomFilter'
 import { BLOOM_FILTER_PRESETS, explainBloomFilterConcept } from '@/lib/simulator/bloomFilterTrace'
+import Card from '@/components/ui/Card'
 
 export default function BloomFilterVisualizer() {
   const [size, setSize] = useState(64)
@@ -90,7 +91,7 @@ export default function BloomFilterVisualizer() {
   return (
     <div className="space-y-6">
       {/* Parameter & Action Control Card */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs transition-colors dark:border-zinc-800 dark:bg-zinc-900">
+      <Card className="p-6 transition-colors">
         <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Bloom Filter Simulator Controls</h2>
           <div className="flex flex-wrap items-center gap-2">
@@ -191,10 +192,10 @@ export default function BloomFilterVisualizer() {
         </div>
 
         {error && <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">{error}</p>}
-      </div>
+      </Card>
 
       {/* Bit Array Visualizer Grid */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+      <Card className="p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
             Bit Array View <span className="text-xs font-normal text-zinc-500">({bits.length} bits)</span>
@@ -288,12 +289,12 @@ export default function BloomFilterVisualizer() {
               ))}
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Real-time Statistics & Math Panel */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <Card className="p-6">
           <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">Filter Performance Metrics</h3>
           <div className="space-y-3 font-mono text-sm">
             <div className="flex justify-between border-b border-zinc-100 pb-2 dark:border-zinc-800">
@@ -317,9 +318,9 @@ export default function BloomFilterVisualizer() {
               <span className="font-bold text-zinc-900 dark:text-white">{stats.optimalNumHashes}</span>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <Card className="p-6">
           <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-white">
             Inserted Elements ({insertedList.length})
           </h3>
@@ -337,11 +338,11 @@ export default function BloomFilterVisualizer() {
               ))}
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
       {/* Educational Concept Section */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+      <Card className="p-6">
         <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">How Bloom Filters Work</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           {conceptSteps.map((step) => (
@@ -351,7 +352,7 @@ export default function BloomFilterVisualizer() {
             </div>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

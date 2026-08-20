@@ -53,11 +53,13 @@ const CONFIG = {
   OPS_PER_SECOND_FAST: 10n ** 12n, // 1 trillion ops/sec (high-end GPU/ASIC)
   OPS_PER_SECOND_MODERATE: 10n ** 15n, // 1 quadrillion ops/sec (future/optimized)
   
-  // Energy assumptions
-  JOULES_PER_OPERATION: 1n / 10n ** 9n, // 1 nanojoule per operation (optimistic)
-  
-  // Cost assumptions
-  USD_PER_KWH: 1n / 10n, // $0.10 per kWh
+  // Energy assumptions: 1 nanojoule per operation. Stored as a divisor because a
+  // fractional BigInt literal (1n / 10n ** 9n) truncates to 0n.
+  OPERATIONS_PER_JOULE: 10n ** 9n, // joules = operations / OPERATIONS_PER_JOULE
+
+  // Cost assumptions: $0.10 per kWh as a numerator/denominator (same reason).
+  USD_PER_KWH_NUM: 1n,
+  USD_PER_KWH_DEN: 10n,
   HARDWARE_COST_USD: 10_000_000n, // $10M for specialized hardware
 } as const
 
@@ -284,8 +286,8 @@ function calculateEnergy(operations: bigint): EnergyEstimate {
     return { joules: '0', kwh: '0', readable: '0 J' }
   }
   
-  // Joules = operations * joules_per_operation
-  const joules = operations * CONFIG.JOULES_PER_OPERATION
+  // Joules = operations / operations_per_joule (1 nJ/op)
+  const joules = operations / CONFIG.OPERATIONS_PER_JOULE
   
   // Convert to kWh (1 kWh = 3.6 MJ = 3.6 × 10^6 J)
   const kwh = joules / (3_600_000n)
@@ -334,8 +336,8 @@ function calculateCost(operations: bigint): CostEstimate {
   const energy = calculateEnergy(operations)
   const kwh = BigInt(energy.kwh)
   
-  // Energy cost
-  const energyCost = kwh * CONFIG.USD_PER_KWH
+  // Energy cost = kwh * $0.10/kWh
+  const energyCost = (kwh * CONFIG.USD_PER_KWH_NUM) / CONFIG.USD_PER_KWH_DEN
   
   // Add hardware cost (amortized over attack time)
   const totalCost = energyCost + CONFIG.HARDWARE_COST_USD

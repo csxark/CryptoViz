@@ -23,8 +23,17 @@ export class BenchmarkEngine {
 
     const chars =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
-    const randomValues = new Uint32Array(sizeInBytes)
-    crypto.getRandomValues(randomValues)
+    // One byte of entropy per output char. crypto.getRandomValues rejects any
+    // view larger than 65536 bytes, so fill the buffer in <=64 KB chunks — a
+    // Uint32Array(sizeInBytes) (4x the byteLength) threw QuotaExceededError for
+    // any payload > 16 KB (e.g. the 64 KB / 256 KB / 1 MB scaling sizes).
+    const randomValues = new Uint8Array(sizeInBytes)
+    const MAX_BYTES_PER_CALL = 65536
+    for (let offset = 0; offset < sizeInBytes; offset += MAX_BYTES_PER_CALL) {
+      crypto.getRandomValues(
+        randomValues.subarray(offset, Math.min(offset + MAX_BYTES_PER_CALL, sizeInBytes)),
+      )
+    }
 
     let result = ''
 

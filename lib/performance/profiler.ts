@@ -9,10 +9,10 @@ import type {
   ExecutionTimeMetrics,
   MemoryMetrics,
   ThroughputMetrics,
-  LatencyMetrics,
   EnvironmentInfo,
   ProfilingOptions,
 } from './types'
+import { formatBytes } from '@/lib/formatters'
 
 export class PerformanceProfiler {
   private static readonly DEFAULT_OPTIONS: Required<ProfilingOptions> = {
@@ -265,13 +265,7 @@ export class PerformanceProfiler {
    * Format bytes to human-readable string
    */
   static formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 B'
-    const units = ['B', 'KB', 'MB', 'GB', 'TB']
-    const index = Math.min(
-      Math.floor(Math.log(Math.abs(bytes)) / Math.log(1024)),
-      units.length - 1,
-    )
-    return `${(bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 2)} ${units[index]}`
+    return formatBytes(bytes, '0 B')
   }
 
   /**

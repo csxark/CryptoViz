@@ -1,5 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
+import Card from '@/components/ui/Card'
 
 interface OverallProgressProps { pct: number; visited: number; total: number }
 
@@ -8,7 +9,7 @@ export default function OverallProgress({ pct, visited, total }: OverallProgress
   const circumference = 2 * Math.PI * radius
   const dash = (pct / 100) * circumference
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40 p-6 flex flex-col items-center justify-center gap-4">
+    <Card className="dark:bg-zinc-900/40 p-6 flex flex-col items-center justify-center gap-4">
       <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 self-start">Overall Progress</h2>
       <div className="relative flex items-center justify-center">
         <svg width="140" height="140" className="-rotate-90">
@@ -25,6 +26,6 @@ export default function OverallProgress({ pct, visited, total }: OverallProgress
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
         <span className="font-bold text-zinc-800 dark:text-zinc-200">{visited}</span> of <span className="font-bold text-zinc-800 dark:text-zinc-200">{total}</span> algorithms explored
       </p>
-    </div>
+    </Card>
   )
 }

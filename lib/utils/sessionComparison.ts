@@ -701,3 +701,29 @@ export function exportSessionComparisonCSV(
 
   return rows.join("\n");
 }
+
+/**
+ * Returns Tailwind background and text color utility classes for benchmark metric indicators.
+ */
+export function getMetricBg(isSpeedup: boolean, isSlowdown: boolean): string {
+  if (isSpeedup) {
+    return "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400";
+  }
+  if (isSlowdown) {
+    return "bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400";
+  }
+  return "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400";
+}
+
+/**
+ * Returns Tailwind text color utility classes for metric trend percentage text.
+ */
+export function getMetricTextColor(isSpeedup: boolean, isSlowdown: boolean): string {
+  if (isSpeedup) {
+    return "text-emerald-600 dark:text-emerald-400";
+  }
+  if (isSlowdown) {
+    return "text-rose-600 dark:text-rose-400";
+  }
+  return "text-zinc-500 dark:text-zinc-400";
+}

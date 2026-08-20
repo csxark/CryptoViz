@@ -7,6 +7,7 @@ import PracticePageTemplate from "@/components/layout/PracticePageTemplate";
 import { Search, ShieldAlert, ArrowRight, Bug } from 'lucide-react';
 import Link from 'next/link';
 import { AutomatedCryptanalysisWorkbench } from '@/components/attacks/AutomatedCryptanalysisWorkbench';
+import SideChannelWaveformLab from "@/components/attacks/SideChannelWaveformLab";
 
 export interface AttackDemoItem {
   id: string;
@@ -81,6 +82,16 @@ export const ATTACK_COLLECTION: AttackDemoItem[] = [
     tags: ['Side-Channel', 'Execution Delay', 'Constant-Time'],
   },
   {
+    id: 'side-channel-waveform',
+    slug: 'side-channel-waveform',
+    title: 'Power & Cache Side-Channel Analyzer',
+    category: 'Side-Channel',
+    riskLevel: 'High',
+    summary: 'Interactive RSA SPA waveform, AES DPA correlation, and Flush+Reload cache-line heatmap simulations.',
+    educationalNote: 'Shows how secret-dependent power and memory-access patterns can leak information, and why constant-time, cache-oblivious, and hardware-accelerated implementations matter.',
+    tags: ['SPA', 'DPA', 'Flush+Reload', 'Cache'],
+  },
+  {
     id: 'dh-mitm',
     slug: 'dh-mitm',
     title: 'Diffie-Hellman Man-in-the-Middle Attack',
@@ -147,6 +158,13 @@ export default function AttackCollectionPage() {
             <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
               Explore interactive, safe simulations of real-world cryptographic attacks. Understand vulnerabilities and learn industry-standard mitigations.
             </p>
+          </div>
+        </section>
+
+        {/* Hardware Side-Channel Featured Lab */}
+        <section aria-label="Featured Power and Cache Side-Channel Lab" className="space-y-4">
+          <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/5 via-transparent to-transparent p-1">
+            <SideChannelWaveformLab />
           </div>
         </section>
 

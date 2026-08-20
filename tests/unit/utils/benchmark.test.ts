@@ -67,6 +67,15 @@ describe('BenchmarkEngine Utility Unit Tests', () => {
       expect(input).toHaveLength(size)
     })
 
+    it('handles payloads above the 64KB getRandomValues quota (#1275)', () => {
+      // Uint32Array(size) had 4x the byteLength, so crypto.getRandomValues threw
+      // QuotaExceededError for any size > 16384 — including the scaling sizes.
+      for (const size of [16384, 65536, 262144, 1048576]) {
+        const input = BenchmarkEngine.generateInput(size)
+        expect(input).toHaveLength(size)
+      }
+    })
+
     it('rejects size of 0 and negative sizes', () => {
       expect(() => BenchmarkEngine.generateInput(0)).toThrow(
         'sizeInBytes must be greater than 0',

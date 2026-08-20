@@ -1,6 +1,7 @@
 /** Structured benchmark report exporters.*/
 
 import type { BenchmarkResult, DeviceInfo } from "@/types/benchmark";
+import { formatBytes, formatMilliseconds, formatOperationsPerSecond } from "@/lib/formatters";
 
 export const BENCHMARK_EXPORT_SCHEMA = "cryptoviz.benchmark";
 export const BENCHMARK_EXPORT_SCHEMA_VERSION = "1.0.0";
@@ -47,34 +48,8 @@ export interface BenchmarkJsonReport {
   }>;
 }
 
-const numberFormatter = new Intl.NumberFormat("en-US");
-
 function finiteOrZero(value: number): number {
   return Number.isFinite(value) ? value : 0;
-}
-
-function formatMilliseconds(value: number | undefined): string {
-  return value === undefined || !Number.isFinite(value)
-    ? "N/A"
-    : `${value.toFixed(4)} ms`;
-}
-
-function formatOperationsPerSecond(value: number): string {
-  return Number.isFinite(value) ? numberFormatter.format(value) : "N/A";
-}
-
-function formatBytes(value: number | undefined): string {
-  if (value === undefined || !Number.isFinite(value)) {
-    return "N/A";
-  }
-
-  const absolute = Math.abs(value);
-  if (absolute < 1024) return `${value.toFixed(0)} B`;
-  if (absolute < 1024 * 1024) return `${(value / 1024).toFixed(2)} KB`;
-  if (absolute < 1024 * 1024 * 1024) {
-    return `${(value / (1024 * 1024)).toFixed(2)} MB`;
-  }
-  return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
 function escapeMarkdownCell(value: string): string {

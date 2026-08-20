@@ -11,7 +11,11 @@ export interface ChallengeData {
   key: string;
   difficulty: ChallengeDifficulty;
   hints: string[];
+  /** Custom challenge payload fields; omitted for generated sessions. */
+  ciphertext?: string
+  answerHash?: string
 }
+
 
 const SHORT_WORDS = [
   'CODE', 'LOCK', 'SAFE', 'HASH', 'BYTE', 'DATA', 'KEYS', 'KYE',

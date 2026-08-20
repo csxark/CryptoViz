@@ -11,6 +11,7 @@ import {
 import SnapshotDiffViewer from "./SnapshotDiffViewer";
 import SnapshotPresetSelector from "./SnapshotPresetSelector";
 import { Play, CheckCircle2, XCircle, Download, RefreshCw } from "lucide-react";
+import Card from "@/components/ui/Card";
 
 export default function SnapshotTestRunner() {
   const [snapshots, setSnapshots] = useState<VisualizationSnapshot[]>(() =>
@@ -163,35 +164,35 @@ export default function SnapshotTestRunner() {
 
       {/* Snapshot Suite Overview Stats */}
       <div className="grid gap-4 sm:grid-cols-4">
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <Card className="p-4">
           <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Total Snapshots</span>
           <div className="mt-1 font-mono text-2xl font-bold text-zinc-900 dark:text-white">
             {stats.total}
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <Card className="p-4">
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Passed Assertions</span>
           <div className="mt-1 flex items-center gap-2 font-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-5 w-5" />
             {stats.passed}
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <Card className="p-4">
           <span className="text-xs font-medium text-rose-600 dark:text-rose-400">Failed / Diff Alerts</span>
           <div className="mt-1 flex items-center gap-2 font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">
             <XCircle className="h-5 w-5" />
             {stats.failed}
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <Card className="p-4">
           <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Component Health</span>
           <div className="mt-1 font-mono text-2xl font-bold text-teal-600 dark:text-teal-400">
             {stats.passPercentage}%
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Preset Selector */}

@@ -5,7 +5,8 @@
  */
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector } from '../types'
-import { CipherError, validateInput, validateKey, toByteArray, fromByteArray } from '../../utils'
+import { CipherError, validateKey, toByteArray, fromByteArray } from '../../utils'
+import { parseAndValidateHex, validateKeyLength, validateRequiredInput } from '../../utils/cipherValidation'
 
 const METADATA = {
   name: 'DES (Data Encryption Standard)',
@@ -533,20 +534,18 @@ export function encrypt(
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateRequiredInput(input)
   validateKey(key)
 
   const inEnc = options.encoding || 'utf8'
   const inputBytes = toByteArray(input, inEnc)
   // Key must be exactly 8 bytes (64 bits) for DES
-  let keyBytes = toByteArray(key, 'utf8')
-  if (keyBytes.length !== 8 && /^[0-9a-fA-F]{16}$/.test(key)) {
-    keyBytes = toByteArray(key, 'hex')
-  }
+  const normalizedKeyLength = key.replace(/\s+/g, '').length
+  let keyBytes = normalizedKeyLength === 16
+    ? parseAndValidateHex(key, undefined, 'DES key')
+    : toByteArray(key, 'utf8')
 
-  if (keyBytes.length !== 8) {
-    throw new CipherError('INVALID_KEY_LENGTH', `DES key must be exactly 8 bytes (got ${keyBytes.length} bytes).`)
-  }
+  validateKeyLength(keyBytes, [8], 'DES')
 
   if (isWeakKey(keyBytes)) {
     throw new CipherError('WEAK_KEY', 'DES weak key detected. Do not use this key.')
@@ -566,23 +565,21 @@ export function decrypt(
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateRequiredInput(input)
   validateKey(key)
 
   // Ciphertext for DES is expected in hex
-  const inputBytes = toByteArray(input, 'hex')
+  const inputBytes = parseAndValidateHex(input, undefined, 'DES ciphertext')
   if (inputBytes.length % 8 !== 0) {
     throw new CipherError('INVALID_PADDING', 'DES ciphertext must be a multiple of 8 bytes (even hex length).')
   }
 
-  let keyBytes = toByteArray(key, 'utf8')
-  if (keyBytes.length !== 8 && /^[0-9a-fA-F]{16}$/.test(key)) {
-    keyBytes = toByteArray(key, 'hex')
-  }
+  const normalizedKeyLength = key.replace(/\s+/g, '').length
+  let keyBytes = normalizedKeyLength === 16
+    ? parseAndValidateHex(key, undefined, 'DES key')
+    : toByteArray(key, 'utf8')
 
-  if (keyBytes.length !== 8) {
-    throw new CipherError('INVALID_KEY_LENGTH', `DES key must be exactly 8 bytes (got ${keyBytes.length} bytes).`)
-  }
+  validateKeyLength(keyBytes, [8], 'DES')
 
   if (isWeakKey(keyBytes)) {
     throw new CipherError('WEAK_KEY', 'DES weak key detected. Do not use this key.')

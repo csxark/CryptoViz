@@ -1,116 +1,122 @@
 export interface CustodyVault {
   id: string;
   vaultName: string;
-  custodianProvider: 'Fireblocks' | 'BitGo' | 'Coinbase Custody' | 'Anchorage Digital' | 'Ledger Enterprise';
-  signatoryThreshold: string; // e.g. "3-of-5 MPC" or "2-of-3 Multisig"
-  vaultAssetType: 'Cold Storage' | 'MPC Warm Vault' | 'Institutional Staking' | 'Settlement Collateral';
-  totalBalanceUsd: number;
-  primaryAssets: string[];
-  amlComplianceStatus: 'verified' | 'flagged-sanction-check' | 'pending-reverification';
-  timelockDelayHours: number;
-  status: 'active' | 'frozen' | 'archived';
-  lastAuditedDate: string;
+  institutionTier: 'Tier 1 Prime' | 'Enterprise' | 'Hedge Fund' | 'Sovereign';
+  storageType: 'Cold Storage (HSM)' | 'MPC Multi-Sig' | 'Warm Treasury';
+  totalAumUsd: number;
+  signersRequired: number;
+  signersTotal: number;
+  complianceScore: number; // 0 - 100
+  proofOfReserveVerified: boolean;
+  custodianPartner: string;
+  primaryAssets: { asset: string; balanceUsd: number }[];
+  status: 'active-compliant' | 'audit-pending' | 'risk-alert';
 }
 
-export interface CustodyWithdrawalApproval {
+export interface GovernanceAuthorizationRequest {
   id: string;
   vaultId: string;
   vaultName: string;
-  custodianProvider: string;
+  transferAsset: string;
+  amountUsd: number;
   destinationAddress: string;
-  assetSymbol: string;
-  requestedAmount: number;
-  requestedValueUsd: number;
-  requiredApprovals: number;
-  currentApprovals: number;
-  approvalStatus: 'approved-relayed' | 'pending-signatories' | 'rejected-policy';
+  signaturesCollected: number;
+  signaturesNeeded: number;
+  requestedBy: string;
   requestedTimestamp: string;
+  status: 'pending-signatures' | 'approved-broadcast' | 'rejected';
 }
 
 export interface CustodyFilterOptions {
-  custodianProvider: string;
-  vaultAssetType: string;
-  amlComplianceStatus: string;
+  storageType: string;
+  institutionTier: string;
   searchQuery: string;
 }
 
 const INITIAL_VAULTS: CustodyVault[] = [
   {
-    id: "cust-101",
-    vaultName: "Institutional Treasury Cold Vault #1",
-    custodianProvider: "Fireblocks",
-    signatoryThreshold: "3-of-5 MPC",
-    vaultAssetType: "Cold Storage",
-    totalBalanceUsd: 145000000,
-    primaryAssets: ["BTC", "ETH", "USDC"],
-    amlComplianceStatus: "verified",
-    timelockDelayHours: 24,
-    status: "active",
-    lastAuditedDate: "Aug 01, 2026",
+    id: "vault-101",
+    vaultName: "Aegis Prime Cold Storage",
+    institutionTier: "Tier 1 Prime",
+    storageType: "Cold Storage (HSM)",
+    totalAumUsd: 145000000,
+    signersRequired: 3,
+    signersTotal: 5,
+    complianceScore: 98,
+    proofOfReserveVerified: true,
+    custodianPartner: "BitGo Prime Custody",
+    primaryAssets: [
+      { asset: "BTC", balanceUsd: 95000000 },
+      { asset: "ETH", balanceUsd: 50000000 }
+    ],
+    status: "active-compliant"
   },
   {
-    id: "cust-102",
-    vaultName: "Institutional Prime Clearing Reserve",
-    custodianProvider: "BitGo",
-    signatoryThreshold: "2-of-3 Multisig",
-    vaultAssetType: "Settlement Collateral",
-    totalBalanceUsd: 68000000,
-    primaryAssets: ["USDT", "USDC", "WBTC"],
-    amlComplianceStatus: "verified",
-    timelockDelayHours: 6,
-    status: "active",
-    lastAuditedDate: "Aug 10, 2026",
+    id: "vault-102",
+    vaultName: "Titan MPC Treasury Vault",
+    institutionTier: "Enterprise",
+    storageType: "MPC Multi-Sig",
+    totalAumUsd: 48000000,
+    signersRequired: 2,
+    signersTotal: 3,
+    complianceScore: 92,
+    proofOfReserveVerified: true,
+    custodianPartner: "Fireblocks Institutional",
+    primaryAssets: [
+      { asset: "USDC", balanceUsd: 30000000 },
+      { asset: "SOL", balanceUsd: 18000000 }
+    ],
+    status: "active-compliant"
   },
   {
-    id: "cust-103",
-    vaultName: "DeFi Yield Staking Vault",
-    custodianProvider: "Anchorage Digital",
-    signatoryThreshold: "4-of-7 MPC",
-    vaultAssetType: "Institutional Staking",
-    totalBalanceUsd: 32000000,
-    primaryAssets: ["ETH", "SOL"],
-    amlComplianceStatus: "verified",
-    timelockDelayHours: 12,
-    status: "active",
-    lastAuditedDate: "Jul 28, 2026",
-  },
+    id: "vault-103",
+    vaultName: "Apex Sovereign Yield Reserve",
+    institutionTier: "Sovereign",
+    storageType: "Warm Treasury",
+    totalAumUsd: 82000000,
+    signersRequired: 4,
+    signersTotal: 7,
+    complianceScore: 86,
+    proofOfReserveVerified: true,
+    custodianPartner: "Coinbase Custody Trust",
+    primaryAssets: [
+      { asset: "WBTC", balanceUsd: 52000000 },
+      { asset: "USDT", balanceUsd: 30000000 }
+    ],
+    status: "audit-pending"
+  }
 ];
 
-const INITIAL_APPROVALS: CustodyWithdrawalApproval[] = [
+const INITIAL_REQUESTS: GovernanceAuthorizationRequest[] = [
   {
-    id: "appr-201",
-    vaultId: "cust-101",
-    vaultName: "Institutional Treasury Cold Vault #1",
-    custodianProvider: "Fireblocks",
-    destinationAddress: "0x7a81...44b9",
-    assetSymbol: "USDC",
-    requestedAmount: 5000000,
-    requestedValueUsd: 5000000,
-    requiredApprovals: 3,
-    currentApprovals: 3,
-    approvalStatus: "approved-relayed",
-    requestedTimestamp: "Aug 18, 2026",
-  },
+    id: "auth-301",
+    vaultId: "vault-101",
+    vaultName: "Aegis Prime Cold Storage",
+    transferAsset: "BTC",
+    amountUsd: 2500000,
+    destinationAddress: "0x7a8...91bc",
+    signaturesCollected: 2,
+    signaturesNeeded: 3,
+    requestedBy: "Compliance Officer #42",
+    requestedTimestamp: "15 minutes ago",
+    status: "pending-signatures"
+  }
 ];
 
 export class CryptoCustodyService {
   private static vaults: CustodyVault[] = [...INITIAL_VAULTS];
-  private static approvals: CustodyWithdrawalApproval[] = [...INITIAL_APPROVALS];
+  private static requests: GovernanceAuthorizationRequest[] = [...INITIAL_REQUESTS];
 
   public static getVaults(options?: Partial<CustodyFilterOptions>): CustodyVault[] {
     let result = [...this.vaults];
     if (!options) return result;
 
-    if (options.custodianProvider && options.custodianProvider !== "All") {
-      result = result.filter((v) => v.custodianProvider === options.custodianProvider);
+    if (options.storageType && options.storageType !== "All") {
+      result = result.filter((v) => v.storageType === options.storageType);
     }
 
-    if (options.vaultAssetType && options.vaultAssetType !== "All") {
-      result = result.filter((v) => v.vaultAssetType === options.vaultAssetType);
-    }
-
-    if (options.amlComplianceStatus && options.amlComplianceStatus !== "All") {
-      result = result.filter((v) => v.amlComplianceStatus === options.amlComplianceStatus);
+    if (options.institutionTier && options.institutionTier !== "All") {
+      result = result.filter((v) => v.institutionTier === options.institutionTier);
     }
 
     if (options.searchQuery && options.searchQuery.trim() !== "") {
@@ -118,62 +124,39 @@ export class CryptoCustodyService {
       result = result.filter(
         (v) =>
           v.vaultName.toLowerCase().includes(q) ||
-          v.custodianProvider.toLowerCase().includes(q) ||
-          v.primaryAssets.some((a) => a.toLowerCase().includes(q))
+          v.custodianPartner.toLowerCase().includes(q)
       );
     }
 
     return result;
   }
 
-  public static getVaultById(id: string): CustodyVault | undefined {
-    return this.vaults.find((v) => v.id === id);
-  }
-
-  public static registerCustodyVault(
-    vault: Omit<CustodyVault, "id" | "status" | "lastAuditedDate">
+  public static registerVault(
+    vault: Omit<CustodyVault, "id" | "complianceScore" | "proofOfReserveVerified">
   ): CustodyVault {
     const newVault: CustodyVault = {
       ...vault,
-      id: `cust-${Date.now()}`,
-      status: "active",
-      lastAuditedDate: "Just now",
+      id: `vault-${Date.now()}`,
+      complianceScore: 95,
+      proofOfReserveVerified: true
     };
     this.vaults.unshift(newVault);
     return newVault;
   }
 
-  public static getApprovalHistory(): CustodyWithdrawalApproval[] {
-    return [...this.approvals];
+  public static getAuthorizationRequests(): GovernanceAuthorizationRequest[] {
+    return [...this.requests];
   }
 
-  public static requestWithdrawalApproval(
-    vaultId: string,
-    destinationAddress: string,
-    assetSymbol: string,
-    requestedAmount: number
-  ): CustodyWithdrawalApproval {
-    const vault = this.getVaultById(vaultId);
-    if (!vault) throw new Error("Institutional custody vault profile not found.");
+  public static approveSignature(requestId: string): GovernanceAuthorizationRequest {
+    const req = this.requests.find((r) => r.id === requestId);
+    if (!req) throw new Error("Authorization request not found.");
 
-    const requestedValueUsd = requestedAmount;
+    req.signaturesCollected += 1;
+    if (req.signaturesCollected >= req.signaturesNeeded) {
+      req.status = "approved-broadcast";
+    }
 
-    const newApproval: CustodyWithdrawalApproval = {
-      id: `appr-${Date.now()}`,
-      vaultId,
-      vaultName: vault.vaultName,
-      custodianProvider: vault.custodianProvider,
-      destinationAddress,
-      assetSymbol,
-      requestedAmount,
-      requestedValueUsd,
-      requiredApprovals: 3,
-      currentApprovals: 3,
-      approvalStatus: "approved-relayed",
-      requestedTimestamp: "Just now",
-    };
-
-    this.approvals.unshift(newApproval);
-    return newApproval;
+    return req;
   }
 }

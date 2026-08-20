@@ -12,6 +12,9 @@ import SessionEnvironmentComparison from "./SessionEnvironmentComparison";
 import EducationalSessionInsights from "./EducationalSessionInsights";
 import SessionPresetSelector from "./SessionPresetSelector";
 import SessionExportImport from "./SessionExportImport";
+import SessionComparisonTabBar, { type ComparisonTabId } from "./SessionComparisonTabBar";
+import MetricSelector, { type ChartMetricId } from "./MetricSelector";
+import { useChartData } from "@/hooks/useChartData";
 import {
   BarChart,
   Bar,
@@ -22,7 +25,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { BarChart3, Layers, Sliders, HelpCircle } from "lucide-react";
 
 interface SessionComparisonVisualizerProps {
   sessionA: BenchmarkSession;
@@ -42,8 +44,8 @@ export default function SessionComparisonVisualizer({
   const [currentSessionA, setCurrentSessionA] = useState<BenchmarkSession>(initialSessionA);
   const [currentSessionB, setCurrentSessionB] = useState<BenchmarkSession>(initialSessionB);
   const [activePresetId, setActivePresetId] = useState<string | undefined>(undefined);
-  const [activeMetric, setActiveMetric] = useState<"throughput" | "latency" | "worker" | "memory">("throughput");
-  const [activeTab, setActiveTab] = useState<"charts" | "table" | "environment" | "educational">("charts");
+  const [activeMetric, setActiveMetric] = useState<ChartMetricId>("throughput");
+  const [activeTab, setActiveTab] = useState<ComparisonTabId>("charts");
 
   // Keep state synced if props change
   useEffect(() => {
@@ -62,22 +64,7 @@ export default function SessionComparisonVisualizer({
     setActivePresetId(preset.id);
   };
 
-  // Prepare recharts comparison data
-  const chartData = useMemo(() => {
-    return delta.algorithmDiffs.map((diff) => ({
-      name: diff.cipherName,
-      category: diff.category,
-      sessionA_ops: diff.opsPerSecA || 0,
-      sessionB_ops: diff.opsPerSecB || 0,
-      sessionA_time: diff.avgTimeA || 0,
-      sessionB_time: diff.avgTimeB || 0,
-      sessionA_worker: diff.resultA?.workerExecutionTime || 0,
-      sessionB_worker: diff.resultB?.workerExecutionTime || 0,
-      sessionA_memory: (diff.resultA?.memoryUsage || 0) / 1024,
-      sessionB_memory: (diff.resultB?.memoryUsage || 0) / 1024,
-      speedup: diff.speedupFactor || 1,
-    }));
-  }, [delta]);
+  const chartData = useChartData(delta);
 
   return (
     <div className="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
@@ -97,32 +84,10 @@ export default function SessionComparisonVisualizer({
           </div>
 
           {/* Navigation Sub-Tabs */}
-          <div className="flex flex-wrap gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900">
-            {[
-              { id: "charts", label: "Comparison Charts", icon: BarChart3 },
-              { id: "table", label: "Algorithm Diff Grid", icon: Layers },
-              { id: "environment", label: "Environmental Specs", icon: Sliders },
-              { id: "educational", label: "Educational Insights", icon: HelpCircle },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                    isActive
-                      ? "bg-white text-teal-700 shadow-sm dark:bg-zinc-800 dark:text-teal-300"
-                      : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <SessionComparisonTabBar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </div>
 
         {/* Preset Selector */}
@@ -133,9 +98,7 @@ export default function SessionComparisonVisualizer({
       </div>
 
       {/* Top Cards: Delta Summary */}
-      <SessionDeltaCard
-        delta={delta}
-      />
+      <SessionDeltaCard delta={delta} />
 
       {/* Export / Import Toolbar */}
       <SessionExportImport
@@ -152,32 +115,10 @@ export default function SessionComparisonVisualizer({
       {activeTab === "charts" && (
         <div className="space-y-4">
           {/* Metric selector bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-3 dark:border-zinc-800/80 dark:bg-zinc-900/60">
-            <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-              Select Chart Metric:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: "throughput", label: "Throughput (ops/sec)" },
-                { id: "latency", label: "Cipher Time (ms)" },
-                { id: "worker", label: "Worker RTT (ms)" },
-                { id: "memory", label: "Memory Usage (KB)" },
-              ].map((metric) => (
-                <button
-                  key={metric.id}
-                  type="button"
-                  onClick={() => setActiveMetric(metric.id as any)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                    activeMetric === metric.id
-                      ? "bg-teal-600 text-white dark:bg-teal-500"
-                      : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                  }`}
-                >
-                  {metric.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <MetricSelector
+            activeMetric={activeMetric}
+            onMetricChange={setActiveMetric}
+          />
 
           {/* Recharts Bar Chart */}
           <div className="h-80 w-full rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">

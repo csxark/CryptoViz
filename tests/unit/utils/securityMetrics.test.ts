@@ -368,4 +368,27 @@ describe('securityMetrics', () => {
       expect(parseKeySize(desCipher)).toBe(56)
     })
   })
+
+  describe('cost-to-break (#1276)', () => {
+    it('energy and cost are non-zero and scale with strength', () => {
+      const weak = calculateSecurityMetrics(
+        createMockCipher({ id: 'aes', name: 'AES', category: 'symmetric', keySize: '128 bits' }),
+        { keySize: 128 },
+      )
+      const strong = calculateSecurityMetrics(
+        createMockCipher({ id: 'aes', name: 'AES', category: 'symmetric', keySize: '256 bits' }),
+        { keySize: 256 },
+      )
+
+      // Before the fix, JOULES_PER_OPERATION / USD_PER_KWH truncated to 0n, so
+      // every cipher reported "0 J" and the flat hardware cost.
+      const weakE = weak.crackEstimates.energy
+      const strongE = strong.crackEstimates.energy
+      expect(strongE.joules).not.toBe('0')
+      expect(BigInt(strongE.joules)).toBeGreaterThan(BigInt(weakE.joules))
+      expect(BigInt(strong.crackEstimates.cost.usd)).toBeGreaterThan(
+        BigInt(weak.crackEstimates.cost.usd),
+      )
+    })
+  })
 })

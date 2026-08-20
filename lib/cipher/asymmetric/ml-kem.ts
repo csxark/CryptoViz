@@ -23,7 +23,6 @@
  * - Shared Secret: 32 bytes (64 hex chars)
  */
 
-// @ts-ignore - Requires @noble/post-quantum dependency to be installed
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js'
 import { CipherError } from '../../utils/errors'
 import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVector } from '../types'

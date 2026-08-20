@@ -140,8 +140,6 @@ function MatrixRain() {
 export default function NotFound() {
     const router = useRouter()
     const [countdown, setCountdown] = useState(COUNTDOWN_START)
-
-    const [cancelled, _setCancelled] = useState(false)
     const redirectRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
 

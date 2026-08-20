@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import type { CipherStep } from "../../lib/cipher/types";
+import type { StepMetadata } from "../../lib/cipher/stepVirtualization";
 import { cn } from "../../lib/utils";
 import A11yStepNarrator from "@/components/ui/A11yStepNarrator";
 
@@ -11,6 +12,8 @@ export type AnimationSpeed = (typeof SPEED_OPTIONS)[number];
 
 interface StepAnimatorProps {
   steps: CipherStep[];
+  /** Optional lightweight descriptors used to avoid hydrating every step. */
+  stepMetadata?: StepMetadata[];
   currentStep: number;
   onStepChange: (index: number) => void;
   speed?: AnimationSpeed;
@@ -22,6 +25,7 @@ const BASE_INTERVAL_MS = 1500;
 
 const StepAnimator = memo(function StepAnimator({
   steps,
+  stepMetadata,
   currentStep,
   onStepChange,
   speed: controlledSpeed,
@@ -31,7 +35,6 @@ const StepAnimator = memo(function StepAnimator({
   const [isPlaying, setIsPlaying] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [internalSpeed, setInternalSpeed] = useState<AnimationSpeed>(1);
-
   const [reducedMotion, setReducedMotion] = useState(false);
 
   const speed = controlledSpeed ?? internalSpeed;
@@ -44,11 +47,18 @@ const StepAnimator = memo(function StepAnimator({
   );
 
   const milestones = useMemo(
-    () =>
-      steps
+    () => {
+      if (stepMetadata) {
+        return stepMetadata
+          .filter((step) => step.isMilestone)
+          .map((step) => ({ step, index: step.index }))
+      }
+
+      return steps
         .map((step, index) => ({ step, index }))
-        .filter(({ step }) => step.isMilestone),
-    [steps],
+        .filter(({ step }) => step.isMilestone)
+    },
+    [steps, stepMetadata],
   )
 
   const currentMilestoneIndex = useMemo(() => {
@@ -201,6 +211,7 @@ const StepAnimator = memo(function StepAnimator({
     onStepChange,
   ]);
 
+  // Keyboard shortcuts.
   useEffect(() => {
     if (steps.length === 0) return;
 

@@ -5,11 +5,89 @@
 :root {
   --background: #FAFAFA;
   --foreground: #171717;
+
+  /* WCAG AA semantic visualizer tokens. These are intentionally hue-light
+     so text and boundaries remain readable without relying on colour alone. */
+  --diff-highlight-bg: #FFF7ED;
+  --diff-highlight-fg: #7C2D12;
+  --diff-highlight-border: #C2410C;
+  --diff-highlight-pattern: #9A3412;
+
+  --category-classical-bg: #F0FDFA;
+  --category-classical-fg: #115E59;
+  --category-symmetric-bg: #EFF6FF;
+  --category-symmetric-fg: #1E3A8A;
+  --category-asymmetric-bg: #FDF2F8;
+  --category-asymmetric-fg: #831843;
+  --category-hash-bg: #F0FDF4;
+  --category-hash-fg: #166534;
 }
 
 .dark {
   --background: #09090B;
   --foreground: #ededed;
+
+  --diff-highlight-bg: #451A03;
+  --diff-highlight-fg: #FFEDD5;
+  --diff-highlight-border: #FB923C;
+  --diff-highlight-pattern: #FDBA74;
+
+  --category-classical-bg: #042F2E;
+  --category-classical-fg: #99F6E4;
+  --category-symmetric-bg: #172554;
+  --category-symmetric-fg: #BFDBFE;
+  --category-asymmetric-bg: #500724;
+  --category-asymmetric-fg: #FBCFE8;
+  --category-hash-bg: #052E16;
+  --category-hash-fg: #BBF7D0;
+}
+
+
+/* System high-contrast mode: strengthen boundaries and preserve the dual
+   colour + geometric encoding used by byte-diff and matrix visualizers. */
+@media (prefers-contrast: more) {
+  :root,
+  .dark {
+    --diff-highlight-bg: #FFF;
+    --diff-highlight-fg: #000;
+    --diff-highlight-border: #000;
+    --diff-highlight-pattern: #000;
+
+    --category-classical-bg: #FFF;
+    --category-classical-fg: #000;
+    --category-symmetric-bg: #FFF;
+    --category-symmetric-fg: #000;
+    --category-asymmetric-bg: #FFF;
+    --category-asymmetric-fg: #000;
+    --category-hash-bg: #FFF;
+    --category-hash-fg: #000;
+  }
+
+  .diff-highlight {
+    border-width: 2px;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+
+  .category-badge {
+    border-width: 2px;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+}
+
+@media (forced-colors: active) {
+  .diff-highlight,
+  .category-badge {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    border: 2px solid CanvasText;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
 }
 
 /* Challenge feedback animations */

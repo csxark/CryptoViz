@@ -9,6 +9,7 @@ import {
   type GridPreset,
   type SubpixelShareResult,
 } from '@/lib/crypto/naorShamir'
+import Card from '@/components/ui/Card'
 
 export default function VisualSecretSharing() {
   const [grid, setGrid] = useState<boolean[][]>(() => createPresetGrid('C', 32, 32))
@@ -310,7 +311,7 @@ export default function VisualSecretSharing() {
 
         {/* Subpixel Superposition Mathematical Proof Card */}
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <Card className="p-4">
             <div className="mb-1 flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-zinc-300 border border-zinc-400" />
               <h4 className="text-xs font-bold text-zinc-900 dark:text-white">White Pixel Subpixel Overlay</h4>
@@ -318,9 +319,9 @@ export default function VisualSecretSharing() {
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
               Share 1 & Share 2 receive <strong>identical</strong> 2×2 subpixel patterns. Superposition covers 2 out of 4 subpixel quadrants (50% light transmission).
             </p>
-          </div>
+          </Card>
 
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <Card className="p-4">
             <div className="mb-1 flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-zinc-900 border border-zinc-950" />
               <h4 className="text-xs font-bold text-zinc-900 dark:text-white">Black Pixel Subpixel Overlay</h4>
@@ -328,7 +329,7 @@ export default function VisualSecretSharing() {
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
               Share 1 & Share 2 receive <strong>complementary</strong> 2×2 subpixel patterns. Superposition covers all 4 out of 4 subpixel quadrants (0% light transmission).
             </p>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Clock, ArrowRight } from 'lucide-react'
 import { type AlgorithmProgress, ALL_ALGORITHMS } from '@/hooks/useProgress'
+import Card from '@/components/ui/Card'
 
 interface RecentActivityProps { recentAlgorithms: AlgorithmProgress[] }
 
@@ -18,7 +19,7 @@ const DOT: Record<string, string> = { Classical: 'bg-violet-500', Symmetric: 'bg
 export default function RecentActivity({ recentAlgorithms }: RecentActivityProps) {
   if (recentAlgorithms.length === 0) {
     return (
-      <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40 p-6">
+      <Card className="dark:bg-zinc-900/40 p-6">
         <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-5">Recent Activity</h2>
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <Clock size={32} className="text-zinc-300 dark:text-zinc-700 mb-3" />
@@ -27,11 +28,11 @@ export default function RecentActivity({ recentAlgorithms }: RecentActivityProps
             Start with Caesar Cipher <ArrowRight size={12} />
           </Link>
         </div>
-      </div>
+      </Card>
     )
   }
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40 p-6">
+    <Card className="dark:bg-zinc-900/40 p-6">
       <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-5">Recent Activity</h2>
       <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
         {recentAlgorithms.map(algo => {
@@ -53,6 +54,6 @@ export default function RecentActivity({ recentAlgorithms }: RecentActivityProps
           )
         })}
       </ul>
-    </div>
+    </Card>
   )
 }

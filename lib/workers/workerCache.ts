@@ -1,11 +1,12 @@
 export interface WorkerCacheEntry<TValue> {
   key: string;
-  value: TValue;
+  value: TValue | WeakRef<object>;
   createdAt: number;
   lastAccessedAt: number;
   accessCount: number;
   expiresAt: number | null;
   size: number;
+  weakToken?: object;
 }
 
 export interface WorkerCacheOptions {
@@ -13,6 +14,8 @@ export interface WorkerCacheOptions {
   ttlMs?: number;
   maxApproxBytes?: number;
   now?: () => number;
+  /** Store object values through WeakRef when the runtime supports it. */
+  weakRef?: boolean;
 }
 
 export interface WorkerCacheStats {
@@ -25,9 +28,10 @@ export interface WorkerCacheStats {
   maxEntries: number;
   maxApproxBytes: number;
   ttlMs: number;
+  weakRefEnabled: boolean;
 }
 
-const DEFAULT_MAX_ENTRIES = 75;
+const DEFAULT_MAX_ENTRIES = 50;
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
 const DEFAULT_MAX_APPROX_BYTES = 512 * 1024;
 
@@ -70,6 +74,8 @@ export class WorkerCache<TValue> {
   private readonly ttlMs: number;
   private readonly maxApproxBytes: number;
   private readonly now: () => number;
+  private readonly weakRefEnabled: boolean;
+  private readonly finalizationRegistry: FinalizationRegistry<{ key: string; token: object }> | null;
 
   constructor(options: WorkerCacheOptions = {}) {
     this.maxEntries = Math.max(1, options.maxEntries ?? DEFAULT_MAX_ENTRIES);
@@ -79,6 +85,18 @@ export class WorkerCache<TValue> {
       options.maxApproxBytes ?? DEFAULT_MAX_APPROX_BYTES,
     );
     this.now = options.now ?? Date.now;
+    this.weakRefEnabled = options.weakRef ?? true;
+    this.finalizationRegistry =
+      this.weakRefEnabled &&
+      typeof WeakRef !== "undefined" &&
+      typeof FinalizationRegistry !== "undefined"
+        ? new FinalizationRegistry(({ key, token }) => {
+            const entry = this.entries.get(key);
+            if (entry && entry.weakToken === token) {
+              this.deleteEntry(key, "eviction");
+            }
+          })
+        : null;
   }
 
   get(key: string): TValue | undefined {
@@ -95,12 +113,19 @@ export class WorkerCache<TValue> {
       return undefined;
     }
 
+    const value = this.dereference(entry);
+    if (value === undefined) {
+      this.deleteEntry(key, "eviction");
+      this.misses += 1;
+      return undefined;
+    }
+
     entry.lastAccessedAt = this.now();
     entry.accessCount += 1;
     this.entries.delete(key);
     this.entries.set(key, entry);
     this.hits += 1;
-    return entry.value;
+    return value;
   }
 
   set(key: string, value: TValue, ttlMs = this.ttlMs): TValue {
@@ -108,17 +133,29 @@ export class WorkerCache<TValue> {
 
     const currentTime = this.now();
     const size = approximateSize(value);
+    const weakToken =
+      this.finalizationRegistry && typeof value === "object" && value !== null
+        ? {}
+        : undefined;
+    const storedValue =
+      weakToken && this.weakRefEnabled && typeof WeakRef !== "undefined"
+        ? new WeakRef(value as object)
+        : value;
     const entry: WorkerCacheEntry<TValue> = {
       key,
-      value,
+      value: storedValue,
       createdAt: currentTime,
       lastAccessedAt: currentTime,
       accessCount: 0,
       expiresAt: ttlMs > 0 ? currentTime + ttlMs : null,
       size,
+      weakToken,
     };
 
     this.entries.set(key, entry);
+    if (weakToken && this.finalizationRegistry) {
+      this.finalizationRegistry.register(value as object, { key, token: weakToken }, weakToken);
+    }
     this.approxBytes += size;
     this.enforceLimits();
     return value;
@@ -131,7 +168,16 @@ export class WorkerCache<TValue> {
   }
 
   has(key: string): boolean {
-    return this.get(key) !== undefined;
+    // A membership probe must not touch hit/miss stats or LRU recency, so it
+    // can't delegate to get(). Mirror get()'s "would return a value" checks
+    // (existence, expiry, live reference) without the side effects.
+    const entry = this.entries.get(key);
+    if (!entry) return false;
+    if (this.isExpired(entry)) {
+      this.deleteEntry(key, "expiration");
+      return false;
+    }
+    return this.dereference(entry) !== undefined;
   }
 
   delete(key: string): boolean {
@@ -139,6 +185,11 @@ export class WorkerCache<TValue> {
   }
 
   clear(): void {
+    for (const entry of this.entries.values()) {
+      if (entry.weakToken && this.finalizationRegistry) {
+        this.finalizationRegistry.unregister(entry.weakToken);
+      }
+    }
     this.entries.clear();
     this.approxBytes = 0;
   }
@@ -169,7 +220,15 @@ export class WorkerCache<TValue> {
       maxEntries: this.maxEntries,
       maxApproxBytes: this.maxApproxBytes,
       ttlMs: this.ttlMs,
+      weakRefEnabled: this.weakRefEnabled && this.finalizationRegistry !== null,
     };
+  }
+
+  private dereference(entry: WorkerCacheEntry<TValue>): TValue | undefined {
+    if (typeof WeakRef !== "undefined" && entry.value instanceof WeakRef) {
+      return entry.value.deref() as TValue | undefined;
+    }
+    return entry.value as TValue;
   }
 
   private isExpired(entry: WorkerCacheEntry<TValue>): boolean {
@@ -184,6 +243,9 @@ export class WorkerCache<TValue> {
     if (!entry) return false;
 
     this.entries.delete(key);
+    if (entry.weakToken && this.finalizationRegistry) {
+      this.finalizationRegistry.unregister(entry.weakToken);
+    }
     this.approxBytes = Math.max(0, this.approxBytes - entry.size);
     if (reason === "eviction") this.evictions += 1;
     if (reason === "expiration") this.expirations += 1;

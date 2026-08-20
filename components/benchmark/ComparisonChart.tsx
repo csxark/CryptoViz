@@ -35,6 +35,22 @@ const getCategoryColor = (category: string) => {
   }
 }
 
+const getCategoryBadgeClass = (category: string, active: boolean) => {
+  if (!active) {
+    return 'border-zinc-200 bg-zinc-50 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400'
+  }
+  switch (category) {
+    case 'classical':
+      return 'category-badge border-teal-700 bg-[var(--category-classical-bg)] text-[color:var(--category-classical-fg)] dark:border-teal-300'
+    case 'symmetric':
+      return 'category-badge border-blue-700 bg-[var(--category-symmetric-bg)] text-[color:var(--category-symmetric-fg)] dark:border-blue-300'
+    case 'asymmetric':
+      return 'category-badge border-pink-700 bg-[var(--category-asymmetric-bg)] text-[color:var(--category-asymmetric-fg)] dark:border-pink-300'
+    default:
+      return 'category-badge border-green-700 bg-[var(--category-hash-bg)] text-[color:var(--category-hash-fg)] dark:border-green-300'
+  }
+}
+
 interface TooltipPayloadItem {
   payload: {
     name: string
@@ -66,10 +82,10 @@ const CustomChartTooltip = ({ active, payload, label }: CustomChartTooltipProps)
             {data.fullName || label}
           </p>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
-            data.category === 'classical' ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400' :
-            data.category === 'symmetric' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-            data.category === 'asymmetric' ? 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400' :
-            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+            data.category === 'classical' ? 'category-badge border border-teal-700 bg-[var(--category-classical-bg)] text-[color:var(--category-classical-fg)]' :
+            data.category === 'symmetric' ? 'category-badge border border-blue-700 bg-[var(--category-symmetric-bg)] text-[color:var(--category-symmetric-fg)]' :
+            data.category === 'asymmetric' ? 'category-badge border border-pink-700 bg-[var(--category-asymmetric-bg)] text-[color:var(--category-asymmetric-fg)]' :
+            'category-badge border border-green-700 bg-[var(--category-hash-bg)] text-[color:var(--category-hash-fg)]'
           }`}>
             {data.category}
           </span>
@@ -524,7 +540,7 @@ export default React.memo(function ComparisonChart({
             aria-pressed={activeCategories.classical}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
               activeCategories.classical
-                ? 'bg-teal-50 border-teal-200 text-teal-800 dark:bg-teal-950/40 dark:border-teal-900 dark:text-teal-300'
+                ? getCategoryBadgeClass('classical', activeCategories.classical)
                 : 'bg-zinc-50 border-zinc-200 text-zinc-550 opacity-60 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-500'
             }`}
           >
@@ -537,7 +553,7 @@ export default React.memo(function ComparisonChart({
             aria-pressed={activeCategories.symmetric}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
               activeCategories.symmetric
-                ? 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300'
+                ? getCategoryBadgeClass('symmetric', activeCategories.symmetric)
                 : 'bg-zinc-50 border-zinc-200 text-zinc-550 opacity-60 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-500'
             }`}
           >
@@ -550,7 +566,7 @@ export default React.memo(function ComparisonChart({
             aria-pressed={activeCategories.asymmetric}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
               activeCategories.asymmetric
-                ? 'bg-pink-50 border-pink-200 text-pink-800 dark:bg-pink-950/40 dark:border-pink-900 dark:text-pink-300'
+                ? getCategoryBadgeClass('asymmetric', activeCategories.asymmetric)
                 : 'bg-zinc-50 border-zinc-200 text-zinc-550 opacity-60 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-500'
             }`}
           >
@@ -563,7 +579,7 @@ export default React.memo(function ComparisonChart({
             aria-pressed={activeCategories.hash}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
               activeCategories.hash
-                ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-950/40 dark:border-green-900 dark:text-green-300'
+                ? getCategoryBadgeClass('hash', activeCategories.hash)
                 : 'bg-zinc-50 border-zinc-200 text-zinc-550 opacity-60 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-500'
             }`}
           >

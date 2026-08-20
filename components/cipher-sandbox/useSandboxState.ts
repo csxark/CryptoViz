@@ -255,6 +255,11 @@ export function useSandboxState({ cipher }: UseSandboxStateProps): UseSandboxSta
             action: currentAction,
             output: String(res.output),
             timestamp: new Date().toLocaleString(),
+            parameters: cipher.id === 'chacha20-poly1305' && key.split('|')[1]
+              ? { nonce: key.split('|')[1].split(':')[0] }
+              : cipher.id === 'aes-gcm' && typeof options.iv === 'string'
+                ? { iv: options.iv }
+                : undefined,
           };
           setHistory((prev) =>
             saveConversionHistory(cipher.id, [entry, ...prev]),

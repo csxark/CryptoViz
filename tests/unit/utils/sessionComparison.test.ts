@@ -4,6 +4,8 @@ import {
   DEFAULT_SESSION_PRESETS,
   exportSessionComparisonJSON,
   exportSessionComparisonCSV,
+  getMetricBg,
+  getMetricTextColor,
 } from "@/lib/utils/sessionComparison";
 import type { BenchmarkSession } from "@/types/benchmark";
 
@@ -163,5 +165,19 @@ describe("sessionComparison utility", () => {
     expect(csvStr).toContain("Algorithm ID");
     expect(csvStr).toContain("AES-GCM");
     expect(csvStr).toContain("Caesar Cipher");
+  });
+
+  it("returns correct Tailwind classes from getMetricBg and getMetricTextColor", () => {
+    // Speedup state
+    expect(getMetricBg(true, false)).toContain("bg-emerald-100");
+    expect(getMetricTextColor(true, false)).toContain("text-emerald-600");
+
+    // Slowdown state
+    expect(getMetricBg(false, true)).toContain("bg-rose-100");
+    expect(getMetricTextColor(false, true)).toContain("text-rose-600");
+
+    // Neutral state
+    expect(getMetricBg(false, false)).toContain("bg-amber-100");
+    expect(getMetricTextColor(false, false)).toContain("text-zinc-500");
   });
 });

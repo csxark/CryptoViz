@@ -33,6 +33,14 @@ const METADATA: CipherMetadata = {
   standardBody: 'ANSI X9.62 / FIPS 186',
 }
 
+// Define interface for noble/curves signature output structure to ensure strict type safety
+interface NobleSignature {
+  toCompactHex?: () => string;
+  toCompactBytes?: () => Uint8Array;
+  r?: { toString(radix: number, pad?: number): string };
+  s?: { toString(radix: number, pad?: number): string };
+}
+
 function signCore(message: string, privateKeyHex: string, instrument: boolean): CipherResult {
   const start = performance.now()
   let privKey: Uint8Array
@@ -56,12 +64,18 @@ function signCore(message: string, privateKeyHex: string, instrument: boolean): 
 
   const pubKey = secp256k1.getPublicKey(privKey)
   const msgHash = sha256(toByteArray(message, 'utf8'))
-  const sig = secp256k1.sign(msgHash, privKey)
-  const sigHex = typeof (sig as any)?.toCompactHex === 'function'
-    ? (sig as any).toCompactHex()
-    : typeof (sig as any)?.toCompactBytes === 'function'
-    ? fromByteArray((sig as any).toCompactBytes(), 'hex')
-    : (sig as any).r.toString(16).padStart(64, '0') + (sig as any).s.toString(16).padStart(64, '0')
+  const sig: NobleSignature = secp256k1.sign(msgHash, privKey)
+  
+  let sigHex: string
+  if (typeof sig.toCompactHex === 'function') {
+    sigHex = sig.toCompactHex()
+  } else if (typeof sig.toCompactBytes === 'function') {
+    sigHex = fromByteArray(sig.toCompactBytes(), 'hex')
+  } else if (sig.r && sig.s) {
+    sigHex = sig.r.toString(16).padStart(64, '0') + sig.s.toString(16).padStart(64, '0')
+  } else {
+    throw new CipherError('INVALID_INPUT', 'Unsupported signature format returned by secp256k1.sign')
+  }
 
   if (instrument) {
     steps.push({

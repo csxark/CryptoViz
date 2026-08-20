@@ -130,6 +130,7 @@ export function useCipherWorker() {
       if (signal?.aborted) return reject(new DOMException('The user aborted the request.', 'AbortError'))
       let onAbort: (() => void) | undefined
       onAbort = () => {
+        clearTimeout(timeoutId)
         workerRef.current?.postMessage({ type: 'CANCEL', requestId: id, jobId: id })
         activeRequestsRef.current.delete(id)
         setLoading(activeRequestsRef.current.size > 0)

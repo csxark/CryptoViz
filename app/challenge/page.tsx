@@ -3,16 +3,28 @@
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import WorkspaceLayout from "../../components/layout/WorkspaceLayout";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import ChallengeMode from "../../components/challenge/ChallengeMode";
 import DailyQuiz from "../../components/challenge/DailyQuiz";
-import QuestionBankQuiz from "../../components/challenge/QuestionBankQuiz";
+import QuestionBankQuiz from "../../components/challenge/QuestionBankQuiz"
+import CustomChallengeBuilder from "../../components/challenge/CustomChallengeBuilder"
+import { deserializeCustomChallengeSet, type CustomChallengeSet } from '@/lib/challenge/customChallengeSerializer';
 
 function ChallengeContent() {
   const searchParams = useSearchParams();
   const urlCipher = searchParams.get('cipher');
-  const [activeTab, setActiveTab] = useState<'daily' | 'bank' | 'decryption'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'bank' | 'decryption'>(searchParams.get('custom') ? 'decryption' : 'daily');
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [customChallenge, setCustomChallenge] = useState<CustomChallengeSet | null>(null);
+  const [customError, setCustomError] = useState('');
+
+  useEffect(() => {
+    const encoded = searchParams.get('custom');
+    if (!encoded) return;
+    void deserializeCustomChallengeSet(encoded)
+      .then(setCustomChallenge)
+      .catch((error) => setCustomError(error instanceof Error ? error.message : 'Invalid custom challenge link.'));
+  }, [searchParams]);
 
   return (
     <WorkspaceLayout activeCipherId={urlCipher || undefined}>
@@ -31,7 +43,7 @@ function ChallengeContent() {
             Guided Practice & Challenge Hub
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
-            Master cryptography through structured daily micro-quizzes, comprehensive topic question banks, or timed interactive cipher decryption.
+            Master cryptography through structured daily micro-quizzes, comprehensive topic question banks, timed interactive cipher decryption, or custom shareable challenges.
           </p>
         </div>
 
@@ -112,6 +124,23 @@ function ChallengeContent() {
           </button>
         </div>
 
+        {customError && (
+          <div role="alert" className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+            Could not open this custom challenge: {customError}
+          </div>
+        )}
+
+        {activeTab === 'decryption' && !customChallenge && (
+          <div className="mb-6">
+            <CustomChallengeBuilder onCreated={(serialized) => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('custom', serialized);
+              window.history.replaceState({}, '', url.toString());
+              void deserializeCustomChallengeSet(serialized).then(setCustomChallenge);
+            }} />
+          </div>
+        )}
+
         {/* Active Flow Content */}
         {activeTab === 'daily' && (
           <div>
@@ -127,7 +156,7 @@ function ChallengeContent() {
 
         {activeTab === 'decryption' && (
           <div>
-            <ChallengeMode />
+            <ChallengeMode customChallenge={customChallenge} />
           </div>
         )}
       </main>

@@ -4,7 +4,8 @@
  */
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector } from '../types'
-import { validateInput, validateKey } from '../../utils'
+import { validateKey } from '../../utils/errors'
+import { normalizeAsciiText, validateRequiredInput } from '../../utils/cipherValidation'
 
 const METADATA = {
   name: 'Playfair Cipher',
@@ -15,7 +16,7 @@ const METADATA = {
 
 // Generate the 5x5 Playfair grid from a key
 export function generateGrid(key: string): { grid: string[][]; letterMap: Map<string, { r: number; c: number }> } {
-  const cleanKey = key.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '')
+  const cleanKey = normalizeAsciiText(key, { uppercase: true, stripNonAlpha: true }).replace(/J/g, 'I')
   const seen = new Set<string>()
   const flatGrid: string[] = []
 
@@ -258,7 +259,7 @@ export function encrypt(
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateRequiredInput(input)
   validateKey(key)
   if (options.instrument) return playfairInstrumented(input, key, false)
   return playfairFast(input, key, false)
@@ -269,7 +270,7 @@ export function decrypt(
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateRequiredInput(input)
   validateKey(key)
   if (options.instrument) return playfairInstrumented(input, key, true)
   return playfairFast(input, key, true)

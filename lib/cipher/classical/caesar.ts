@@ -8,7 +8,8 @@
  */
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector } from '../types'
-import { CipherError, validateInput } from '../../utils/errors'
+import { CipherError } from '../../utils/errors'
+import { validateRequiredInput } from '../../utils/cipherValidation'
 
 const METADATA = {
   name: 'Caesar Cipher',
@@ -133,7 +134,7 @@ export function encrypt(
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateRequiredInput(input)
   if (options.instrument) return caesarInstrumented(input, key, false, options)
   return caesarFast(input, key, false, options)
 }
@@ -143,7 +144,7 @@ export function decrypt(
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateRequiredInput(input)
   if (options.instrument) return caesarInstrumented(input, key, true, options)
   return caesarFast(input, key, true, options)
 }

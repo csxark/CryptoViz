@@ -25,19 +25,21 @@ interface ByteHeatmapProps {
 /** Tailwind background classes keyed by how many bits changed in a byte. */
 function cellTone(cell: ByteCell): string {
   if (!cell.changed) {
-    return 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800/60 dark:text-zinc-500'
+    return 'border border-zinc-200 bg-zinc-100 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400'
   }
-  // More changed bits → hotter colour.
+
+  // Use one WCAG-AA palette for changed bytes and encode intensity with the
+  // border geometry so the heatmap never relies on hue alone.
   if (cell.changedBits >= 6) {
-    return 'bg-red-600 text-white dark:bg-red-500'
+    return 'diff-highlight border-2 border-[var(--diff-highlight-border)] bg-[var(--diff-highlight-bg)] text-[color:var(--diff-highlight-fg)]'
   }
   if (cell.changedBits >= 4) {
-    return 'bg-orange-500 text-white dark:bg-orange-500'
+    return 'diff-highlight border-2 border-dashed border-[var(--diff-highlight-border)] bg-[var(--diff-highlight-bg)] text-[color:var(--diff-highlight-fg)]'
   }
   if (cell.changedBits >= 2) {
-    return 'bg-amber-400 text-amber-950 dark:bg-amber-400 dark:text-amber-950'
+    return 'diff-highlight border-2 border-dotted border-[var(--diff-highlight-border)] bg-[var(--diff-highlight-bg)] text-[color:var(--diff-highlight-fg)]'
   }
-  return 'bg-amber-200 text-amber-900 dark:bg-amber-300/80 dark:text-amber-950'
+  return 'diff-highlight border border-[var(--diff-highlight-border)] bg-[var(--diff-highlight-bg)] text-[color:var(--diff-highlight-fg)]'
 }
 
 export default function ByteHeatmap({
@@ -110,9 +112,15 @@ export default function ByteHeatmap({
           aria-label={`Byte ${cell.index}: ${cell.hex} (${cell.changed ? 'changed' : 'unchanged'})`}
           onKeyDown={(event) => handleKeyDown(event, index)}
           onFocus={() => setFocusIndex(index)}
-          className={`flex aspect-square items-center justify-center rounded-md font-mono text-[11px] font-semibold tabular-nums outline-none transition-colors focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-950 ${cellTone(cell)}`}
+          className={`relative flex aspect-square items-center justify-center rounded-md font-mono text-[11px] font-semibold tabular-nums outline-none transition-colors focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-950 ${cellTone(cell)}`}
         >
           {cell.hex}
+          {cell.changed && (
+            <span
+              aria-hidden="true"
+              className="absolute bottom-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-[var(--diff-highlight-pattern)]"
+            />
+          )}
         </div>
       ))}
     </div>

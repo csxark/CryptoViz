@@ -12,7 +12,8 @@
  */
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
-import { CipherError, validateInput, validateKey } from '../../utils'
+import { CipherError, validateKey } from '../../utils'
+import { parseAndValidateHex, validateKeyLength, validateRequiredInput } from '../../utils/cipherValidation'
 
 const METADATA: CipherMetadata = {
     name: 'Blowfish',
@@ -272,13 +273,7 @@ function u32ToBytesBE(n: number, out: Uint8Array, off: number): void {
 }
 
 function parseHex(s: string, label: string): Uint8Array {
-    const clean = s.replace(/\s+/g, '').toLowerCase()
-    if (!/^[0-9a-f]+$/.test(clean) || clean.length % 2 !== 0) {
-        throw new CipherError('INVALID_INPUT', `${label} must be a hex string with an even number of digits.`)
-    }
-    const out = new Uint8Array(clean.length / 2)
-    for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16)
-    return out
+    return parseAndValidateHex(s, undefined, label)
 }
 
 function toHex(b: Uint8Array): string {
@@ -294,12 +289,7 @@ function blowfishCore(
     const start = performance.now()
     validateKey(key)
     const keyBytes = parseHex(key, 'Blowfish key')
-    if (keyBytes.length < 4 || keyBytes.length > 56) {
-        throw new CipherError(
-            'INVALID_KEY_LENGTH',
-            `Blowfish key must be 4–56 bytes (8–448 bits). Got ${keyBytes.length} bytes.`,
-        )
-    }
+    validateKeyLength(keyBytes, Array.from({ length: 53 }, (_, i) => i + 4), 'Blowfish')
 
     const inBytes = parseHex(input, 'Blowfish input')
     if (inBytes.length === 0 || inBytes.length % 8 !== 0) {
@@ -357,12 +347,12 @@ function blowfishCore(
 }
 
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
-    validateInput(input)
+    validateRequiredInput(input)
     return blowfishCore(input, key, false, !!options.instrument)
 }
 
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
-    validateInput(input)
+    validateRequiredInput(input)
     return blowfishCore(input, key, true, !!options.instrument)
 }
 

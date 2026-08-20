@@ -220,7 +220,7 @@ export default function PlayfairGrid({
                             )}
                             className={`border-t border-zinc-200 px-3 py-2 font-mono font-bold dark:border-zinc-800 ${
                               highlighted
-                                ? 'bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400'
+                                ? 'diff-highlight border-2 border-[var(--diff-highlight-border)] bg-[var(--diff-highlight-bg)] text-[color:var(--diff-highlight-fg)] shadow-sm'
                                 : 'bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-200'
                             }`}
                           >
@@ -322,7 +322,7 @@ export default function PlayfairGrid({
                     }
                     className={`flex h-12 w-12 items-center justify-center rounded-lg border font-mono text-lg font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 ${
                       isHighlighted
-                        ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md shadow-teal-500/10 dark:border-teal-400 dark:bg-teal-950/50 dark:text-teal-400'
+                        ? 'diff-highlight border-2 border-[var(--diff-highlight-border)] bg-[var(--diff-highlight-bg)] text-[color:var(--diff-highlight-fg)] shadow-md'
                         : 'border-zinc-200 bg-white text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200'
                     }`}
                   >

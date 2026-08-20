@@ -12,6 +12,7 @@ export interface ConversionHistoryEntry {
   action: 'encrypt' | 'decrypt'
   output: string
   timestamp: string
+  parameters?: { iv?: string; nonce?: string }
 }
 
 export const MAX_CONVERSION_HISTORY_ENTRIES = 50
@@ -62,6 +63,12 @@ export function normalizeConversionHistory(
       action,
       output: item.output,
       timestamp: item.timestamp,
+      parameters: isRecord(item.parameters)
+        ? {
+            ...(typeof item.parameters.iv === 'string' ? { iv: item.parameters.iv } : {}),
+            ...(typeof item.parameters.nonce === 'string' ? { nonce: item.parameters.nonce } : {}),
+          }
+        : undefined,
     })
 
     if (normalized.length === MAX_CONVERSION_HISTORY_ENTRIES) break

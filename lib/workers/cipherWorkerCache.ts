@@ -65,6 +65,7 @@ export function withWorkerCache<TResult>(
   return result;
 }
 
+
 export function getCipherWorkerCacheStats(): WorkerCacheStats {
   return getSharedWorkerCacheStats();
 }

@@ -1,12 +1,12 @@
-import CipherPipelineBuilder from "../../components/pipeline/CipherPipelineBuilder";
+import DagPipelineCanvas from "@/components/pipeline/DagPipelineCanvas";
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/footer";
 import PracticePageTemplate from "@/components/layout/PracticePageTemplate";
 
 export const metadata = {
-  title: "Cipher Pipeline Builder | CryptoViz",
+  title: "Cryptographic DAG Pipeline Canvas | CryptoViz",
   description:
-    "Chain operations like Encode → Encrypt → Hash → Sign → Verify to build, execute, and visualize custom multi-stage cryptographic workflows.",
+    "Design and execute multi-stage cryptographic protocol architectures using an interactive node-based DAG canvas with typed sockets and real-time buffer inspection.",
 };
 
 export default function PipelinePage() {
@@ -14,13 +14,13 @@ export default function PipelinePage() {
     <div className="min-h-screen flex flex-col bg-white dark:bg-[#060816] text-zinc-900 dark:text-white transition-colors duration-300">
       <Navbar />
       <PracticePageTemplate
-        title="Cipher Pipeline Builder"
-        description="Chain operations like Encode → Encrypt → Hash → Sign → Verify to build, execute, and visualize custom multi-stage cryptographic workflows."
-        eyebrow="Cryptographic Workflow Builder"
-        breadcrumbs={[{ label: "Practice" }, { label: "Cipher Pipeline" }]}
+        title="Cryptographic DAG Pipeline Canvas"
+        description="Wire primitives together to build, evaluate, and visualize custom multi-stage protocol architectures like Hybrid Encryption and TLS 1.3."
+        eyebrow="Protocol Architecture Canvas"
+        breadcrumbs={[{ label: "Practice" }, { label: "DAG Pipeline" }]}
         hideHeader
       >
-        <CipherPipelineBuilder />
+        <DagPipelineCanvas />
       </PracticePageTemplate>
 
       <Footer />

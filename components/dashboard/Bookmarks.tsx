@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import { Bookmark, ExternalLink, BookmarkX } from 'lucide-react'
 import { type BookmarkedResource } from '@/hooks/useProgress'
+import Card from '@/components/ui/Card'
 
 interface BookmarksProps { bookmarks: BookmarkedResource[]; onRemove: (id: string) => void }
 
 export default function Bookmarks({ bookmarks, onRemove }: BookmarksProps) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40 p-6">
+    <Card className="dark:bg-zinc-900/40 p-6">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Bookmarks</h2>
         <span className="text-xs text-zinc-400">{bookmarks.length} saved</span>
@@ -31,6 +32,6 @@ export default function Bookmarks({ bookmarks, onRemove }: BookmarksProps) {
           ))}
         </ul>
       )}
-    </div>
+    </Card>
   )
 }

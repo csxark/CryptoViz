@@ -10,7 +10,7 @@ export interface FlashLoanArbitrageOpportunity {
   netProfitUsd: number;
   profitMarginPercentage: number;
   executionRisk: 'low' | 'moderate' | 'high' | 'extreme';
-  status: 'opportunity-detected' | 'executing' | 'completed' | 'failed-slippage';
+  status: 'opportunity-detected' | 'simulating' | 'simulated-success' | 'simulated-reverted' | 'failed-slippage';
   detectedTimestamp: string;
 }
 
@@ -20,11 +20,13 @@ export interface ArbitrageExecutionRecord {
   tokenPair: string;
   borrowAsset: string;
   loanAmountUsd: number;
-  realizedNetProfitUsd: number;
-  actualGasPaidUsd: number;
-  transactionHash: string;
+  simulatedNetProfitUsd: number;
+  estimatedGasPaidUsd: number;
+  simulatedTxHash: string;
   executedTimestamp: string;
-  status: 'success' | 'reverted';
+  status: 'simulated-success' | 'simulated-reverted';
+  mode: 'paper-trading-simulation';
+  disclaimer: string;
 }
 
 export interface ArbitrageFilterOptions {
@@ -88,11 +90,13 @@ const INITIAL_RECORDS: ArbitrageExecutionRecord[] = [
     tokenPair: "WETH / DAI",
     borrowAsset: "WETH",
     loanAmountUsd: 500000,
-    realizedNetProfitUsd: 4180,
-    actualGasPaidUsd: 605,
-    transactionHash: "0x3e11...77a9",
+    simulatedNetProfitUsd: 4180,
+    estimatedGasPaidUsd: 605,
+    simulatedTxHash: "SIM-0x3e11...77a9",
     executedTimestamp: "Aug 18, 2026",
-    status: "success",
+    status: "simulated-success",
+    mode: "paper-trading-simulation",
+    disclaimer: "Off-chain paper trading simulation only. No real funds borrowed or mainnet transactions executed.",
   },
 ];
 
@@ -146,13 +150,13 @@ export class CryptoArbitrageService {
     return [...this.records];
   }
 
-  public static executeFlashLoanArbitrage(
+  public static simulateFlashLoanArbitrage(
     opportunityId: string
   ): ArbitrageExecutionRecord {
     const opp = this.getOpportunityById(opportunityId);
     if (!opp) throw new Error("Flash loan arbitrage opportunity not found.");
 
-    opp.status = "completed";
+    opp.status = "simulated-success";
 
     const newRecord: ArbitrageExecutionRecord = {
       id: `exec-${Date.now()}`,
@@ -160,11 +164,13 @@ export class CryptoArbitrageService {
       tokenPair: opp.tokenPair,
       borrowAsset: opp.borrowAsset,
       loanAmountUsd: opp.loanAmountUsd,
-      realizedNetProfitUsd: opp.netProfitUsd,
-      actualGasPaidUsd: opp.estimatedGasFeeUsd,
-      transactionHash: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`,
+      simulatedNetProfitUsd: opp.netProfitUsd,
+      estimatedGasPaidUsd: opp.estimatedGasFeeUsd,
+      simulatedTxHash: `SIM-0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`,
       executedTimestamp: "Just now",
-      status: "success",
+      status: "simulated-success",
+      mode: "paper-trading-simulation",
+      disclaimer: "Off-chain paper trading simulation only. No real funds borrowed or mainnet transactions executed.",
     };
 
     this.records.unshift(newRecord);

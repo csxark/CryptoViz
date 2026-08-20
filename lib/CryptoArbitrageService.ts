@@ -24,7 +24,7 @@ export class CryptoArbitrageServiceHandler {
     return CryptoArbitrageService.getExecutionRecords();
   }
 
-  public static executeArbitrageBotTrade(opportunityId: string): ArbitrageExecutionRecord {
-    return CryptoArbitrageService.executeFlashLoanArbitrage(opportunityId);
+  public static simulateArbitrageBotTrade(opportunityId: string): ArbitrageExecutionRecord {
+    return CryptoArbitrageService.simulateFlashLoanArbitrage(opportunityId);
   }
 }

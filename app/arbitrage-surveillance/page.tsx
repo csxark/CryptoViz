@@ -21,6 +21,8 @@ import {
   X,
   TrendingUp,
   Activity,
+  AlertTriangle,
+  FlaskConical,
 } from 'lucide-react';
 
 export default function CryptoArbitrageSurveillanceDashboardPage() {
@@ -61,7 +63,7 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
     e.preventDefault();
     if (!selectedOpportunity) return;
 
-    CryptoArbitrageServiceHandler.executeArbitrageBotTrade(selectedOpportunity.id);
+    CryptoArbitrageServiceHandler.simulateArbitrageBotTrade(selectedOpportunity.id);
 
     setRecords(CryptoArbitrageServiceHandler.fetchExecutionRecords());
     setIsExecutionSuccess(true);
@@ -97,19 +99,32 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Simulation Mode Banner Disclaimer */}
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 text-amber-900 text-xs sm:text-sm">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-bold uppercase tracking-wider text-amber-800 text-[11px] block">
+              Paper-Trading & Simulation Mode Active
+            </span>
+            <p>
+              This suite operates strictly in <strong>Paper-Trading & Off-Chain Simulation Mode</strong>. Gas estimations, MEV route calculations, and arbitrage executions are simulated off-chain metrics for strategic analysis. No real funds are borrowed, and no transactions are broadcast to mainnet or on-chain settlement layers.
+            </p>
+          </div>
+        </div>
+
         {/* Hero Banner */}
         <div className="bg-gradient-to-r from-amber-950 via-slate-900 to-yellow-950 rounded-3xl p-8 sm:p-10 text-white shadow-xl relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 bg-amber-500/20 backdrop-blur-md border border-amber-400/30 px-3.5 py-1.5 rounded-full text-xs font-semibold text-amber-200">
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              Real-Time Cross-DEX MEV & Flash Loan Arbitrage Radar
+              <FlaskConical className="w-4 h-4 text-amber-300" />
+              Paper-Trading Cross-DEX MEV & Flash Loan Simulation Radar
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
               Crypto Flash Loan Arbitrage Surveillance Suite
             </h1>
             <p className="text-amber-200 text-base sm:text-lg leading-relaxed">
-              Detect cross-DEX price discrepancies in real time, calculate gas fees and net profit margins, and execute flash loan arbitrage bots with zero initial capital.
+              Detect cross-DEX price discrepancies in real time, calculate gas fees and net profit margins, and simulate flash loan arbitrage bot strategies in zero-risk paper-trading mode.
             </p>
             <div className="pt-2 flex flex-wrap gap-4 items-center">
               <button
@@ -117,7 +132,7 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
                 className="bg-white text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg hover:bg-amber-50 transition-all flex items-center gap-2 text-sm"
               >
                 <PlusCircle className="w-5 h-5 text-amber-600" />
-                Register Arbitrage Radar Node
+                Register Simulation Radar Node
               </button>
             </div>
           </div>
@@ -173,14 +188,14 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-xl text-gray-900 flex items-center gap-2">
               <Zap className="w-6 h-6 text-amber-600" />
-              Detected Arbitrage Opportunities ({opportunities.length})
+              Simulated Arbitrage Opportunities ({opportunities.length})
             </h2>
           </div>
 
           {opportunities.length === 0 ? (
             <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
               <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-gray-800 font-semibold text-lg">No arbitrage opportunities detected</h3>
+              <h3 className="text-gray-800 font-semibold text-lg">No simulated opportunities detected</h3>
               <p className="text-gray-500 text-sm mt-1">Try broadening your search or asset filters.</p>
             </div>
           ) : (
@@ -213,9 +228,9 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
               {isExecutionSuccess ? (
                 <div className="text-center py-8 space-y-3">
                   <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto animate-bounce" />
-                  <h3 className="text-2xl font-bold text-gray-900">Flash Loan Executed & Settled!</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">Simulated Flash Loan Trade Complete!</h3>
                   <p className="text-sm text-gray-600">
-                    Realized profit of +${selectedOpportunity.netProfitUsd.toLocaleString()} captured from {selectedOpportunity.tokenPair}.
+                    Simulated profit of +${selectedOpportunity.netProfitUsd.toLocaleString()} calculated from {selectedOpportunity.tokenPair} (Paper-Trading Mode).
                   </p>
                 </div>
               ) : (
@@ -223,13 +238,17 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
                   <div>
                     <h3 className="font-bold text-gray-900 text-xl">{selectedOpportunity.tokenPair}</h3>
                     <p className="text-xs text-amber-600 font-semibold mt-1">
-                      Route: {selectedOpportunity.sourceDex} ➔ {selectedOpportunity.targetDex}
+                      Route: {selectedOpportunity.sourceDex} ➔ {selectedOpportunity.targetDex} (Simulation)
                     </p>
+                  </div>
+
+                  <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-3 text-[11px] text-amber-900">
+                    ℹ️ <strong>Paper Trading Disclaimer:</strong> This operation runs an off-chain strategy simulation. No live transactions are broadcast to blockchain networks.
                   </div>
 
                   <div className="bg-gray-50 rounded-2xl p-4 space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-gray-500 font-medium">Flash Loan Amount:</span>
+                      <span className="text-gray-500 font-medium">Simulated Flash Loan:</span>
                       <span className="font-bold text-gray-900">${selectedOpportunity.loanAmountUsd.toLocaleString()} ({selectedOpportunity.borrowAsset})</span>
                     </div>
                     <div className="flex justify-between">
@@ -237,7 +256,7 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
                       <span className="font-bold text-red-600">${selectedOpportunity.estimatedGasFeeUsd}</span>
                     </div>
                     <div className="flex justify-between border-t border-gray-200 pt-2">
-                      <span className="text-gray-900 font-extrabold">Net Profit After Gas:</span>
+                      <span className="text-gray-900 font-extrabold">Simulated Net Profit:</span>
                       <span className="font-extrabold text-emerald-600 text-sm">+${selectedOpportunity.netProfitUsd.toLocaleString()}</span>
                     </div>
                   </div>
@@ -247,7 +266,7 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
                     className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl shadow-md transition-colors text-sm flex items-center justify-center gap-2"
                   >
                     <Zap className="w-4 h-4 fill-slate-950" />
-                    Confirm & Execute MEV Flash Loan Bot
+                    Simulate Paper-Trading Arbitrage Run
                   </button>
                 </form>
               )}
@@ -267,8 +286,8 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
               </button>
 
               <div className="mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">Register Arbitrage Radar Node</h3>
-                <p className="text-xs text-gray-500 mt-1">Configure DEX surveillance parameters and flash loan thresholds.</p>
+                <h3 className="text-2xl font-bold text-gray-900">Register Simulation Radar Node</h3>
+                <p className="text-xs text-gray-500 mt-1">Configure off-chain DEX surveillance parameters and simulated loan thresholds.</p>
               </div>
 
               <form onSubmit={handleCreateSubmit} className="space-y-4">
@@ -376,7 +395,7 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
                   type="submit"
                   className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl shadow-md transition-colors text-sm"
                 >
-                  Register Surveillance Radar
+                  Register Simulation Surveillance Node
                 </button>
               </form>
             </div>

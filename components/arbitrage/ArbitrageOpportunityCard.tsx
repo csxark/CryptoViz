@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { FlashLoanArbitrageOpportunity } from '../../lib/CryptoArbitrageModel';
-import { Zap, ShieldAlert, TrendingUp, DollarSign, ArrowRight, CheckCircle2, Clock, Activity } from 'lucide-react';
+import { Zap, ShieldAlert, TrendingUp, DollarSign, ArrowRight, CheckCircle2, Clock, Activity, FlaskConical } from 'lucide-react';
 
 interface CardProps {
   opportunity: FlashLoanArbitrageOpportunity;
@@ -34,6 +34,15 @@ export const ArbitrageOpportunityCard: React.FC<CardProps> = ({ opportunity, onE
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6 flex flex-col justify-between">
       <div>
+        {/* Paper Trading Badge Banner */}
+        <div className="mb-3 flex items-center justify-between">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-purple-50 text-purple-700 border border-purple-200 uppercase">
+            <FlaskConical className="w-3 h-3 text-purple-600" />
+            Paper Simulation
+          </span>
+          <span className="text-[10px] text-gray-400 font-mono">Off-Chain Metric</span>
+        </div>
+
         {/* Token Pair & Risk Badge Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2 flex-wrap">
@@ -47,7 +56,7 @@ export const ArbitrageOpportunityCard: React.FC<CardProps> = ({ opportunity, onE
           </div>
           <div className="text-right">
             <span className="text-2xl font-black text-emerald-600">+${opportunity.netProfitUsd.toLocaleString()}</span>
-            <span className="text-xs text-gray-400 font-medium block">Net Profit ({opportunity.profitMarginPercentage}%)</span>
+            <span className="text-xs text-gray-400 font-medium block">Simulated Net Profit ({opportunity.profitMarginPercentage}%)</span>
           </div>
         </div>
 
@@ -61,11 +70,11 @@ export const ArbitrageOpportunityCard: React.FC<CardProps> = ({ opportunity, onE
         {/* Financial Highlights */}
         <div className="bg-gray-50 rounded-xl p-3 mb-5 space-y-1 text-xs">
           <div className="flex justify-between">
-            <span className="text-gray-400 font-medium">Flash Loan Required:</span>
+            <span className="text-gray-400 font-medium">Simulated Flash Loan:</span>
             <span className="font-semibold text-gray-900">${opportunity.loanAmountUsd.toLocaleString()} ({opportunity.borrowAsset})</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400 font-medium">Estimated Gas Fee:</span>
+            <span className="text-gray-400 font-medium">Est. Gas (Simulated):</span>
             <span className="font-semibold text-red-600">${opportunity.estimatedGasFeeUsd}</span>
           </div>
           <div className="flex justify-between">
@@ -81,8 +90,8 @@ export const ArbitrageOpportunityCard: React.FC<CardProps> = ({ opportunity, onE
           onClick={() => onExecuteClick(opportunity)}
           className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-sm py-2.5 px-4 rounded-xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-2"
         >
-          <Zap className="w-4 h-4 fill-slate-950" />
-          Trigger Flash Loan Arbitrage
+          <FlaskConical className="w-4 h-4 text-slate-950" />
+          Run Simulation Strategy
         </button>
         <button
           onClick={handleShare}

@@ -1,31 +1,31 @@
 export interface CrossChainBridgeRoute {
   id: string;
-  sourceChain: 'Ethereum' | 'Arbitrum' | 'Optimism' | 'Solana' | 'Polygon' | 'Avalanche';
-  targetChain: 'Ethereum' | 'Arbitrum' | 'Optimism' | 'Solana' | 'Polygon' | 'Avalanche';
-  bridgeProtocol: 'Stargate' | 'Hop Protocol' | 'Synapse' | 'Wormhole' | 'Across';
-  supportedTokens: string[];
-  totalBridgeLiquidityUsd: number;
-  estimatedTransferTimeMinutes: number;
-  protocolFeePercentage: number;
-  gasCostEstimateUsd: number;
-  bridgeSecurityScore: number; // 0 - 100
-  status: 'operational' | 'congested' | 'maintenance' | 'paused';
-}
-
-export interface BridgeTransferTransaction {
-  id: string;
-  routeId: string;
+  bridgeName: string;
   sourceChain: string;
   targetChain: string;
-  bridgeProtocol: string;
   tokenSymbol: string;
-  transferAmount: number;
-  transferValueUsd: number;
-  feePaidUsd: number;
+  bridgeProtocol: 'LayerZero' | 'Stargate' | 'Wormhole' | 'Hop Protocol' | 'Arbitrum Bridge';
+  poolLiquidityUsd: number;
+  estimatedFeeUsd: number;
+  estimatedLatencyMinutes: number;
+  slippageTolerancePercentage: number;
+  securityRating: 'AAA+' | 'AA' | 'A' | 'BBB';
+  status: 'optimal-path' | 'high-congestion' | 'degraded-liquidity';
+}
+
+export interface BridgeTransferAuditRecord {
+  id: string;
+  routeId: string;
+  bridgeName: string;
+  tokenSymbol: string;
+  sourceChain: string;
+  targetChain: string;
+  amountTransferredUsd: number;
   sourceTxHash: string;
   targetTxHash: string;
-  transferredTimestamp: string;
-  status: 'relayed' | 'pending-confirmation' | 'relayer-refunding';
+  initiatedTimestamp: string;
+  completedTimestamp: string;
+  status: 'transferred-settled' | 'in-flight' | 'destination-pending';
 }
 
 export interface BridgeFilterOptions {
@@ -37,67 +37,69 @@ export interface BridgeFilterOptions {
 
 const INITIAL_ROUTES: CrossChainBridgeRoute[] = [
   {
-    id: "route-101",
-    sourceChain: "Ethereum",
-    targetChain: "Arbitrum",
+    id: "bridge-101",
+    bridgeName: "Stargate V2 Liquidity Pool",
+    sourceChain: "Ethereum Mainnet",
+    targetChain: "Arbitrum One",
+    tokenSymbol: "USDC",
     bridgeProtocol: "Stargate",
-    supportedTokens: ["USDC", "USDT", "ETH"],
-    totalBridgeLiquidityUsd: 85000000,
-    estimatedTransferTimeMinutes: 2,
-    protocolFeePercentage: 0.06,
-    gasCostEstimateUsd: 14.50,
-    bridgeSecurityScore: 96,
-    status: "operational",
+    poolLiquidityUsd: 85000000,
+    estimatedFeeUsd: 4.20,
+    estimatedLatencyMinutes: 2,
+    slippageTolerancePercentage: 0.05,
+    securityRating: "AAA+",
+    status: "optimal-path"
   },
   {
-    id: "route-102",
-    sourceChain: "Ethereum",
-    targetChain: "Optimism",
-    bridgeProtocol: "Across",
-    supportedTokens: ["WETH", "USDC", "WBTC"],
-    totalBridgeLiquidityUsd: 42000000,
-    estimatedTransferTimeMinutes: 1,
-    protocolFeePercentage: 0.04,
-    gasCostEstimateUsd: 9.80,
-    bridgeSecurityScore: 94,
-    status: "operational",
-  },
-  {
-    id: "route-103",
-    sourceChain: "Solana",
-    targetChain: "Ethereum",
+    id: "bridge-102",
+    bridgeName: "Wormhole Portal Protocol",
+    sourceChain: "Solana Mainnet",
+    targetChain: "Ethereum Mainnet",
+    tokenSymbol: "ETH",
     bridgeProtocol: "Wormhole",
-    supportedTokens: ["SOL", "USDC", "BONK"],
-    totalBridgeLiquidityUsd: 29000000,
-    estimatedTransferTimeMinutes: 8,
-    protocolFeePercentage: 0.12,
-    gasCostEstimateUsd: 28.00,
-    bridgeSecurityScore: 88,
-    status: "congested",
+    poolLiquidityUsd: 42000000,
+    estimatedFeeUsd: 12.50,
+    estimatedLatencyMinutes: 8,
+    slippageTolerancePercentage: 0.12,
+    securityRating: "AA",
+    status: "optimal-path"
   },
+  {
+    id: "bridge-103",
+    bridgeName: "Hop Protocol AMM Vault",
+    sourceChain: "Polygon POS",
+    targetChain: "Optimism Mainnet",
+    tokenSymbol: "USDT",
+    bridgeProtocol: "Hop Protocol",
+    poolLiquidityUsd: 18000000,
+    estimatedFeeUsd: 2.10,
+    estimatedLatencyMinutes: 5,
+    slippageTolerancePercentage: 0.08,
+    securityRating: "A",
+    status: "optimal-path"
+  }
 ];
 
-const INITIAL_TRANSFERS: BridgeTransferTransaction[] = [
+const INITIAL_RECORDS: BridgeTransferAuditRecord[] = [
   {
-    id: "tx-201",
-    routeId: "route-101",
-    sourceChain: "Ethereum",
-    targetChain: "Arbitrum",
-    bridgeProtocol: "Stargate",
+    id: "tx-401",
+    routeId: "bridge-101",
+    bridgeName: "Stargate V2 Liquidity Pool",
     tokenSymbol: "USDC",
-    transferAmount: 25000,
-    transferValueUsd: 25000,
-    feePaidUsd: 29.50,
-    sourceTxHash: "0x4a12...99b2",
-    targetTxHash: "0x8e91...33c1",
-    transferredTimestamp: "Aug 18, 2026",
-    status: "relayed",
-  },
+    sourceChain: "Ethereum Mainnet",
+    targetChain: "Arbitrum One",
+    amountTransferredUsd: 50000,
+    sourceTxHash: "0x8b1...32ae",
+    targetTxHash: "0x4f9...91cd",
+    initiatedTimestamp: "10 minutes ago",
+    completedTimestamp: "8 minutes ago",
+    status: "transferred-settled"
+  }
 ];
 
 export class CryptoBridgeService {
   private static routes: CrossChainBridgeRoute[] = [...INITIAL_ROUTES];
-  private static transfers: BridgeTransferTransaction[] = [...INITIAL_TRANSFERS];
+  private static records: BridgeTransferAuditRecord[] = [...INITIAL_RECORDS];
 
   public static getRoutes(options?: Partial<BridgeFilterOptions>): CrossChainBridgeRoute[] {
     let result = [...this.routes];
@@ -119,66 +121,50 @@ export class CryptoBridgeService {
       const q = options.searchQuery.toLowerCase().trim();
       result = result.filter(
         (r) =>
-          r.bridgeProtocol.toLowerCase().includes(q) ||
-          r.sourceChain.toLowerCase().includes(q) ||
-          r.targetChain.toLowerCase().includes(q) ||
-          r.supportedTokens.some((t) => t.toLowerCase().includes(q))
+          r.bridgeName.toLowerCase().includes(q) ||
+          r.tokenSymbol.toLowerCase().includes(q)
       );
     }
 
     return result;
   }
 
-  public static getRouteById(id: string): CrossChainBridgeRoute | undefined {
-    return this.routes.find((r) => r.id === id);
-  }
-
-  public static registerBridgeRoute(
+  public static registerRoute(
     route: Omit<CrossChainBridgeRoute, "id" | "status">
   ): CrossChainBridgeRoute {
     const newRoute: CrossChainBridgeRoute = {
       ...route,
-      id: `route-${Date.now()}`,
-      status: "operational",
+      id: `bridge-${Date.now()}`,
+      status: "optimal-path"
     };
     this.routes.unshift(newRoute);
     return newRoute;
   }
 
-  public static getTransferHistory(): BridgeTransferTransaction[] {
-    return [...this.transfers];
+  public static getTransferRecords(): BridgeTransferAuditRecord[] {
+    return [...this.records];
   }
 
-  public static executeBridgeTransfer(
-    routeId: string,
-    tokenSymbol: string,
-    transferAmount: number
-  ): BridgeTransferTransaction {
-    const route = this.getRouteById(routeId);
-    if (!route) throw new Error("Cross-chain bridge route profile not found.");
+  public static initiateBridgeTransfer(routeId: string, amountUsd: number): BridgeTransferAuditRecord {
+    const route = this.routes.find((r) => r.id === routeId);
+    if (!route) throw new Error("Bridge route not found.");
 
-    const transferValueUsd = transferAmount;
-    const feePaidUsd = Math.round(
-      route.gasCostEstimateUsd + (transferValueUsd * route.protocolFeePercentage) / 100
-    );
-
-    const newTransfer: BridgeTransferTransaction = {
+    const newRecord: BridgeTransferAuditRecord = {
       id: `tx-${Date.now()}`,
       routeId,
+      bridgeName: route.bridgeName,
+      tokenSymbol: route.tokenSymbol,
       sourceChain: route.sourceChain,
       targetChain: route.targetChain,
-      bridgeProtocol: route.bridgeProtocol,
-      tokenSymbol,
-      transferAmount,
-      transferValueUsd,
-      feePaidUsd,
+      amountTransferredUsd: amountUsd,
       sourceTxHash: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`,
       targetTxHash: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`,
-      transferredTimestamp: "Just now",
-      status: "relayed",
+      initiatedTimestamp: "Just now",
+      completedTimestamp: "Just now",
+      status: "transferred-settled"
     };
 
-    this.transfers.unshift(newTransfer);
-    return newTransfer;
+    this.records.unshift(newRecord);
+    return newRecord;
   }
 }

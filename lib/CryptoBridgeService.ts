@@ -1,38 +1,26 @@
 import {
   CryptoBridgeService,
   CrossChainBridgeRoute,
-  BridgeTransferTransaction,
-  BridgeFilterOptions,
+  BridgeTransferAuditRecord,
+  BridgeFilterOptions
 } from "./CryptoBridgeModel";
 
 export class CryptoBridgeServiceHandler {
-  public static fetchBridgeRoutes(filters?: Partial<BridgeFilterOptions>): CrossChainBridgeRoute[] {
+  public static fetchRoutes(filters?: Partial<BridgeFilterOptions>): CrossChainBridgeRoute[] {
     return CryptoBridgeService.getRoutes(filters);
   }
 
-  public static fetchRouteDetails(id: string): CrossChainBridgeRoute | undefined {
-    return CryptoBridgeService.getRouteById(id);
-  }
-
-  public static registerNewBridgeRoute(
+  public static registerNewRoute(
     payload: Omit<CrossChainBridgeRoute, "id" | "status">
   ): CrossChainBridgeRoute {
-    return CryptoBridgeService.registerBridgeRoute(payload);
+    return CryptoBridgeService.registerRoute(payload);
   }
 
-  public static fetchTransferHistory(): BridgeTransferTransaction[] {
-    return CryptoBridgeService.getTransferHistory();
+  public static fetchTransferRecords(): BridgeTransferAuditRecord[] {
+    return CryptoBridgeService.getTransferRecords();
   }
 
-  public static executeCrossChainRelay(
-    routeId: string,
-    tokenSymbol: string,
-    transferAmount: number
-  ): BridgeTransferTransaction {
-    return CryptoBridgeService.executeBridgeTransfer(
-      routeId,
-      tokenSymbol,
-      transferAmount
-    );
+  public static executeBridgeTransfer(routeId: string, amountUsd: number): BridgeTransferAuditRecord {
+    return CryptoBridgeService.initiateBridgeTransfer(routeId, amountUsd);
   }
 }

@@ -8,11 +8,9 @@ import {
   FileText,
   CheckCircle2,
   AlertTriangle,
-  ArrowRight,
   Layers,
   Copy,
   Check,
-  RefreshCw,
   Zap,
   BarChart3,
   FileSearch,
@@ -29,8 +27,11 @@ import {
   HashAlgorithm,
   CompressionAlgorithm,
   CipherAlgorithm,
-  KeyType,
 } from '@/lib/openpgp/openpgpEngine';
+
+// Strict discriminated union types to eliminate `as any`
+type OpenPGPTab = 'flow' | 'packets' | 'entropy' | 'sandbox' | 'theory';
+type TamperMode = 'NONE' | 'CORRUPT_CIPHERTEXT' | 'WRONG_RECIPIENT_KEY' | 'TAMPER_SIGNATURE';
 
 const PRESETS: { name: string; description: string; config: OpenPGPConfig }[] = [
   {
@@ -86,10 +87,10 @@ const PRESETS: { name: string; description: string; config: OpenPGPConfig }[] = 
 ];
 
 export default function OpenPGPExplorer() {
-  const [activeTab, setActiveTab] = useState<'flow' | 'packets' | 'entropy' | 'sandbox' | 'theory'>('flow');
+  const [activeTab, setActiveTab] = useState<OpenPGPTab>('flow');
   const [activeStageIndex, setActiveStageIndex] = useState<number>(0);
   const [copiedArmor, setCopiedArmor] = useState<boolean>(false);
-  const [tamperMode, setTamperMode] = useState<'NONE' | 'CORRUPT_CIPHERTEXT' | 'WRONG_RECIPIENT_KEY' | 'TAMPER_SIGNATURE'>('NONE');
+  const [tamperMode, setTamperMode] = useState<TamperMode>('NONE');
 
   // Config state
   const [config, setConfig] = useState<OpenPGPConfig>(PRESETS[0].config);
@@ -165,18 +166,18 @@ export default function OpenPGPExplorer() {
       {/* Main Navigation Tabs */}
       <div className="flex overflow-x-auto gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 scrollbar-hide">
         {[
-          { id: 'flow', label: 'Pipeline Stepper', icon: Layers },
-          { id: 'packets', label: 'Packet Tree Inspector', icon: FileSearch },
-          { id: 'entropy', label: 'Entropy & Compression Lab', icon: BarChart3 },
-          { id: 'sandbox', label: 'Decrypt & Verify Sandbox', icon: ShieldAlert },
-          { id: 'theory', label: 'Standards & Security Theory', icon: BookOpen },
+          { id: 'flow' as OpenPGPTab, label: 'Pipeline Stepper', icon: Layers },
+          { id: 'packets' as OpenPGPTab, label: 'Packet Tree Inspector', icon: FileSearch },
+          { id: 'entropy' as OpenPGPTab, label: 'Entropy & Compression Lab', icon: BarChart3 },
+          { id: 'sandbox' as OpenPGPTab, label: 'Decrypt & Verify Sandbox', icon: ShieldAlert },
+          { id: 'theory' as OpenPGPTab, label: 'Standards & Security Theory', icon: BookOpen },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
                 isActive
                   ? 'bg-teal-500 text-white dark:text-zinc-950 dark:font-bold shadow-md shadow-teal-500/20'
@@ -286,7 +287,6 @@ export default function OpenPGPExplorer() {
 
           {/* Active Stage Details Card */}
           <div className="bg-white dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-md">
-            {/* Step 1 */}
             {activeStageIndex === 0 && (
               <div className="space-y-6">
                 <div>
@@ -331,7 +331,6 @@ export default function OpenPGPExplorer() {
               </div>
             )}
 
-            {/* Step 2 */}
             {activeStageIndex === 1 && (
               <div className="space-y-6">
                 <div>
@@ -377,7 +376,6 @@ export default function OpenPGPExplorer() {
               </div>
             )}
 
-            {/* Step 3 */}
             {activeStageIndex === 2 && (
               <div className="space-y-6">
                 <div>
@@ -427,7 +425,6 @@ export default function OpenPGPExplorer() {
               </div>
             )}
 
-            {/* Step 4 */}
             {activeStageIndex === 3 && (
               <div className="space-y-6">
                 <div>
@@ -442,7 +439,7 @@ export default function OpenPGPExplorer() {
 
                 <div className="space-y-4">
                   <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                    <span className="text-xs font-bold uppercase text-teal-600 dark:text-teal-400">Generated Session Key ($K_{'{sess}'}$)</span>
+                    <span className="text-xs font-bold uppercase text-teal-600 dark:text-teal-400">Generated Session Key</span>
                     <p className="font-mono text-sm text-amber-500 mt-1 bg-zinc-100 dark:bg-zinc-900 p-2 rounded">
                       {pipelineResult.stage4.sessionKeyHex}
                     </p>
@@ -469,7 +466,6 @@ export default function OpenPGPExplorer() {
               </div>
             )}
 
-            {/* Step 5 */}
             {activeStageIndex === 4 && (
               <div className="space-y-6">
                 <div className="flex justify-between items-start">
@@ -497,7 +493,6 @@ export default function OpenPGPExplorer() {
               </div>
             )}
 
-            {/* Step 6 */}
             {activeStageIndex === 5 && (
               <div className="space-y-6">
                 <div>
@@ -599,7 +594,6 @@ export default function OpenPGPExplorer() {
               </p>
             </div>
 
-            {/* Entropy Meters */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-zinc-50 dark:bg-zinc-950 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800">
                 <span className="text-xs font-bold uppercase text-amber-500">1. Plaintext Payload</span>
@@ -650,14 +644,13 @@ export default function OpenPGPExplorer() {
               </div>
             </div>
 
-            {/* Educational Insight Box */}
             <div className="p-6 bg-teal-500/10 border border-teal-500/30 rounded-2xl space-y-3">
               <h4 className="text-base font-bold text-teal-400 flex items-center gap-2">
                 <Zap className="w-5 h-5 text-teal-400" />
                 Why Encrypt-then-Compress Fails
               </h4>
               <p className="text-sm text-zinc-300 leading-relaxed">
-                If you attempt to compress encrypted ciphertext, compression algorithms like DEFLATE or ZIP will achieve a <b>0% compression ratio</b> (and might even increase file size due to header overhead!). This is because cryptographic ciphers produce outputs with uniform byte distributions ($H \approx 8.0$). Compressing plaintext BEFORE encryption reduces ciphertext size and removes statistical redundancy that cryptanalysts could exploit.
+                If you attempt to compress encrypted ciphertext, compression algorithms like DEFLATE or ZIP will achieve a <b>0% compression ratio</b>. Compressing plaintext BEFORE encryption reduces ciphertext size and removes statistical redundancy that cryptanalysts could exploit.
               </p>
             </div>
           </div>
@@ -677,17 +670,16 @@ export default function OpenPGPExplorer() {
             </p>
           </div>
 
-          {/* Tamper Selector */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { id: 'NONE', label: '1. Valid Transmission', desc: 'No tampering' },
-              { id: 'CORRUPT_CIPHERTEXT', label: '2. Corrupt Ciphertext', desc: 'Mutate SEIPD bytes' },
-              { id: 'WRONG_RECIPIENT_KEY', label: '3. Wrong Private Key', desc: 'Mismatched Key ID' },
-              { id: 'TAMPER_SIGNATURE', label: '4. Tamper Signature', desc: 'Corrupt signature packet' },
+              { id: 'NONE' as TamperMode, label: '1. Valid Transmission', desc: 'No tampering' },
+              { id: 'CORRUPT_CIPHERTEXT' as TamperMode, label: '2. Corrupt Ciphertext', desc: 'Mutate SEIPD bytes' },
+              { id: 'WRONG_RECIPIENT_KEY' as TamperMode, label: '3. Wrong Private Key', desc: 'Mismatched Key ID' },
+              { id: 'TAMPER_SIGNATURE' as TamperMode, label: '4. Tamper Signature', desc: 'Corrupt signature packet' },
             ].map(m => (
               <button
                 key={m.id}
-                onClick={() => setTamperMode(m.id as any)}
+                onClick={() => setTamperMode(m.id)}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   tamperMode === m.id
                     ? 'bg-teal-500 text-zinc-950 border-teal-400 font-bold shadow-lg shadow-teal-500/20'
@@ -700,7 +692,6 @@ export default function OpenPGPExplorer() {
             ))}
           </div>
 
-          {/* Sandbox Verification Result Output */}
           <div className="p-6 bg-zinc-50 dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
             <h4 className="text-sm font-bold uppercase text-teal-600 dark:text-teal-400">
               Recipient Execution Status
@@ -790,7 +781,7 @@ export default function OpenPGPExplorer() {
             <div className="p-5 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2">
               <h4 className="text-sm font-bold text-teal-600 dark:text-teal-400">3. Hybrid Cryptography</h4>
               <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                Asymmetric algorithms (RSA/X25519) are computationally heavy. OpenPGP generates a high-speed random symmetric session key ($K_{'{sess}'}$) for bulk payload encryption, then encrypts only $K_{'{sess}'}$ with public key cryptography.
+                Asymmetric algorithms (RSA/X25519) are computationally heavy. OpenPGP generates a high-speed random symmetric session key for bulk payload encryption, then encrypts only the session key with public key cryptography.
               </p>
             </div>
 

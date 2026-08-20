@@ -1,9 +1,6 @@
-"use client";
 import HeroIllustration from "@/components/HeroIllustration";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import Navbar from "../components/layout/Navbar";
-import SkeletonCard from "../components/ui/SkeletonCard";
 import { Zap, ShieldCheck, BookOpen, ArrowRight } from "lucide-react";
 import Footer from "../components/layout/footer";
 import LearningJourney from "../components/landing/LearningJourney";
@@ -13,15 +10,6 @@ import StatisticsRow from "../components/landing/StatisticsRow";
 import { StartHereSection } from '@/components/landing/StartHereSection'
 
 export default function Home() {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-
-    return () => window.clearTimeout(timer);
-  }, []);
 
   const categories = [
     {
@@ -251,13 +239,11 @@ export default function Home() {
           </div>
  
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {isLoading
-              ? Array.from({ length: 5 }).map((_, idx) => <SkeletonCard key={`skeleton-${idx}`} />) // static skeleton count, index key is safe
-              : categories.map((cat) => (
-                <div
-                  key={cat.title}
-                  className={`group relative flex flex-col justify-between rounded-xl border border-zinc-200 dark:border-[#2A2A31] bg-white dark:bg-[#16161A] p-6 shadow-sm transition-all duration-250 hover:-translate-y-1 hover:bg-zinc-50 dark:hover:bg-[#1A1A1F] ${cat.glowClass}`}
-                >
+            {categories.map((cat) => (
+              <div
+                key={cat.title}
+                className={`group relative flex flex-col justify-between rounded-xl border border-zinc-200 dark:border-[#2A2A31] bg-white dark:bg-[#16161A] p-6 shadow-sm transition-all duration-250 hover:-translate-y-1 hover:bg-zinc-50 dark:hover:bg-[#1A1A1F] ${cat.glowClass}`}
+              >
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-50 dark:bg-[#101013] border border-zinc-200 dark:border-[#2A2A31]">

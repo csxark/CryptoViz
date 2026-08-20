@@ -1,16 +1,17 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import type { CipherDefinition, CipherOptionValue } from '../../lib/cipher/registry'
 import type { CipherResult, CipherOptions } from '../../lib/cipher/types'
+import { createVirtualizedCipherResult, type VirtualizedCipherResult } from '../../lib/cipher/stepVirtualization'
 import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
 import type { AnimationSpeed } from './StepAnimator'
 import WorkspacePresetManager from './WorkspacePresetManager'
 import ConversionHistory from './ConversionHistory'
 import WhereIsThisUsed from "./WhereIsThisUsed";
-import type { WorkspacePreset } from '../../lib/utils/workspacePresets'
+import type { WorkspacePreset } from "../../lib/utils/workspacePresets";
 import {
   clearScopeAnnotations,
   createStableStepId,
@@ -20,22 +21,23 @@ import {
   toggleStepBookmark,
   updateStepNote,
   type StepAnnotationStore,
-} from '../../lib/utils/stepAnnotations'
+} from "../../lib/utils/stepAnnotations";
 import {
   buildVisualizerPermalink,
   clampStepIndex,
   parseVisualizerPermalink,
   updateStepInCurrentUrl,
-} from '../../lib/utils/visualizerPermalink'
-import { CipherOptionsPanel } from './CipherOptionsPanel'
-import TraceTransferControls from './TraceTransferControls'
-import CipherLifecycleBadge from './CipherLifecycleBadge'
-import { SecurityStrengthCard } from './SecurityStrengthCard'
+} from "../../lib/utils/visualizerPermalink";
+import TraceTransferControls from "./TraceTransferControls";
+import CipherLifecycleBadge from "./CipherLifecycleBadge";
+import LessonPackageModal from "./LessonPackageModal";
+import LessonPlayerModal from "./LessonPlayerModal";
+import type { LessonPackage } from "../../lib/utils/lessonPackage";
 import {
   loadConversionHistory,
   saveConversionHistory,
   type ConversionHistoryEntry,
-} from '../../lib/utils/conversionHistory'
+} from "../../lib/utils/conversionHistory";
 import {
   traceToCipherResult,
   type CipherTraceFile,
@@ -43,6 +45,8 @@ import {
 import { calculateSecurityMetrics, parseKeySize } from '../../lib/utils/securityMetrics'
 import { diagnoseError, type Diagnostic } from '../../lib/utils/errors'
 import { CryptoDiagnosticBanner } from '../ui/CryptoDiagnosticBanner'
+import { WeakParameterAlertBanner } from '../ui/WeakParameterAlertBanner'
+import { detectWeakParameters } from '../../lib/security/weakParameters'
 
 const StepAnimator = dynamic(() => import('./StepAnimator'), { ssr: false })
 const PlayfairGrid = dynamic(() => import('./PlayfairGrid'), { ssr: false })
@@ -58,38 +62,13 @@ interface CipherLayoutProps {
   cipher: CipherDefinition;
 }
 
-interface HistoryEntry {
-  id: string;
-  input: string;
-  key: string;
-  action: "encrypt" | "decrypt";
-  output: string;
-  timestamp: string;
-}
 
-const getHistoryStorageKey = (cipherId: string) =>
-  `cryptoviz-history-${cipherId}`;
-
-const isBooleanOptionValue = (value: CipherOptionValue): value is boolean => typeof value === 'boolean'
-const isNumberOptionValue = (value: CipherOptionValue): value is number => typeof value === 'number'
-const isStringOptionValue = (value: CipherOptionValue): value is string => typeof value === 'string'
-
-const isValidHistoryEntry = (entry: unknown): entry is HistoryEntry => {
-  return (
-    typeof entry === "object" &&
-    entry !== null &&
-    "id" in entry &&
-    "input" in entry &&
-    "key" in entry &&
-    "action" in entry &&
-    "output" in entry &&
-    "timestamp" in entry
-  );
-};
-
-const isValidHistoryArray = (data: unknown): data is HistoryEntry[] => {
-  return Array.isArray(data) && data.every(isValidHistoryEntry);
-};
+const isBooleanOptionValue = (value: CipherOptionValue): value is boolean =>
+  typeof value === "boolean";
+const isNumberOptionValue = (value: CipherOptionValue): value is number =>
+  typeof value === "number";
+const isStringOptionValue = (value: CipherOptionValue): value is string =>
+  typeof value === "string";
 
 export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const { runCipher, loading, error: workerError } = useCipherWorker();
@@ -126,28 +105,48 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     }))
   }, []);
 
-  const [result, setResult] = useState<CipherResult | null>(null);
+  const [result, setResult] = useState<VirtualizedCipherResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [animationSpeed, setAnimationSpeed] = useState<AnimationSpeed>(1);
   const [activeTab, setActiveTab] = useState<"result" | "history" | "debugger">("result");
   const [history, setHistory] = useState<ConversionHistoryEntry[]>([]);
-  const [annotationStore, setAnnotationStore] = useState<StepAnnotationStore>(() => ({
-    version: 1,
-    scopes: {},
-  }));
+  const [annotationStore, setAnnotationStore] = useState<StepAnnotationStore>(
+    () => ({
+      version: 1,
+      scopes: {},
+    }),
+  );
   const [stepNoteInput, setStepNoteInput] = useState("");
   const [isZenMode, setIsZenMode] = useState(false);
+  const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
+  const [activeLesson, setActiveLesson] = useState<LessonPackage | null>(null);
+  const [isLessonPlayerOpen, setIsLessonPlayerOpen] = useState(false);
   const [securityMetrics, setSecurityMetrics] = useState(() => 
     calculateSecurityMetrics(cipher, { keySize: parseKeySize(cipher, cipher.defaultKey) })
   );
+  const weakParameterFindings = useMemo(() => detectWeakParameters({
+    cipherId: cipher.id,
+    key,
+    options: optionsState,
+    history,
+  }), [cipher.id, key, optionsState, history]);
 
-  const KEYLESS_CIPHERS = ['atbash', 'rot13', 'sha256','sha512','md5','xxhash32','bloomfilter', 'bloom-filter']
+  const KEYLESS_CIPHERS = [
+    "atbash",
+    "rot13",
+    "sha256",
+    "sha512",
+    "md5",
+    "xxhash32",
+    "bloomfilter",
+    "bloom-filter",
+  ];
 
   useEffect(() => {
-    setAnnotationStore(loadStepAnnotationStore())
-  }, [])
+    setAnnotationStore(loadStepAnnotationStore());
+  }, []);
 
   const handleZenModeToggle = () => {
     setIsZenMode(prev => {
@@ -177,30 +176,27 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
 
   // Restore a shared visualizer configuration from the URL (runs once per cipher).
   useEffect(() => {
-    const shared = parseVisualizerPermalink(window.location.search)
-    if (shared.input !== undefined) setInput(shared.input)
-    if (shared.key !== undefined) setKey(shared.key)
-    if (shared.direction !== undefined && cipher.id !== 'dh') {
-      setAction(shared.direction)
+    const shared = parseVisualizerPermalink(window.location.search);
+    if (shared.input !== undefined) setInput(shared.input);
+    if (shared.key !== undefined) setKey(shared.key);
+    if (shared.direction !== undefined && cipher.id !== "dh") {
+      setAction(shared.direction);
     }
-
-    setOptionsState((prev) => {
-      const updated = { ...prev }
-      for (const [k, v] of Object.entries(shared.options)) {
-        if (v !== undefined) {
-          updated[k] = v as CipherOptionValue
-        }
-      }
-      // Ensure aesMode is mapped to mode if present
-      if (shared.options.aesMode !== undefined) {
-        updated.mode = shared.options.aesMode as string
-      }
-      return updated
-    })
-
-    if (shared.options.autoCompute !== undefined) setAutoCompute(shared.options.autoCompute)
-    pendingSharedStepRef.current = shared.step ?? null
-  }, [cipher.id])
+    if (shared.options.hexInput !== undefined)
+      setHexInput(shared.options.hexInput);
+    if (shared.options.rounds !== undefined) setRounds(shared.options.rounds);
+    if (shared.options.demoMode !== undefined)
+      setDemoMode(shared.options.demoMode);
+    if (shared.options.bobSecret !== undefined)
+      setBobSecret(shared.options.bobSecret);
+    if (shared.options.padding !== undefined)
+      setPadding(shared.options.padding);
+    if (shared.options.aesMode !== undefined)
+      setAesMode(shared.options.aesMode);
+    if (shared.options.autoCompute !== undefined)
+      setAutoCompute(shared.options.autoCompute);
+    pendingSharedStepRef.current = shared.step ?? null;
+  }, [cipher.id]);
 
   // Sync playground state into the URL (debounced) so refresh/share preserves the session.
   useEffect(() => {
@@ -208,25 +204,36 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       const permalink = buildVisualizerPermalink(window.location.href, {
         input,
         key,
-        direction: cipher.id === 'dh' ? 'encrypt' : action,
+        direction: cipher.id === "dh" ? "encrypt" : action,
         step: currentStep,
         options: {
-          ...optionsState,
+          hexInput,
+          rounds,
+          demoMode,
+          bobSecret,
+          padding,
+          aesMode,
           autoCompute,
         },
-      })
-      router.replace(permalink, { scroll: false })
-    }, 300)
-    return () => clearTimeout(debounceId)
-  }, [input, key, action, optionsState, autoCompute, currentStep, cipher.id, router])
-
-  // Update security metrics when key changes for relevant ciphers
-  useEffect(() => {
-    const relevantCiphers = ['aes', 'rsa', 'ecc', 'dh', '3des', 'des']
-    if (relevantCiphers.includes(cipher.id)) {
-      setSecurityMetrics(calculateSecurityMetrics(cipher, { keySize: parseKeySize(cipher, key) }))
-    }
-  }, [key, cipher])
+      });
+      router.replace(permalink, { scroll: false });
+    }, 300);
+    return () => clearTimeout(debounceId);
+  }, [
+    input,
+    key,
+    action,
+    hexInput,
+    rounds,
+    demoMode,
+    bobSecret,
+    aesMode,
+    padding,
+    autoCompute,
+    currentStep,
+    cipher.id,
+    router,
+  ]);
 
   // Reset inputs when cipher changes
   useEffect(() => {
@@ -249,23 +256,43 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     // Reset option defaults from cipher.options schema + permalinks
     const newOptions: Record<string, CipherOptionValue> = {}
     if (cipher.options) {
-      for (const opt of cipher.options) {
-        const sharedVal = shared.options[opt.id]
-        newOptions[opt.id] = (sharedVal !== undefined ? sharedVal : opt.default) as CipherOptionValue
-      }
-    }
-    // Backward compatibility for ciphers with implicit defaults
-    if (newOptions.hexInput === undefined) {
-      newOptions.hexInput = (shared.options.hexInput !== undefined ? shared.options.hexInput : true) as boolean
-    }
-    if (newOptions.rounds === undefined && shared.options.rounds !== undefined) {
-      newOptions.rounds = shared.options.rounds
-    }
-    if (newOptions.demoMode === undefined && shared.options.demoMode !== undefined) {
-      newOptions.demoMode = shared.options.demoMode
-    }
-    if (newOptions.bobSecret === undefined && shared.options.bobSecret !== undefined) {
-      newOptions.bobSecret = shared.options.bobSecret
+      cipher.options.forEach((opt) => {
+        if (
+          opt.id === "hexInput" &&
+          shared.options.hexInput === undefined &&
+          isBooleanOptionValue(opt.default)
+        ) {
+          setHexInput(opt.default);
+        }
+        if (
+          opt.id === "rounds" &&
+          shared.options.rounds === undefined &&
+          isNumberOptionValue(opt.default)
+        ) {
+          setRounds(opt.default);
+        }
+        if (
+          opt.id === "demoMode" &&
+          shared.options.demoMode === undefined &&
+          isBooleanOptionValue(opt.default)
+        ) {
+          setDemoMode(opt.default);
+        }
+        if (
+          opt.id === "bobSecret" &&
+          shared.options.bobSecret === undefined &&
+          isStringOptionValue(opt.default)
+        ) {
+          setBobSecret(opt.default);
+        }
+        if (
+          opt.id === "padding" &&
+          shared.options.padding === undefined &&
+          isBooleanOptionValue(opt.default)
+        ) {
+          setPadding(opt.default);
+        }
+      });
     }
     if (newOptions.mode === undefined && shared.options.aesMode !== undefined) {
       newOptions.mode = shared.options.aesMode
@@ -337,10 +364,26 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         signal: controller.signal,
         ...optionsState,
       };
-
-      // Compatibility mapping for older cipher interfaces
-      if (optionsState.demoMode !== undefined && options.mode === undefined) {
-        options.mode = optionsState.demoMode ? "demo" : "real";
+      if (
+        cipher.id === "des" ||
+        cipher.id === "3des" ||
+        cipher.id === "aes" ||
+        cipher.id === "camellia"
+      ) {
+        options.hexInput = hexInput;
+      }
+      if (cipher.id === "aes" || cipher.id === "camellia") {
+        options.mode = aesMode;
+      }
+      if (cipher.id === "bcrypt") {
+        options.rounds = rounds;
+      }
+      if (cipher.id === "rsa") {
+        options.mode = demoMode ? "demo" : "real";
+      }
+      if (cipher.id === "dh") {
+        options.mode = "demo";
+        options.bobSecret = bobSecret;
       }
       if (cipher.id === "camellia" && typeof optionsState.padding === "boolean") {
         options.padding = optionsState.padding ? "PKCS7" : "None";
@@ -355,7 +398,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         options,
       );
       if (!controller.signal.aborted) {
-        setResult(res);
+        setResult(createVirtualizedCipherResult(res));
         const restoredStep = pendingSharedStepRef.current;
         setCurrentStep(
           restoredStep === null
@@ -372,6 +415,11 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
             action: currentAction,
             output: String(res.output),
             timestamp: new Date().toLocaleString(),
+            parameters: (() => {
+              const nonce = cipher.id === 'chacha20-poly1305' ? key.split('|')[1]?.split(':')[0] : undefined
+              const iv = cipher.id === 'aes-gcm' && typeof optionsState.iv === 'string' ? optionsState.iv : undefined
+              return nonce || iv ? { ...(nonce ? { nonce } : {}), ...(iv ? { iv } : {}) } : undefined
+            })(),
           };
           setHistory((prev) =>
             saveConversionHistory(cipher.id, [entry, ...prev]),
@@ -382,8 +430,11 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       if (err instanceof Error && err.name === "AbortError") {
         return;
       }
-      const errorMessage = err instanceof Error ? err.message : "An error occurred during calculation.";
-      setError(errorMessage);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred during calculation.",
+      );
       setResult(null);
       
       // Try to generate diagnostic for the error
@@ -414,7 +465,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
       ...trace.options,
     }));
     const importedResult = traceToCipherResult(trace);
-    setResult(importedResult);
+    setResult(createVirtualizedCipherResult(importedResult));
     const restoredStep = pendingSharedStepRef.current;
     setCurrentStep(
       restoredStep === null
@@ -424,6 +475,41 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     pendingSharedStepRef.current = null;
     setActiveTab("result");
     setError(null);
+  };
+
+  const handleLessonImported = (lesson: LessonPackage) => {
+    setActiveLesson(lesson);
+    setAutoCompute(false);
+    setInput(lesson.executionContext.input);
+    setKey(lesson.executionContext.key);
+    setAction(lesson.executionContext.direction);
+    setOptionsState((prev) => ({
+      ...prev,
+      ...lesson.executionContext.options,
+    }));
+    const importedResult = traceToCipherResult({
+      schemaVersion: 1,
+      cipherId: lesson.executionContext.algorithmId,
+      direction: lesson.executionContext.direction,
+      input: lesson.executionContext.input,
+      key: lesson.executionContext.key,
+      options: lesson.executionContext.options,
+      output: lesson.output,
+      outputEncoding: lesson.outputEncoding,
+      steps: lesson.steps,
+      metadata: { name: lesson.metadata.targetCipher, securityStatus: 'secure' },
+      durationMs: 0,
+      timestamp: lesson.metadata.createdAt,
+    });
+    setResult(createVirtualizedCipherResult(importedResult));
+    setCurrentStep(0);
+    setActiveTab("result");
+    setError(null);
+    setIsLessonPlayerOpen(true);
+  };
+
+  const handleLessonStepNavigate = (stepIndex: number) => {
+    setCurrentStep(stepIndex);
   };
 
   useEffect(() => {
@@ -441,7 +527,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
     optionsState,
   ]);
 
-  const getStatusBadge = (status: "secure" | "legacy" | "deprecated" | "broken") => {
+  const getStatusBadge = (
+    status: "secure" | "legacy" | "deprecated" | "broken",
+  ) => {
     switch (status) {
       case "secure":
         return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900";
@@ -455,43 +543,47 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
   };
 
   const renderSpecificVisualizer = () => {
-    if (!result || result.steps.length === 0) return null;
-    const step = result.steps[currentStep];
-    if (cipher.id === "playfair" && step.matrix) {
-      return <PlayfairGrid matrix={step.matrix} highlights={step.highlight} />;
+    if (!result || result.steps.length === 0) {
+      return null;
     }
-    if (cipher.id === "railfence" && step.matrix) {
-      return <RailFenceViz matrix={step.matrix} highlight={step.highlight} />;
+
+    const activeStep = result.steps[currentStep];
+
+    if (!activeStep) {
+      return null;
     }
-    if (cipher.id === "dh") {
-      return <DHVisualizer currentStep={currentStep} />;
+
+    const Visualizer = getVisualizerComponent(cipher.id);
+
+    if (!Visualizer) {
+      return null;
     }
-    if (cipher.id === "hmac") {
-      return <HmacVisualizer currentStep={currentStep} result={result} />;
-    }
-    if (cipher.id === "sm3") {
-      return <Sm3Visualizer currentStep={currentStep} result={result} />;
-    }
-    if (cipher.id === "hill") {
-      return <HillMatrixVisualizer step={step} keyString={key} currentStepIndex={currentStep} />;
-    }
-    return null;
+
+    return (
+      <Visualizer
+        cipherId={cipher.id}
+        currentStep={currentStep}
+        result={result}
+        activeStep={activeStep}
+        onStepChange={handleStepChange}
+      />
+    );
   };
 
   const handleStepChange = (nextStep: number) => {
-    const safeStep = clampStepIndex(nextStep, result?.steps?.length ?? 0)
-    setCurrentStep(safeStep)
+    const safeStep = clampStepIndex(nextStep, result?.steps?.length ?? 0);
+    setCurrentStep(safeStep);
     if (result?.steps?.length) {
-      const nextUrl = updateStepInCurrentUrl(window.location.href, safeStep)
-      router.replace(nextUrl, { scroll: false })
+      const nextUrl = updateStepInCurrentUrl(window.location.href, safeStep);
+      router.replace(nextUrl, { scroll: false });
     }
-  }
+  };
 
   const handleCopyStepLink = async () => {
     const permalink = buildVisualizerPermalink(window.location.href, {
       input,
       key,
-      direction: cipher.id === 'dh' ? 'encrypt' : action,
+      direction: cipher.id === "dh" ? "encrypt" : action,
       step: currentStep,
       options: {
         hexInput,
@@ -500,49 +592,43 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         bobSecret,
         padding,
       },
-    })
-    await navigator.clipboard.writeText(permalink)
-  }
+    });
+    await navigator.clipboard.writeText(permalink);
+  };
 
   const annotationScope = {
     cipherId: cipher.id,
-    direction: cipher.id === 'dh' ? ('encrypt' as const) : action,
-  }
+    direction: cipher.id === "dh" ? ("encrypt" as const) : action,
+  };
 
-  const activeStep = result?.steps?.[currentStep]
+  const activeStep = result?.steps?.[currentStep];
   const activeStepId = activeStep
     ? createStableStepId(activeStep.label, currentStep)
-    : null
+    : null;
 
   const scopeAnnotations = getScopeAnnotations(
     annotationStore,
     annotationScope,
-  )
+  );
 
   const activeAnnotation = activeStepId
     ? scopeAnnotations.find((item) => item.stepId === activeStepId)
-    : undefined
+    : undefined;
 
-  const bookmarkedSteps = result?.steps
-    ? result.steps
+  const bookmarkedSteps = result?.stepMetadata
+    ? result.stepMetadata
         .map((step, index) => {
-          const stepId = createStableStepId(step.label, index)
+          const stepId = createStableStepId(step.label, index);
           const annotation = scopeAnnotations.find(
             (item) => item.stepId === stepId && item.bookmarked,
-          )
-          return annotation
-            ? { ...annotation, stepIndex: index }
-            : null
+          );
+          return annotation ? { ...annotation, stepIndex: index } : null;
         })
-        .filter(
-          (
-            item,
-          ): item is NonNullable<typeof item> => item !== null,
-        )
-    : []
+        .filter((item): item is NonNullable<typeof item> => item !== null)
+    : [];
 
   const handleToggleStepBookmark = () => {
-    if (!activeStep || !activeStepId) return
+    if (!activeStep || !activeStepId) return;
     setAnnotationStore(
       toggleStepBookmark(
         annotationStore,
@@ -550,11 +636,11 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         activeStepId,
         activeStep.label,
       ),
-    )
-  }
+    );
+  };
 
   const handleSaveStepNote = (note: string) => {
-    if (!activeStep || !activeStepId) return
+    if (!activeStep || !activeStepId) return;
     setAnnotationStore(
       updateStepNote(
         annotationStore,
@@ -563,15 +649,15 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         activeStep.label,
         note,
       ),
-    )
-  }
+    );
+  };
 
   const handleDeleteStepNote = () => {
-    if (!activeStepId) return
+    if (!activeStepId) return;
     setAnnotationStore(
       removeStepNote(annotationStore, annotationScope, activeStepId),
-    )
-  }
+    );
+  };
 
   const handleDiagnosticRemediation = (value: string | number) => {
     // Apply the remediation to the relevant input
@@ -604,18 +690,16 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
   const handleClearStepAnnotations = async () => {
     if (
       !window.confirm(
-        'Clear all notes and bookmarks for this cipher and direction?',
+        "Clear all notes and bookmarks for this cipher and direction?",
       )
     ) {
-      return
+      return;
     }
-    setAnnotationStore(
-      clearScopeAnnotations(annotationStore, annotationScope),
-    )
+    setAnnotationStore(clearScopeAnnotations(annotationStore, annotationScope));
     const permalink = buildVisualizerPermalink(window.location.href, {
       input,
       key,
-      direction: cipher.id === 'dh' ? 'encrypt' : action,
+      direction: cipher.id === "dh" ? "encrypt" : action,
       step: currentStep,
       options: {
         hexInput,
@@ -623,9 +707,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         demoMode,
         bobSecret,
       },
-    })
-    await navigator.clipboard.writeText(permalink)
-  }
+    });
+    await navigator.clipboard.writeText(permalink);
+  };
 
   const handleClearKey = useCallback(() => {
     setKey('');
@@ -671,6 +755,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
           )}
         </div>
       </div>
+
+      <WeakParameterAlertBanner findings={weakParameterFindings} />
 
       {/* Security Strength Card */}
       <SecurityStrengthCard 
@@ -765,10 +851,34 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                   No key required for this cipher
                 </span>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  This algorithm operates using a fixed transformation or deterministic digest rule.
+                  This algorithm operates using a fixed transformation or
+                  deterministic digest rule.
                 </p>
               </div>
-            ) : cipher.defaultKey !== undefined && (
+            ) : (
+              cipher.defaultKey !== undefined && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                    {cipher.id === "ecc"
+                      ? action === "encrypt"
+                        ? "Private Key (Hex)"
+                        : "Signature, Public Key (comma separated)"
+                      : cipher.id === "dh"
+                        ? "Alice Private Secret (a) & Public Parameters (p, g)"
+                        : "Cryptographic Key / Shift"}
+                  </label>
+                  <input
+                    type="text"
+                    value={key}
+                    onChange={(e) => setKey(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 bg-zinc-50/50 p-2.5 font-mono text-sm text-zinc-900 outline-none transition-all focus:border-teal-500 focus:bg-white dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-100 dark:focus:border-teal-400 dark:focus:bg-zinc-950"
+                    placeholder={cipher.keyPlaceholder || "Enter key..."}
+                  />
+                </div>
+              )
+            )}
+
+            {cipher.id === "bcrypt" && (
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -860,7 +970,10 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                     Execution Error
                   </h4>
                   <p className="text-xs text-red-700 dark:text-red-400">
-                    {error || workerError?.message || workerError?.code || 'Unknown error'}
+                    {error ||
+                      workerError?.message ||
+                      workerError?.code ||
+                      "Unknown error"}
                   </p>
                 </div>
               </div>
@@ -909,11 +1022,15 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
             <>
               <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
                 <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                  {cipher.category === "hash" ? "Generated Hash Digest" : "Output Result"}
+                  {cipher.category === "hash"
+                    ? "Generated Hash Digest"
+                    : "Output Result"}
                 </span>
                 <div className="mt-2 min-h-[48px] overflow-x-auto rounded-lg bg-zinc-50 p-3 font-mono text-sm leading-relaxed break-all text-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-200">
                   {loading ? (
-                    <span className="flex items-center gap-1.5 text-zinc-400">Computing...</span>
+                    <span className="flex items-center gap-1.5 text-zinc-400">
+                      Computing...
+                    </span>
                   ) : result ? (
                     result.output
                   ) : (
@@ -930,6 +1047,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                 options={traceOptions}
                 result={result}
                 onImport={handleTraceImport}
+                onOpenLessonModal={() => setIsLessonModalOpen(true)}
+                onLessonImported={handleLessonImported}
               />
 
               {renderSpecificVisualizer()}
@@ -949,7 +1068,9 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                             : "border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-900"
                         }`}
                       >
-                        {activeAnnotation?.bookmarked ? "Bookmarked ★" : "Bookmark Step"}
+                        {activeAnnotation?.bookmarked
+                          ? "Bookmarked ★"
+                          : "Bookmark Step"}
                       </button>
                       {scopeAnnotations.length > 0 && (
                         <button
@@ -967,7 +1088,8 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                          Step Note (Step {currentStep + 1}: {activeStep?.label})
+                          Step Note (Step {currentStep + 1}: {activeStep?.label}
+                          )
                         </span>
                         {activeAnnotation?.note && (
                           <button
@@ -981,7 +1103,11 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          value={stepNoteInput !== "" ? stepNoteInput : (activeAnnotation?.note || "")}
+                          value={
+                            stepNoteInput !== ""
+                              ? stepNoteInput
+                              : activeAnnotation?.note || ""
+                          }
                           onChange={(e) => setStepNoteInput(e.target.value)}
                           placeholder="Add a personal note to this step..."
                           className="flex-1 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs text-zinc-900 outline-none focus:border-teal-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
@@ -1001,6 +1127,7 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
 
                   <StepAnimator
                     steps={result.steps}
+                    stepMetadata={result.stepMetadata}
                     currentStep={currentStep}
                     onStepChange={handleStepChange}
                     speed={animationSpeed}
@@ -1028,6 +1155,44 @@ export default function CipherLayout({ cipher }: CipherLayoutProps) {
         </div>
       </div>
       {!isZenMode && <WhereIsThisUsed cipherId={cipher.id} />}
+
+      <LessonPackageModal
+        isOpen={isLessonModalOpen}
+        onClose={() => setIsLessonModalOpen(false)}
+        cipherId={cipher.id}
+        cipherName={cipher.name}
+        direction={cipher.id === "dh" ? "encrypt" : action}
+        input={input}
+        key={key}
+        options={traceOptions}
+        steps={result?.steps ?? []}
+        output={result?.output ?? ''}
+        outputEncoding={result?.outputEncoding ?? 'utf8'}
+        metadata={result?.metadata ?? { name: cipher.name, securityStatus: cipher.securityStatus }}
+        stepNotes={(() => {
+          const notes: Record<number, string> = {}
+          if (result?.steps) {
+            result.steps.forEach((step, index) => {
+              const stepId = createStableStepId(step.label, index)
+              const annotation = scopeAnnotations.find((a) => a.stepId === stepId && a.note)
+              if (annotation) {
+                notes[index] = annotation.note
+              }
+            })
+          }
+          return notes
+        })()}
+        onLessonImported={handleLessonImported}
+      />
+
+      {activeLesson && (
+        <LessonPlayerModal
+          isOpen={isLessonPlayerOpen}
+          onClose={() => setIsLessonPlayerOpen(false)}
+          lesson={activeLesson}
+          onStepNavigate={handleLessonStepNavigate}
+        />
+      )}
     </div>
   );
 }

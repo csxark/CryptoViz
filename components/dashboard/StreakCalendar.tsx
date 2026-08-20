@@ -1,5 +1,6 @@
 'use client'
 import { Flame } from 'lucide-react'
+import Card from '@/components/ui/Card'
 
 interface StreakCalendarProps { currentStreak: number; longestStreak: number; lastActiveAt: string; joinedAt: string }
 
@@ -18,7 +19,7 @@ export default function StreakCalendar({ currentStreak, longestStreak, lastActiv
   }))
   const isStreakActive = lastDate === new Date().toISOString().slice(0, 10)
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40 p-6">
+    <Card className="dark:bg-zinc-900/40 p-6">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Learning Streak</h2>
         <div className={`flex items-center gap-1.5 rounded-full px-3 py-1 ${isStreakActive ? 'bg-orange-500/10' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
@@ -49,6 +50,6 @@ export default function StreakCalendar({ currentStreak, longestStreak, lastActiv
         <span>Longest streak</span>
         <span className="font-bold text-zinc-700 dark:text-zinc-300 tabular-nums">{longestStreak} day{longestStreak !== 1 ? 's' : ''}</span>
       </div>
-    </div>
+    </Card>
   )
 }

@@ -8,7 +8,9 @@
  */
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector } from '../types'
-import { CipherError, validateInput, validateKey } from '../../utils/errors'
+import { CipherError } from '../../utils/errors'
+import { normalizeAsciiText, validateRequiredInput } from '../../utils/cipherValidation'
+import { validateKey } from '../../utils/errors'
 
 const METADATA = {
   name: 'Vigenère Cipher',
@@ -18,7 +20,7 @@ const METADATA = {
 }
 
 function validateVigenereKey(key: string): string {
-  const cleaned = key.toUpperCase().replace(/[^A-Z]/g, '')
+  const cleaned = normalizeAsciiText(key, { uppercase: true, stripNonAlpha: true })
   if (cleaned.length === 0) {
     throw new CipherError('INVALID_KEY', 'Vigenère key must contain at least one letter (A-Z).')
   }
@@ -188,7 +190,7 @@ export function encrypt(
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateRequiredInput(input)
   validateKey(key)
   if (options.instrument) return vigenereInstrumented(input, key, false)
   return vigenereFast(input, key, false)
@@ -199,7 +201,7 @@ export function decrypt(
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateRequiredInput(input)
   validateKey(key)
   if (options.instrument) return vigenereInstrumented(input, key, true)
   return vigenereFast(input, key, true)

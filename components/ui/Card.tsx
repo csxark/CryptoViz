@@ -1,11 +1,11 @@
 import type { ComponentPropsWithoutRef } from 'react'
 
-interface CardProps extends ComponentPropsWithoutRef<'div'> {}
+export interface CardProps extends ComponentPropsWithoutRef<'div'> {}
 
 export function Card({ className = '', ...props }: CardProps) {
   return (
     <div
-      className={`rounded-[var(--radius-lg)] border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900 ${className}`.trim()}
+      className={`rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 ${className}`.trim()}
       {...props}
     />
   )
@@ -26,3 +26,6 @@ export function CardDescription({ className = '', ...props }: ComponentPropsWith
 export function CardContent({ className = '', ...props }: CardProps) {
   return <div className={`p-6 pt-0 ${className}`.trim()} {...props} />
 }
+
+export default Card
+

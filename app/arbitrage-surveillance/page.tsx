@@ -92,17 +92,20 @@ export default function CryptoArbitrageSurveillanceDashboardPage() {
     const parsedMaxGas = parseFloat(customMaxGas);
     const parsedMinProfit = parseFloat(customMinProfit);
 
-    setTimeout(() => {
-      const record = CryptoArbitrageServiceHandler.executeArbitrageSimulation(selectedOpportunity.id, {
-        tradeAmountUsd: parsedTradeAmount,
-        maxAllowedSlippagePercent: parsedMaxSlippage,
-        maxAllowedGasFeeUsd: parsedMaxGas,
-        minRequiredProfitUsd: parsedMinProfit,
-      });
+    // Domain state transition occurs synchronously as source of truth
+    const record = CryptoArbitrageServiceHandler.executeArbitrageSimulation(selectedOpportunity.id, {
+      tradeAmountUsd: parsedTradeAmount,
+      maxAllowedSlippagePercent: parsedMaxSlippage,
+      maxAllowedGasFeeUsd: parsedMaxGas,
+      minRequiredProfitUsd: parsedMinProfit,
+    });
 
-      setSimulationResult(record);
-      setOpportunities(CryptoArbitrageServiceHandler.fetchOpportunities(filters));
-      setRecords(CryptoArbitrageServiceHandler.fetchExecutionRecords());
+    setSimulationResult(record);
+    setOpportunities(CryptoArbitrageServiceHandler.fetchOpportunities(filters));
+    setRecords(CryptoArbitrageServiceHandler.fetchExecutionRecords());
+
+    // UI timer used purely for presentation transition delay
+    setTimeout(() => {
       setIsSimulating(false);
     }, 600);
   };

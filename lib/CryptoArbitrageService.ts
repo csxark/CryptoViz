@@ -88,7 +88,12 @@ const INITIAL_RECORDS: ArbitrageSimulationRecord[] = [
 
 /**
  * Deterministic Simulation Engine.
- * Evaluates trade parameters, slippage, liquidity, gas cost, and execution constraints.
+ * Evaluates trade parameters, scaled profitability, slippage, liquidity, gas cost, and execution constraints.
+ * 
+ * Mathematical Model:
+ *   scaledGrossProfit = expectedGrossProfitUsd * (tradeAmountUsd / loanAmountUsd)
+ *   simulatedSlippageCost = tradeAmountUsd * (actualSlippagePercentage / 100)
+ *   netProfitUsd = scaledGrossProfit - simulatedGasFeeUsd - simulatedSlippageCost
  */
 export class DeterministicArbitrageSimulationEngine {
   public static evaluate(
@@ -106,7 +111,7 @@ export class DeterministicArbitrageSimulationEngine {
     const minProfit = params?.minRequiredProfitUsd ?? opportunity.minNetProfitRequirementUsd ?? 0;
     const maxGas = params?.maxAllowedGasFeeUsd ?? opportunity.maxGasFeeLimitUsd ?? 5000;
 
-    // 1. Parameter Validation
+    // 1. Domain-Level Parameter Validation (Reject non-finite numbers, negative values, and zero limits)
     if (
       !Number.isFinite(tradeAmount) ||
       tradeAmount <= 0 ||
@@ -114,7 +119,13 @@ export class DeterministicArbitrageSimulationEngine {
       maxSlippage < 0 ||
       !Number.isFinite(minProfit) ||
       !Number.isFinite(maxGas) ||
-      maxGas <= 0
+      maxGas <= 0 ||
+      !Number.isFinite(opportunity.loanAmountUsd) ||
+      opportunity.loanAmountUsd <= 0 ||
+      !Number.isFinite(opportunity.expectedGrossProfitUsd) ||
+      opportunity.expectedGrossProfitUsd < 0 ||
+      !Number.isFinite(opportunity.estimatedGasFeeUsd) ||
+      opportunity.estimatedGasFeeUsd < 0
     ) {
       return {
         success: false,
@@ -125,9 +136,9 @@ export class DeterministicArbitrageSimulationEngine {
       };
     }
 
-    // 2. Liquidity Simulation Check
+    // 2. Liquidity Simulation Check (No negative liquidity allowed)
     const availableLiquidity = opportunity.availableLiquidityUsd ?? tradeAmount * 2;
-    if (availableLiquidity < tradeAmount) {
+    if (!Number.isFinite(availableLiquidity) || availableLiquidity < 0 || availableLiquidity < tradeAmount) {
       return {
         success: false,
         failureReason: 'INSUFFICIENT_LIQUIDITY',
@@ -139,17 +150,17 @@ export class DeterministicArbitrageSimulationEngine {
 
     // 3. Slippage Simulation Check
     const actualSlippage = opportunity.actualSlippagePercentage ?? 0.5;
-    if (actualSlippage > maxSlippage) {
+    if (!Number.isFinite(actualSlippage) || actualSlippage < 0 || actualSlippage > maxSlippage) {
       return {
         success: false,
         failureReason: 'SLIPPAGE_EXCEEDED',
         netProfitUsd: 0,
         actualGasUsd: opportunity.estimatedGasFeeUsd,
-        slippagePercentage: actualSlippage,
+        slippagePercentage: Number.isFinite(actualSlippage) ? actualSlippage : 0,
       };
     }
 
-    // 4. Gas Simulation Check
+    // 4. Gas Constraint Simulation Check
     const actualGas = opportunity.estimatedGasFeeUsd;
     if (actualGas > maxGas) {
       return {
@@ -161,13 +172,17 @@ export class DeterministicArbitrageSimulationEngine {
       };
     }
 
-    // 5. Execution Constraint / Profitability Check
-    const netProfit = opportunity.expectedGrossProfitUsd - actualGas;
-    if (netProfit < minProfit) {
+    // 5. Scaled Profitability & Execution Constraint Check
+    // Scaled gross profit proportional to custom trade amount vs base opportunity loan amount
+    const scaledGrossProfit = opportunity.expectedGrossProfitUsd * (tradeAmount / opportunity.loanAmountUsd);
+    const slippageCostUsd = tradeAmount * (actualSlippage / 100);
+    const calculatedNetProfit = scaledGrossProfit - actualGas - slippageCostUsd;
+
+    if (calculatedNetProfit < minProfit) {
       return {
         success: false,
         failureReason: 'EXECUTION_CONSTRAINT_FAILED',
-        netProfitUsd: netProfit,
+        netProfitUsd: Number(calculatedNetProfit.toFixed(2)),
         actualGasUsd: actualGas,
         slippagePercentage: actualSlippage,
       };
@@ -175,7 +190,7 @@ export class DeterministicArbitrageSimulationEngine {
 
     return {
       success: true,
-      netProfitUsd: netProfit,
+      netProfitUsd: Number(calculatedNetProfit.toFixed(2)),
       actualGasUsd: actualGas,
       slippagePercentage: actualSlippage,
     };

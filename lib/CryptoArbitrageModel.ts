@@ -65,6 +65,12 @@ export interface SimulationParams {
 /**
  * Domain State Instance class for Simulation Engine State Management.
  * Replaces static mutable service state with instance-based domain level state.
+ * 
+ * PERSISTENCE BOUNDARY & SESSION SEMANTICS:
+ * This domain state class operates in ephemeral in-memory runtime/session memory.
+ * It provides isolated domain state modeling for paper trading and simulation without
+ * mutating production databases or external ledger state. State resets on server restart
+ * or page reload.
  */
 export class ArbitrageSimulationDomainState {
   private opportunities: Map<string, FlashLoanArbitrageOpportunity>;

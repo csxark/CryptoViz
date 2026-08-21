@@ -36,11 +36,26 @@ describe('Deterministic Arbitrage Simulation Engine & Domain State', () => {
   });
 
   describe('Deterministic Engine Evaluation', () => {
-    it('returns success for valid parameters within tolerance', () => {
+    it('returns success for valid parameters within tolerance and calculates net profit deterministically', () => {
       const result = DeterministicArbitrageSimulationEngine.evaluate(sampleOpp);
       expect(result.success).toBe(true);
-      expect(result.netProfitUsd).toBe(1700);
+      // Scaled gross profit: 2000 * (100000/100000) = 2000
+      // Slippage cost: 100000 * (0.4 / 100) = 400
+      // Net profit: 2000 - 300 - 400 = 1300
+      expect(result.netProfitUsd).toBe(1300);
       expect(result.failureReason).toBeUndefined();
+    });
+
+    it('scales gross profit and net profit proportionally when custom trade amount is provided', () => {
+      // Half trade amount: 50,000 USD
+      // Scaled gross profit: 2000 * (50000/100000) = 1000
+      // Slippage cost: 50000 * (0.4 / 100) = 200
+      // Net profit: 1000 - 300 - 200 = 500
+      const result = DeterministicArbitrageSimulationEngine.evaluate(sampleOpp, {
+        tradeAmountUsd: 50000,
+      });
+      expect(result.success).toBe(true);
+      expect(result.netProfitUsd).toBe(500);
     });
 
     it('returns SLIPPAGE_EXCEEDED when actual slippage exceeds max allowed', () => {
@@ -64,12 +79,11 @@ describe('Deterministic Arbitrage Simulation Engine & Domain State', () => {
       expect(result.failureReason).toBe('GAS_CONSTRAINT_FAILED');
     });
 
-    it('returns INVALID_PARAMETERS when trade amount or parameters are invalid', () => {
-      const result = DeterministicArbitrageSimulationEngine.evaluate(sampleOpp, {
-        tradeAmountUsd: -500,
-      });
-      expect(result.success).toBe(false);
-      expect(result.failureReason).toBe('INVALID_PARAMETERS');
+    it('returns INVALID_PARAMETERS for non-finite, negative, or invalid parameter inputs', () => {
+      expect(DeterministicArbitrageSimulationEngine.evaluate(sampleOpp, { tradeAmountUsd: -500 }).failureReason).toBe('INVALID_PARAMETERS');
+      expect(DeterministicArbitrageSimulationEngine.evaluate(sampleOpp, { tradeAmountUsd: NaN }).failureReason).toBe('INVALID_PARAMETERS');
+      expect(DeterministicArbitrageSimulationEngine.evaluate(sampleOpp, { maxAllowedSlippagePercent: Infinity }).failureReason).toBe('INVALID_PARAMETERS');
+      expect(DeterministicArbitrageSimulationEngine.evaluate(sampleOpp, { maxAllowedGasFeeUsd: 0 }).failureReason).toBe('INVALID_PARAMETERS');
     });
   });
 
@@ -97,10 +111,16 @@ describe('Deterministic Arbitrage Simulation Engine & Domain State', () => {
       expect(updatedOpp?.failureReason).toBe('INSUFFICIENT_LIQUIDITY');
     });
 
-    it('rejects invalid state transitions in domain state', () => {
+    it('rejects invalid state transitions in domain state (e.g. terminal to non-terminal)', () => {
       const domainState = new ArbitrageSimulationDomainState([sampleOpp]);
       expect(() => {
         domainState.updateOpportunityStatus('opp-test-1', 'SIMULATED_SUCCESS');
+      }).toThrow(/Invalid simulation state transition/);
+
+      domainState.updateOpportunityStatus('opp-test-1', 'SIMULATING');
+      domainState.updateOpportunityStatus('opp-test-1', 'SIMULATED_SUCCESS');
+      expect(() => {
+        domainState.updateOpportunityStatus('opp-test-1', 'SIMULATING');
       }).toThrow(/Invalid simulation state transition/);
     });
   });

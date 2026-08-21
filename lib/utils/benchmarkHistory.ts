@@ -48,16 +48,7 @@ export function addBenchmarkSession(
   );
 }
 
-export function formatBytes(bytes?: number): string {
-  if (bytes === undefined || !Number.isFinite(bytes)) return "Unavailable";
-  if (bytes === 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  const index = Math.min(
-    Math.floor(Math.log(Math.abs(bytes)) / Math.log(1024)),
-    units.length - 1,
-  );
-  return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
-}
+export { formatBytes } from "@/lib/formatters";
 
 function reviveScalingResult(result: ScalingBenchmarkResult): ScalingBenchmarkResult {
   return {

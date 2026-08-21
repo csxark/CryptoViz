@@ -5,11 +5,19 @@
  */
 import { CipherError } from '../utils/errors'
 import type { WorkerRequest, WorkerResponse } from '../../types/worker'
+import type { CipherResult } from '../cipher/types'
 import { getDispatcher } from './cipherDispatchRegistry'
 
 const workerScope = self as unknown as Worker & typeof globalThis
 const cancelledJobs = new Set<string>()
 const lastProgressAt = new Map<string, number>()
+
+// Interface representing incoming messages that could be a cancel action
+interface CancelMessage {
+  type?: string;
+  jobId?: string;
+  requestId?: string;
+}
 
 function postProgress(jobId: string, percent: number, currentMilestone: string, force = false) {
   const now = performance.now()
@@ -24,32 +32,48 @@ function postProgress(jobId: string, percent: number, currentMilestone: string, 
   })
 }
 
-workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest | Uint8Array | any>) => {
-  if (event.data?.type === 'CANCEL') {
-    const id = event.data.jobId ?? event.data.requestId
+workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest | Uint8Array | CancelMessage>) => {
+  let rawData = event.data
+
+  if (rawData instanceof Uint8Array) {
+    try {
+      rawData = JSON.parse(new TextDecoder().decode(rawData)) as WorkerRequest | CancelMessage
+    } catch {
+      // Fallback if decoding fails
+    }
+  }
+
+  // Handle cancellation requests
+  const cancelCandidate = rawData as CancelMessage
+  if (cancelCandidate?.type === 'CANCEL') {
+    const id = cancelCandidate.jobId ?? cancelCandidate.requestId
     if (id) cancelledJobs.add(id)
     return
   }
 
+  const requestData = rawData as WorkerRequest
+  const requestId = requestData?.requestId ?? 'unknown'
+  const jobId = requestData?.jobId ?? requestId
   const startTime = performance.now()
-  let requestData: any = event.data
+
   try {
-    if (requestData instanceof Uint8Array) {
-      requestData = JSON.parse(new TextDecoder().decode(requestData))
-    }
-    const { type, requestId, payload, jobId = requestId } = requestData as WorkerRequest
     if (cancelledJobs.has(jobId)) throw new DOMException('The user aborted the request.', 'AbortError')
+    
+    const { type, payload } = requestData
     const { cipherId, input, key, options } = payload
     const safeOptions = options || {}
+    
     postProgress(jobId, 0, 'Starting cipher', true)
 
     const dispatcher = await getDispatcher(cipherId)
     postProgress(jobId, 10, 'Loading cipher implementation', true)
+    
     if (cancelledJobs.has(jobId)) throw new DOMException('The user aborted the request.', 'AbortError')
 
     const handler = type === 'encrypt' ? dispatcher.encrypt : dispatcher.decrypt
     postProgress(jobId, 20, 'Executing cryptographic operation', true)
-    const result = await handler(input, key, safeOptions) as import('../cipher/types').CipherResult
+    
+    const result = (await handler(input, key, safeOptions)) as CipherResult
 
     // Trace-aware progress gives the UI useful milestones without flooding postMessage.
     const steps = result.steps ?? []
@@ -75,7 +99,7 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const errorCode = error instanceof CipherError ? error.code : undefined
-    const requestId = typeof requestData === 'object' && requestData ? requestData.requestId : 'unknown'
+    
     workerScope.postMessage({
       requestId,
       success: false,
@@ -83,10 +107,9 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
       timings: { durationMs: performance.now() - startTime },
     } satisfies WorkerResponse)
   } finally {
-    const id = requestData?.jobId ?? requestData?.requestId
-    if (id) {
-      cancelledJobs.delete(id)
-      lastProgressAt.delete(id)
+    if (jobId) {
+      cancelledJobs.delete(jobId)
+      lastProgressAt.delete(jobId)
     }
   }
 })

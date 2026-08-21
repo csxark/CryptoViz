@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useCipherWorker } from "@/hooks/useCipherWorker";
+import Card from "@/components/ui/Card";
 
 interface LogEntry {
   id: string;
@@ -70,14 +71,14 @@ export const WorkerCommunicationDashboard: React.FC = () => {
       {/* Latency Metric */}
       {latency !== null && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          <Card className="p-4">
             <span className="text-xs text-zinc-500 dark:text-zinc-400">Round-Trip Message Latency</span>
             <p className="text-2xl font-bold text-teal-600 dark:text-teal-400 mt-1">{latency} ms</p>
-          </div>
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          </Card>
+          <Card className="p-4">
             <span className="text-xs text-zinc-500 dark:text-zinc-400">Thread Status</span>
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">Active (Non-Blocking)</p>
-          </div>
+          </Card>
         </div>
       )}
 

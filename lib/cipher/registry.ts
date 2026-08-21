@@ -797,6 +797,17 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keySize: '128/192/256',
   },
   {
+    id: 'wake',
+    name: 'WAKE',
+    category: 'symmetric',
+    description: 'Word Auto Key Encryption (David Wheeler, 1993). Stream cipher with a 256-entry 32-bit table that is CONTINUOUSLY UPDATED during keystream generation — each output word feeds back to overwrite a table entry, making the table data-dependent. Distinct from HC-128/SEAL/Turing. Status: legacy.',
+    defaultKey: '00000000000000000000000000000000',
+    defaultInput: '0000000000000000',
+    securityStatus: 'legacy',
+    keyPlaceholder: '128-bit key as 32 hex chars',
+    keySize: '128',
+  },
+  {
     id: 'hierocrypt3',
     name: 'Hierocrypt-3',
     category: 'symmetric',
@@ -806,6 +817,38 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'legacy',
     keyPlaceholder: '128/192/256-bit key as 32/48/64 hex chars',
     keySize: '128/192/256',
+  },
+  {
+    id: 'prince',
+    name: 'PRINCE',
+    category: 'symmetric',
+    description: 'Ultra-low-latency 64-bit block cipher (ASIACRYPT 2012). FKS construction with an α-reflection property: decryption is structurally equivalent to encryption with a modified key (k₀\', k₁ ⊕ α). 12-round SPN targeting hardware-constrained IoT.',
+    defaultKey: '00000000000000000000000000000000',
+    defaultInput: '0000000000000000',
+    securityStatus: 'legacy',
+    keyPlaceholder: '32 hex characters (128-bit key)',
+  },
+  {
+    id: 'e2',
+    name: 'E2',
+    category: 'symmetric',
+    description: 'NTT AES Round 1 candidate (1998). Direct historical predecessor to Camellia. 128-bit Feistel with byte-oriented S-box + BRL binary matrix diffusion, plus outer whitening layers. Status: legacy (superseded by Camellia).',
+    defaultKey: '00000000000000000000000000000000',
+    defaultInput: '00000000000000000000000000000000',
+    securityStatus: 'legacy',
+    keyPlaceholder: '128/192/256-bit key as 32/48/64 hex chars',
+    keySize: '128/192/256',
+  },
+  {
+    id: 'cast128',
+    name: 'CAST-128 (CAST5)',
+    category: 'symmetric',
+    description: 'RFC 2144 block cipher with 64-bit blocks and a 40–128-bit variable-length key. 16-round Feistel (12 rounds for keys ≤80 bits) with four bent-function-derived S-boxes and three heterogeneous round function types. Historically mandatory in PGP/OpenPGP and early SSH.',
+    defaultKey: '0123456789abcdef0123456789abcdef',
+    defaultInput: '0123456789abcdef',
+    securityStatus: 'legacy',
+    keyPlaceholder: '10–32 hex characters (5–16 bytes)',
+    options: [{ name: 'Mode', id: 'mode', type: 'select', default: 'cbc', choices: [{ label: 'CBC', value: 'cbc' }, { label: 'ECB', value: 'ecb' }] }]
   },
   {
     id: "sha256",
@@ -1242,6 +1285,54 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: '',
     securityStatus: 'secure',
   },
+  {
+    id: 'ripemd256',
+    name: 'RIPEMD-256',
+    category:
+    'hash',
+    description: 'ISO/IEC 10118-3. Two-lane parallel RIPEMD-128 with swaps. ⚠ NOT a security upgrade over 128-bit.',
+    defaultKey: '',
+    defaultInput: '',
+    securityStatus: 'legacy'
+    
+  },
+  {
+    id: 'ripemd320',
+    name: 'RIPEMD-320',
+    category: 'hash',
+    description: 'ISO/IEC 10118-3. Two-lane parallel RIPEMD-160 with swaps. ⚠ NOT a security upgrade over 160-bit.',
+    defaultKey: '',
+    defaultInput: '',
+    securityStatus: 'legacy'
+    
+  },
+  {
+    id: 'kangarootwelve',
+    name: 'KangarooTwelve',
+    category: 'hash',
+    description: 'Fast tree-hashing XOF (Bertoni, Daemen et al., 2016). GENUINE REUSE of sha3.ts Keccak-p permutation, parameterized for 12 rounds instead of 24. TREE-HASHING STRUCTURE: input split into 8192-byte chunks processed independently (in principle, in parallel), then combined via root computation. Fundamentally different from sequential hashes. IRTF-documented. Status: secure.',
+    defaultKey: '',
+    defaultInput: '',
+    securityStatus: 'secure',
+    options: [
+      {
+        name: 'Output Length (bytes)',
+        id: 'outputLength',
+        type: 'number',
+        default: 32,
+      }
+    ],
+  },
+  {
+    id: 'fugue',
+    name: 'Fugue',
+    category: 'hash',
+    description: 'IBM SHA-3 finalist. Accumulative sponge with TIX/CMIX/SMIX (AES SuperSBox). Supports 224/256/384/512-bit outputs.',
+    defaultKey: '',
+    defaultInput: '',
+    securityStatus: 'experimental',
+    options: [{ name: 'Output Bits', id: 'outputBits', type: 'select', default: 256, choices: [{ label: '256-bit', value: 256 }, { label: '512-bit', value: 512 }] }]
+  },
   // Asymmetric
   {
     id: "rsa",
@@ -1580,6 +1671,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: 'Private key (sign) or Public key (verify)',
   },
   {
+    id: 'mqv',
+    name: 'MQV',
+    category: 'asymmetric',
+    description: 'Authenticated key agreement (Menezes-Qu-Vanstone, 1995). Bakes mutual authentication DIRECTLY INTO the key-agreement math by mixing long-term static keys with fresh ephemeral keys — no separate signature/certificate exchange needed. Distinct from unauthenticated DH/X25519/X448. Status: secure (with documented KCI nuance).',
+    defaultKey: 'mock',
+    defaultInput: 'mock',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Static + Ephemeral key pairs',
+  },
+  {
     id: 'falcon',
     name: 'Falcon',
     category: 'asymmetric',
@@ -1588,5 +1689,35 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: '68656c6c6f',
     securityStatus: 'secure',
     keyPlaceholder: 'Private key (sign) or Message (verify)',
+  },
+  {
+    id: 'niederreiter',
+    name: 'Niederreiter',
+    category: 'asymmetric',
+    description: 'DUAL of Classic McEliece (1986). Syndrome-based code encryption: message encoded as exact-weight-t error vector, ciphertext is ONLY the (n-k)-bit syndrome — substantially SHORTER than McEliece\'s n-bit codeword. Proven equivalent in security. Toy parameters for visualizer.',
+    defaultKey: 'mock',
+    defaultInput: 'c0',
+    securityStatus: 'secure',
+    keyPlaceholder: 'Public key (encrypt) or Private key (decrypt)',
+  },
+  {
+    id: 'xmss',
+    name: 'XMSS',
+    category: 'asymmetric',
+    description: 'RFC 8391 stateful hash-based signature. WOTS+ chains + Merkle tree. Quantum-safe. ⚠ Stateful: leaf index must never be reused.',
+    defaultKey: '00'.repeat(32),
+    defaultInput: '48656c6c6f',
+    securityStatus: 'recommended',
+    options: [{ name: 'Leaf Index', id: 'leafIndex', type: 'number', default: 0 }]
+  },
+  {
+    id: 'lms',
+    name: 'LMS',
+    category: 'asymmetric',
+    description: 'RFC 8554 stateful hash-based signature. LM-OTS chains + Merkle tree. Quantum-safe. ⚠ Stateful.',
+    defaultKey: '00'.repeat(32),
+    defaultInput: '48656c6c6f',
+    securityStatus: 'recommended',
+    options: [{ name: 'Leaf Index', id: 'leafIndex', type: 'number', default: 0 }]
   },
 ];

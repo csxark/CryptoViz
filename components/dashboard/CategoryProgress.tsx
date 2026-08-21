@@ -1,5 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
+import Card from '@/components/ui/Card'
 
 interface CategoryProgressProps { byCategory: Record<string, { total: number; visited: number }> }
 
@@ -8,7 +9,7 @@ const BADGES: Record<string, string> = { Classical: 'bg-violet-500/10 text-viole
 
 export default function CategoryProgress({ byCategory }: CategoryProgressProps) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40 p-6">
+    <Card className="dark:bg-zinc-900/40 p-6">
       <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-5">Progress by Category</h2>
       <div className="space-y-4">
         {Object.entries(byCategory).map(([cat, { total, visited }]) => {
@@ -27,6 +28,6 @@ export default function CategoryProgress({ byCategory }: CategoryProgressProps) 
           )
         })}
       </div>
-    </div>
+    </Card>
   )
 }

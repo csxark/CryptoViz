@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, Circle, ArrowRight } from 'lucide-react'
 import { ALL_ALGORITHMS, type AlgorithmProgress } from '@/hooks/useProgress'
+import Card from '@/components/ui/Card'
 
 interface AlgorithmChecklistProps { visited: Record<string, AlgorithmProgress> }
 
@@ -15,7 +16,7 @@ export default function AlgorithmChecklist({ visited }: AlgorithmChecklistProps)
   const [filter, setFilter] = useState<Filter>('All')
   const filtered = ALL_ALGORITHMS.filter(a => filter === 'All' || a.category === filter)
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40 p-6">
+    <Card className="dark:bg-zinc-900/40 p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
         <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Algorithm Checklist</h2>
         <div className="flex flex-wrap gap-1.5">
@@ -42,6 +43,6 @@ export default function AlgorithmChecklist({ visited }: AlgorithmChecklistProps)
         })}
       </div>
       <p className="mt-4 text-center text-xs text-zinc-400 dark:text-zinc-600">Progress is saved locally in your browser.</p>
-    </div>
+    </Card>
   )
 }

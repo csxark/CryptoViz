@@ -1,6 +1,21 @@
 import { BenchmarkResult, BenchmarkSession } from '@/types/benchmark'
 
 /**
+ * Escape a value for a CSV cell: neutralize spreadsheet formula injection and
+ * quote per RFC 4180 (double embedded quotes, wrap in quotes). Previously cells
+ * were wrapped as `"${cell}"` with no escaping, so an embedded `"`, `,` or
+ * newline broke row/column integrity and a leading `=`/`+`/`-`/`@` was evaluated
+ * as a formula by spreadsheet apps.
+ */
+function escapeCsvCell(value: unknown): string {
+  let cell = String(value ?? '')
+  if (/^[=+\-@\t\r]/.test(cell)) {
+    cell = `'${cell}`
+  }
+  return `"${cell.replace(/"/g, '""')}"`
+}
+
+/**
  * Exports benchmark results as CSV
  */
 export function exportToCSV(results: BenchmarkResult[], filename: string = 'benchmark-results.csv'): void {
@@ -38,7 +53,7 @@ export function exportToCSV(results: BenchmarkResult[], filename: string = 'benc
 
   const csv = [
     headers.join(','),
-    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ...rows.map((row) => row.map(escapeCsvCell).join(',')),
   ].join('\n')
 
   downloadCSV(csv, filename)
@@ -91,9 +106,9 @@ export function exportSessionToCSV(session: BenchmarkSession): void {
   ])
 
   const csv = [
-    ...sessionHeader.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ...sessionHeader.map((row) => row.map(escapeCsvCell).join(',')),
     headers.join(','),
-    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ...rows.map((row) => row.map(escapeCsvCell).join(',')),
   ].join('\n')
 
   downloadCSV(csv, `benchmark-session-${Date.now()}.csv`)

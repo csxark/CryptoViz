@@ -40,6 +40,8 @@ const PATH_OVERRIDES: Record<string, string> = {
   "sha384": "../cipher/hash/sha2-truncated.ts",
   "shake128": "../cipher/hash/shake.ts",
   "shake256": "../cipher/hash/shake.ts",
+  'ripemd256': '../cipher/hash/ripemd256-320',
+  'ripemd320': '../cipher/hash/ripemd256-320',
 };
 
 const SPECIAL_DISPATCHERS: Record<string, () => Promise<CipherDispatcher>> = {
@@ -70,6 +72,18 @@ const SPECIAL_DISPATCHERS: Record<string, () => Promise<CipherDispatcher>> = {
       encrypt: requireExport(mod, "encryptShake256", "shake256"),
       decrypt: requireExport(mod, "decrypt", "shake256"),
     };
+  },
+  'ripemd256': async () => {
+    const m = await import('../cipher/hash/ripemd256-320');
+    return {
+      encrypt: m.encryptRipemd256, decrypt: m.decrypt
+    }
+  },
+  'ripemd320': async () => {
+    const m = await import('../cipher/hash/ripemd256-320');
+    return {
+      encrypt: m.encryptRipemd320, decrypt: m.decrypt
+    }
   },
 };
 

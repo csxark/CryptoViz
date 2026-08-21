@@ -143,7 +143,7 @@ function fromBlocks16(blocks: number[][]): Uint8Array {
 
 function parseInput(input: string, options: CipherOptions): Uint8Array {
   if (!input || input.length === 0) throw new CipherError('INPUT_REQUIRED', 'INPUT_REQUIRED: Input text is required.')
-  const useHex = (options as any).hexInput ?? true
+  const useHex = 'hexInput' in options && typeof options.hexInput === 'boolean' ? options.hexInput : true
   const bytes = useHex ? hexToBytes(input) : utf8ToBytes(input)
   if (bytes.length === 0) throw new CipherError('INPUT_REQUIRED', 'INPUT_REQUIRED: Input text is required.')
   if (bytes.length > 4096) throw new CipherError('INPUT_TOO_LONG', 'INPUT_TOO_LONG: Input exceeds 4096 byte limit.')

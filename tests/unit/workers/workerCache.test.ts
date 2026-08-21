@@ -27,6 +27,24 @@ describe("worker cache lifecycle", () => {
     expect(cache.stats()).toMatchObject({ entries: 1, hits: 1, misses: 1 });
   });
 
+  it("has() does not inflate hit/miss stats or change LRU recency (#1280)", () => {
+    const cache = new WorkerCache<string>({ maxEntries: 2 });
+    cache.set("a", "alpha");
+    cache.set("b", "bravo");
+
+    // A membership probe must not count as a hit or a miss.
+    expect(cache.has("a")).toBe(true);
+    expect(cache.has("missing")).toBe(false);
+    expect(cache.stats()).toMatchObject({ hits: 0, misses: 0 });
+
+    // ...and must not mark "a" as most-recently-used. "a" is the LRU entry, so
+    // inserting "c" must evict "a" (not "b") despite the probe above.
+    cache.set("c", "charlie");
+    expect(cache.has("a")).toBe(false);
+    expect(cache.has("b")).toBe(true);
+    expect(cache.has("c")).toBe(true);
+  });
+
   it("evicts least-recently-used entries when max entries is exceeded", () => {
     const cache = new WorkerCache<string>({ maxEntries: 2 });
 
@@ -154,5 +172,17 @@ describe("worker cache lifecycle", () => {
     );
 
     expect(calls).toBe(2);
+  });
+});
+
+describe('worker cache weak references', () => {
+  it('supports explicitly disabling weak references for deterministic strong caching', () => {
+    const cache = new WorkerCache<{ value: string }>({ weakRef: false });
+    const value = { value: 'kept' };
+
+    cache.set('object', value);
+
+    expect(cache.get('object')).toBe(value);
+    expect(cache.stats().weakRefEnabled).toBe(false);
   });
 });

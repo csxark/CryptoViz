@@ -6,7 +6,16 @@ import type {
   Encoding,
 } from "../cipher/types";
 import { CIPHER_REGISTRY } from "../cipher/registry";
+import { resolveProvenance } from "../provenance/resolve";
+import type { DataProvenanceMetadata } from "../provenance";
 
+/**
+ * Cipher trace files intentionally retain the existing schema version.
+ *
+ * Provenance is additive and optional so traces created before provenance
+ * support remain importable. When an older trace is imported, provenance is
+ * resolved through the shared provenance resolver.
+ */
 export const TRACE_SCHEMA_VERSION = 1 as const;
 
 export interface CipherTraceFile {
@@ -22,12 +31,28 @@ export interface CipherTraceFile {
   metadata: CipherMetadata;
   durationMs: number;
   timestamp: string;
+
+  /**
+   * Provenance of the captured result.
+   *
+   * This is duplicated at the trace root intentionally so provenance remains
+   * explicit at the file boundary while metadata remains the authoritative
+   * provenance location for CipherResult.
+   */
+  provenance?: DataProvenanceMetadata;
 }
 
 export type TraceValidationResult =
-  { success: true; trace: CipherTraceFile } | { success: false; error: string };
+  | { success: true; trace: CipherTraceFile }
+  | { success: false; error: string };
 
-const SUPPORTED_ENCODINGS: Encoding[] = ["utf8", "hex", "base64", "binary"];
+const SUPPORTED_ENCODINGS: Encoding[] = [
+  "utf8",
+  "hex",
+  "base64",
+  "binary",
+];
+
 const SAFE_OPTION_KEYS = new Set([
   "hexInput",
   "rounds",
@@ -50,7 +75,9 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 function isCipherStep(value: unknown): value is CipherStep {
-  if (!isRecord(value)) return false;
+  if (!isRecord(value)) {
+    return false;
+  }
 
   if (
     typeof value.index !== "number" ||
@@ -58,13 +85,15 @@ function isCipherStep(value: unknown): value is CipherStep {
     value.index < 0 ||
     typeof value.label !== "string" ||
     typeof value.inputState !== "string" ||
-    typeof value.outputState !== "string" ||
-    typeof value.note !== "string"
+    typeof value.outputState !== "string"
   ) {
     return false;
   }
 
-  if (value.sublabel !== undefined && typeof value.sublabel !== "string") {
+  if (
+    value.sublabel !== undefined &&
+    typeof value.sublabel !== "string"
+  ) {
     return false;
   }
 
@@ -72,7 +101,10 @@ function isCipherStep(value: unknown): value is CipherStep {
     value.highlight !== undefined &&
     (!Array.isArray(value.highlight) ||
       !value.highlight.every(
-        (index) => Number.isInteger(index) && Number(index) >= 0,
+        (index) =>
+          typeof index === "number" &&
+          Number.isInteger(index) &&
+          index >= 0,
       ))
   ) {
     return false;
@@ -99,20 +131,52 @@ function isCipherStep(value: unknown): value is CipherStep {
     return false;
   }
 
+  if (value.note !== undefined && typeof value.note !== "string") {
+    return false;
+  }
+
   return (
-    value.isMilestone === undefined || typeof value.isMilestone === "boolean"
+    value.isMilestone === undefined ||
+    typeof value.isMilestone === "boolean"
   );
 }
 
 function isCipherMetadata(value: unknown): value is CipherMetadata {
-  if (!isRecord(value)) return false;
+  if (!isRecord(value)) {
+    return false;
+  }
 
-  const statuses = ["secure", "legacy", "deprecated", "broken"];
-  return (
-    typeof value.name === "string" &&
-    typeof value.securityStatus === "string" &&
-    statuses.includes(value.securityStatus)
-  );
+  const statuses = [
+    "secure",
+    "legacy",
+    "deprecated",
+    "broken",
+  ] as const;
+
+  if (
+    typeof value.name !== "string" ||
+    !statuses.includes(
+      value.securityStatus as (typeof statuses)[number],
+    )
+  ) {
+    return false;
+  }
+
+  /*
+   * Provenance is optional for backward compatibility with old traces.
+   *
+   * When it exists, the shared resolver is responsible for normalizing it.
+   * This keeps provenance semantics centralized in lib/provenance rather
+   * than duplicating the contract here.
+   */
+  if (
+    value.provenance !== undefined &&
+    !isRecord(value.provenance)
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 function sanitizeOptions(
@@ -134,6 +198,18 @@ function sanitizeOptions(
   return sanitized;
 }
 
+/**
+ * Resolve provenance once at the trace boundary.
+ *
+ * The shared resolver is the single source of truth for defaults and
+ * provenance semantics.
+ */
+function resolveTraceProvenance(
+  provenance: DataProvenanceMetadata | undefined,
+): DataProvenanceMetadata {
+  return resolveProvenance(provenance);
+}
+
 export function createCipherTrace({
   cipherId,
   direction,
@@ -149,6 +225,8 @@ export function createCipherTrace({
   options: Record<string, unknown>;
   result: CipherResult;
 }): CipherTraceFile {
+  const provenance = resolveTraceProvenance(result.metadata.provenance);
+
   return {
     schemaVersion: TRACE_SCHEMA_VERSION,
     cipherId,
@@ -159,15 +237,24 @@ export function createCipherTrace({
     output: result.output,
     outputEncoding: result.outputEncoding,
     steps: result.steps,
-    metadata: result.metadata,
+    metadata: {
+      ...result.metadata,
+      provenance,
+    },
     durationMs: result.durationMs,
     timestamp: new Date().toISOString(),
+    provenance,
   };
 }
 
-export function validateCipherTrace(value: unknown): TraceValidationResult {
+export function validateCipherTrace(
+  value: unknown,
+): TraceValidationResult {
   if (!isRecord(value)) {
-    return { success: false, error: "Trace file must contain a JSON object." };
+    return {
+      success: false,
+      error: "Trace file must contain a JSON object.",
+    };
   }
 
   if (value.schemaVersion !== TRACE_SCHEMA_VERSION) {
@@ -179,13 +266,24 @@ export function validateCipherTrace(value: unknown): TraceValidationResult {
 
   if (
     typeof value.cipherId !== "string" ||
-    !CIPHER_REGISTRY.some((cipher) => cipher.id === value.cipherId)
+    !CIPHER_REGISTRY.some(
+      (cipher) => cipher.id === value.cipherId,
+    )
   ) {
-    return { success: false, error: "The trace uses an unsupported cipher." };
+    return {
+      success: false,
+      error: "The trace uses an unsupported cipher.",
+    };
   }
 
-  if (value.direction !== "encrypt" && value.direction !== "decrypt") {
-    return { success: false, error: "Trace direction is invalid." };
+  if (
+    value.direction !== "encrypt" &&
+    value.direction !== "decrypt"
+  ) {
+    return {
+      success: false,
+      error: "Trace direction is invalid.",
+    };
   }
 
   if (
@@ -201,17 +299,28 @@ export function validateCipherTrace(value: unknown): TraceValidationResult {
   }
 
   if (Number.isNaN(Date.parse(value.timestamp))) {
-    return { success: false, error: "Trace timestamp is invalid." };
+    return {
+      success: false,
+      error: "Trace timestamp is invalid.",
+    };
   }
 
   if (
     typeof value.outputEncoding !== "string" ||
-    !SUPPORTED_ENCODINGS.includes(value.outputEncoding as Encoding)
+    !SUPPORTED_ENCODINGS.includes(
+      value.outputEncoding as Encoding,
+    )
   ) {
-    return { success: false, error: "Trace output encoding is invalid." };
+    return {
+      success: false,
+      error: "Trace output encoding is invalid.",
+    };
   }
 
-  if (!Array.isArray(value.steps) || !value.steps.every(isCipherStep)) {
+  if (
+    !Array.isArray(value.steps) ||
+    !value.steps.every(isCipherStep)
+  ) {
     return {
       success: false,
       error: "Trace visualization steps are missing or malformed.",
@@ -219,7 +328,20 @@ export function validateCipherTrace(value: unknown): TraceValidationResult {
   }
 
   if (!isCipherMetadata(value.metadata)) {
-    return { success: false, error: "Trace metadata is invalid." };
+    return {
+      success: false,
+      error: "Trace metadata is invalid.",
+    };
+  }
+
+  if (
+    value.provenance !== undefined &&
+    !isRecord(value.provenance)
+  ) {
+    return {
+      success: false,
+      error: "Trace provenance metadata is invalid.",
+    };
   }
 
   if (
@@ -227,12 +349,35 @@ export function validateCipherTrace(value: unknown): TraceValidationResult {
     !Number.isFinite(value.durationMs) ||
     value.durationMs < 0
   ) {
-    return { success: false, error: "Trace duration is invalid." };
+    return {
+      success: false,
+      error: "Trace duration is invalid.",
+    };
   }
 
   if (!isRecord(value.options)) {
-    return { success: false, error: "Trace options must be an object." };
+    return {
+      success: false,
+      error: "Trace options must be an object.",
+    };
   }
+
+  const metadataProvenance = isRecord(value.metadata.provenance)
+    ? (value.metadata.provenance as unknown as DataProvenanceMetadata)
+    : undefined;
+
+  const rootProvenance = isRecord(value.provenance)
+    ? (value.provenance as unknown as DataProvenanceMetadata)
+    : undefined;
+
+  /*
+   * Prefer explicit root provenance when present because it represents the
+   * provenance of the trace artifact itself. Fall back to metadata for
+   * traces produced by the previous implementation.
+   */
+  const provenance = resolveTraceProvenance(
+    rootProvenance ?? metadataProvenance,
+  );
 
   return {
     success: true,
@@ -246,32 +391,53 @@ export function validateCipherTrace(value: unknown): TraceValidationResult {
       output: value.output,
       outputEncoding: value.outputEncoding as Encoding,
       steps: value.steps,
-      metadata: value.metadata,
+      metadata: {
+        ...value.metadata,
+        provenance,
+      },
       durationMs: value.durationMs,
       timestamp: value.timestamp,
+      provenance,
     },
   };
 }
 
-export function parseCipherTraceJson(json: string): TraceValidationResult {
+export function parseCipherTraceJson(
+  json: string,
+): TraceValidationResult {
   try {
     return validateCipherTrace(JSON.parse(json));
   } catch {
-    return { success: false, error: "The selected file is not valid JSON." };
+    return {
+      success: false,
+      error: "The selected file is not valid JSON.",
+    };
   }
 }
 
-export function traceToCipherResult(trace: CipherTraceFile): CipherResult {
+export function traceToCipherResult(
+  trace: CipherTraceFile,
+): CipherResult {
+  const provenance = resolveTraceProvenance(
+    trace.provenance ?? trace.metadata.provenance,
+  );
+
   return {
     output: trace.output,
     outputEncoding: trace.outputEncoding,
     steps: trace.steps,
-    metadata: trace.metadata,
+    metadata: {
+      ...trace.metadata,
+      provenance,
+    },
     durationMs: trace.durationMs,
   };
 }
 
-export function getTraceFilename(trace: CipherTraceFile): string {
+export function getTraceFilename(
+  trace: CipherTraceFile,
+): string {
   const timestamp = trace.timestamp.replace(/[:.]/g, "-");
+
   return `cryptoviz-${trace.cipherId}-${trace.direction}-${timestamp}.json`;
 }

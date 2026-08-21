@@ -76,4 +76,23 @@ describe('csvExport', () => {
     vi.runAllTimers()
     clickSpy.mockRestore()
   })
+
+  it('escapes embedded quotes/commas and neutralizes formula injection (#1279)', async () => {
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    let capturedBlob: Blob | null = null
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      capturedBlob = blob
+      return 'blob:mock-url'
+    })
+
+    exportToCSV([makeResult({ cipherId: '=cmd|calc', cipherName: 'a"b,c' })])
+
+    const text = await (capturedBlob as unknown as Blob).text()
+    // Embedded quote doubled, comma stays inside the quoted field.
+    expect(text).toContain('"a""b,c"')
+    // Formula-injection cell prefixed with a single quote so it's treated as text.
+    expect(text).toContain(`"'=cmd|calc"`)
+
+    vi.runAllTimers()
+  })
 })

@@ -2,6 +2,7 @@
 
 import type { SnapshotDiffResult } from "@/lib/utils/visualizationSnapshots";
 import { CheckCircle, AlertTriangle, FileCode } from "lucide-react";
+import Card from "@/components/ui/Card";
 
 interface SnapshotDiffViewerProps {
   diffResult: SnapshotDiffResult;
@@ -15,7 +16,7 @@ export default function SnapshotDiffViewer({
   _title,
 }: SnapshotDiffViewerProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <Card className="overflow-hidden">
       {/* Diff Header Banner */}
       <div className="flex flex-wrap items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex items-center gap-2">
@@ -68,6 +69,6 @@ export default function SnapshotDiffViewer({
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }

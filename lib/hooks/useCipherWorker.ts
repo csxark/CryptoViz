@@ -1,0 +1,407 @@
+/**
+ * Custom Hook for executing ciphers in a Web Worker.
+ * SSR-safe and handles parallel requests using unique message IDs.
+ * @see CLAUDE.md
+ */
+
+"use client";
+
+import { useEffect, useRef, useState, useCallback } from "react";
+import type { CipherResult, CipherOptions } from "../cipher/types";
+import type { WorkerRequest, WorkerResponse } from "../../types/worker";
+import type { CipherErrorCode } from "../utils/errors";
+import {
+  validateWorkload,
+  resolveWorkloadLimits,
+} from "../security/workloadLimits";
+import { CipherError } from "../utils/errors";
+
+const MAX_CACHE_SIZE = 200;
+const resultCache = new Map<string, CipherResult>();
+
+export function clearCipherWorkerCache() {
+  resultCache.clear();
+}
+
+function sortObjectKeys(obj: Record<string, unknown>): Record<string, unknown> {
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sortObjectKeys) as unknown as Record<string, unknown>;
+  }
+  const sortedKeys = Object.keys(obj).sort();
+  const result: Record<string, unknown> = {};
+  for (const k of sortedKeys) {
+    result[k] = sortObjectKeys(obj[k] as Record<string, unknown>);
+  }
+  return result;
+}
+
+// Fast deterministic 64-bit hash (sync). Not cryptographic; used only for cache keys.
+function hash64(input: string): string {
+  // FNV-1a seed + splitmix-like finalizer
+  let h1 = 0xcbf29ce484222325n;
+  const prime = 0x100000001b3n;
+
+  for (let i = 0; i < input.length; i++) {
+    h1 ^= BigInt(input.charCodeAt(i));
+    h1 = (h1 * prime) & 0xffffffffffffffffn;
+  }
+
+  // Finalize (mix)
+  h1 ^= h1 >> 30n;
+  h1 = (h1 * 0xbf58476d1ce4e5b9n) & 0xffffffffffffffffn;
+  h1 ^= h1 >> 27n;
+  h1 = (h1 * 0x94d049bb133111ebn) & 0xffffffffffffffffn;
+  h1 ^= h1 >> 31n;
+
+  // 16 hex chars for 64-bit
+  const hex = h1.toString(16).padStart(16, "0");
+  return hex;
+}
+
+function getCacheKey(
+  action: "encrypt" | "decrypt",
+  cipherId: string,
+  input: string,
+  key: string,
+  options?: CipherOptions,
+): string {
+  const {
+    signal: _signal,
+    bypassCache: _bypassCache,
+    ...cacheableOptions
+  } = options || {};
+  // Stable serialization for options to avoid key-order issues.
+  const stableOptions = JSON.stringify(sortObjectKeys(cacheableOptions));
+
+  // Hash the full tuple, but do not store the huge JSON/plaintext as the map key.
+  // This dramatically reduces memory usage from large JSON.stringify results.
+  return hash64(`${action}|${cipherId}|${input}|${key}|${stableOptions}`);
+}
+
+function cacheResult(key: string, result: CipherResult) {
+  if (resultCache.has(key)) {
+    resultCache.delete(key);
+  } else if (resultCache.size >= MAX_CACHE_SIZE) {
+    const oldestKey = resultCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      resultCache.delete(oldestKey);
+    }
+  }
+  resultCache.set(key, result);
+}
+
+export function useCipherWorker() {
+  const workerRef = useRef<Worker | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<{
+    code: CipherErrorCode;
+    message?: string;
+  } | null>(null);
+
+  const [fatalError, setFatalError] = useState<Error | null>(null);
+
+  if (fatalError) {
+    throw fatalError;
+  }
+
+  // Map to track active requests, resolve/reject callbacks, abort signals, and timeouts
+  const activeRequestsRef = useRef<
+    Map<
+      string,
+      {
+        resolve: (value: CipherResult) => void;
+        reject: (reason: unknown) => void;
+        signal?: AbortSignal;
+        onAbort?: () => void;
+        timeoutId?: ReturnType<typeof setTimeout>;
+        cacheKey?: string;
+      }
+    >
+  >(new Map());
+
+  // Helper to terminate the worker and reject all pending requests (fatal errors only)
+  const terminateWorkerAndRejectAll = useCallback((reason: Error) => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+    for (const [, req] of activeRequestsRef.current.entries()) {
+      try {
+        if (req.timeoutId) clearTimeout(req.timeoutId);
+        if (req.signal && req.onAbort) {
+          req.signal.removeEventListener("abort", req.onAbort);
+        }
+        req.reject(reason);
+      } catch {
+        // Ignore secondary errors during teardown
+      }
+    }
+    activeRequestsRef.current.clear();
+    setLoading(false);
+  }, []);
+
+  // Tracks the most recent (latest) request started by this hook instance.
+  // Any worker response that doesn't match will be ignored to prevent stale UI updates.
+  const latestRequestIdRef = useRef<string | null>(null);
+
+  // Helper to create and initialize the web worker
+  const createWorker = useCallback(() => {
+    if (typeof window === "undefined") return null;
+
+    const worker = new Worker(
+      new URL("../workers/cipher.worker.ts", import.meta.url),
+    );
+
+    worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+      const { requestId, success, payload } = event.data;
+
+      // Latest-request semantics: ignore any response that doesn't match the most recent request.
+      if (
+        latestRequestIdRef.current &&
+        requestId !== latestRequestIdRef.current
+      ) {
+        // Still cleanup (if the request was not already removed from the map)
+        activeRequestsRef.current.delete(requestId);
+        if (activeRequestsRef.current.size === 0) {
+          setLoading(false);
+        }
+        return;
+      }
+
+      const request = activeRequestsRef.current.get(requestId);
+
+      if (request) {
+        if (request.timeoutId) {
+          clearTimeout(request.timeoutId);
+        }
+        if (request.signal && request.onAbort) {
+          request.signal.removeEventListener("abort", request.onAbort);
+        }
+
+        if (success && payload.result) {
+          if (request.cacheKey) {
+            cacheResult(request.cacheKey, payload.result);
+          }
+          request.resolve(payload.result);
+        } else {
+          const code = payload.errorCode;
+          if (code) {
+            request.reject(
+              Object.assign(
+                new Error(
+                  payload.errorMessage || payload.error || "Worker error",
+                ),
+                { code },
+              ),
+            );
+          } else {
+            request.reject(new Error(payload.error || "Worker error"));
+          }
+        }
+
+        activeRequestsRef.current.delete(requestId);
+      }
+
+      if (activeRequestsRef.current.size === 0) {
+        setLoading(false);
+      }
+    };
+
+    worker.onerror = (err) => {
+      console.error("Worker error:", err);
+      const errorMsg = "Web Worker initialization or runtime error.";
+      const errObj = Object.assign(new Error(errorMsg), {
+        code: "INVALID_INPUT",
+      });
+      setError({ code: "INVALID_INPUT", message: errorMsg });
+      setFatalError(errObj);
+      terminateWorkerAndRejectAll(errObj);
+    };
+
+    return worker;
+  }, [terminateWorkerAndRejectAll]);
+
+  useEffect(() => {
+    workerRef.current = createWorker();
+
+    return () => {
+      if (workerRef.current) {
+        workerRef.current.terminate();
+      }
+    };
+  }, [createWorker]);
+
+  const runCipher = useCallback(
+    (
+      action: "encrypt" | "decrypt",
+      cipherId: string,
+      input: string,
+      key: string,
+      options?: CipherOptions,
+    ): Promise<CipherResult> => {
+      // Latest-request semantics: replace any in-flight computation before
+      // applying the one-job workload limit.
+      for (const [existingId, req] of activeRequestsRef.current.entries()) {
+        try {
+          if (req.timeoutId) clearTimeout(req.timeoutId);
+          if (req.signal && req.onAbort) {
+            req.signal.removeEventListener("abort", req.onAbort);
+          }
+          req.reject(
+            new DOMException("The user aborted a request.", "AbortError"),
+          );
+        } catch {
+          // Ignore secondary errors during cancellation.
+        } finally {
+          activeRequestsRef.current.delete(existingId);
+        }
+      }
+
+      const limits = resolveWorkloadLimits("cipher", cipherId);
+
+      const validation = validateWorkload({
+        operation: "cipher",
+        cipherId,
+        input,
+        key,
+        options,
+        concurrentJobs: activeRequestsRef.current.size + 1,
+      });
+
+      if (!validation.valid) {
+        const failure = validation.failure!;
+
+        const error = new CipherError(failure.code, failure.message);
+
+        setError({
+          code: failure.code,
+          message: failure.message,
+        });
+
+        return Promise.reject(error);
+      }
+
+      const cacheKey = getCacheKey(action, cipherId, input, key, options);
+
+      if (!options?.bypassCache && resultCache.has(cacheKey)) {
+        return Promise.resolve(resultCache.get(cacheKey)!);
+      }
+
+      return new Promise<CipherResult>((resolve, reject) => {
+        const id = Math.random().toString(36).substring(2, 11);
+
+        // Mark this as the latest request. Any older in-flight requests will be considered stale
+        // and their eventual worker responses will be ignored.
+        latestRequestIdRef.current = id;
+
+        if (!workerRef.current) {
+          workerRef.current = createWorker();
+          if (!workerRef.current) {
+            return reject(new Error("Web Worker is not available on SSR."));
+          }
+        }
+
+        let onAbort: (() => void) | undefined;
+        const signal = options?.signal as AbortSignal | undefined;
+
+        if (signal) {
+          if (signal.aborted) {
+            return reject(
+              new DOMException("The user aborted a request.", "AbortError"),
+            );
+          }
+
+          onAbort = () => {
+            terminateWorkerAndRejectAll(
+              new DOMException("The user aborted a request.", "AbortError"),
+            );
+          };
+          signal.addEventListener("abort", onAbort);
+        }
+
+        // 10-second timeout budget
+        const timeoutId = setTimeout(() => {
+          setError({
+            code: "WORKER_TIMEOUT",
+            message: `The operation exceeded the ${limits.maxDurationMs}ms workload limit.`,
+          });
+
+          terminateWorkerAndRejectAll(
+            Object.assign(
+              new Error(
+                `The cryptographic operation exceeded its ${limits.maxDurationMs}ms execution limit.`,
+              ),
+              {
+                code: "WORKER_TIMEOUT",
+              },
+            ),
+          );
+        }, limits.maxDurationMs);
+
+        activeRequestsRef.current.set(id, {
+          resolve,
+          reject,
+          signal,
+          onAbort,
+          timeoutId,
+          cacheKey,
+        });
+
+        setLoading(true);
+        setError(null);
+
+        try {
+          // Strip AbortSignal from options since it's not JSON serializable
+          const { signal: __, ...serializableOptions } = options || {};
+          const requestMessage: WorkerRequest = {
+            type: "EXECUTE",
+            requestId: id,
+            payload: {
+              type: action,
+              cipherId,
+              input,
+              key,
+              options: serializableOptions,
+            },
+          };
+          const payloadStr = JSON.stringify(requestMessage);
+          const encoder = new TextEncoder();
+          const payloadBuffer = encoder.encode(payloadStr);
+
+          workerRef.current.postMessage(payloadBuffer, [payloadBuffer.buffer]);
+        } catch (err: unknown) {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+          if (signal && onAbort) {
+            signal.removeEventListener("abort", onAbort);
+          }
+          activeRequestsRef.current.delete(id);
+          if (activeRequestsRef.current.size === 0) setLoading(false);
+          const message = err instanceof Error ? err.message : String(err);
+          const maybeCode =
+            err instanceof Error && "code" in err
+              ? (err as Error & { code: CipherErrorCode }).code
+              : undefined;
+          if (maybeCode) {
+            setError({ code: maybeCode, message });
+          } else {
+            // Preserve legacy behavior without a code.
+            setError({ code: "INVALID_INPUT", message });
+          }
+          reject(new Error(message));
+        }
+      });
+    },
+    [createWorker, terminateWorkerAndRejectAll],
+  );
+
+  return {
+    runCipher,
+    loading,
+    error,
+  };
+}

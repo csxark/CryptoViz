@@ -1,26 +1,31 @@
 name: CI Quality Gates
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
 
-  pull_request:
-    branches:
-      - main
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  quality:
-    name: Lint, Typecheck, Test & Build
-    permissions:
-      contents: read
+  static:
+    name: Static checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-            persist-credentials: false
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,14 +36,101 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint
-        run: npm run lint
-
       - name: Run TypeScript type checking
         run: npm run typecheck
 
-      - name: Run tests
-        run: npm test
+      - name: Run ESLint
+        run: npm run lint
 
-      - name: Build project
+  tests:
+    name: Unit, security & accessibility tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+        env:
+          CI: true
+          TZ: UTC
+
+      - name: Run security tests
+        run: npm run test:security
+        env:
+          CI: true
+          TZ: UTC
+
+      - name: Run accessibility tests
+        run: npm run test:a11y
+        env:
+          CI: true
+          TZ: UTC
+
+  build:
+    name: Production build & bundle budget
+    needs:
+      - static
+      - tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production site
         run: npm run build
+
+      - name: Enforce bundle budget
+        run: npm run check:bundle-budget
+
+  merge-gate:
+    name: Merge Gate
+    if: ${{ always() }}
+    needs:
+      - static
+      - tests
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify required CI jobs passed
+        env:
+          STATIC_RESULT: ${{ needs.static.result }}
+          TESTS_RESULT: ${{ needs.tests.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          set -euo pipefail
+          echo "Static checks: ${STATIC_RESULT}"
+          echo "Tests: ${TESTS_RESULT}"
+          echo "Build and bundle budget: ${BUILD_RESULT}"
+          test "${STATIC_RESULT}" = "success"
+          test "${TESTS_RESULT}" = "success"
+          test "${BUILD_RESULT}" = "success"
+          echo "All mandatory CI gates passed."

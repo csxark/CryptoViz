@@ -26,6 +26,10 @@ Before writing any code, please complete the following steps:
 
 2. Read [Guidelines.md](./GUIDELINES.md) to understand the coding standards, rules, and guidelines we follow.
 
+3. Read [docs/contribution-checklists.md](./docs/contribution-checklists.md) and complete the checklist matching your contribution type (new cipher, new visualizer, or security-sensitive feature) before opening a PR.
+
+4. If your contribution involves reduced parameters, mocked peers, or synthetic data of any kind, read [docs/simulation-vs-live-data-policy.md](./docs/simulation-vs-live-data-policy.md). Contributors are prohibited from describing simulated operations as verified operations, in code, UI copy, or PR descriptions.
+
 ---
 
 ## 💻 Local Development Setup
@@ -241,7 +245,7 @@ interface Resource {
 
 ## 📥 Pull Request Process
 
-- **Branch Protection**: All pull requests must pass the automated GitHub checks (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`) before they can be merged.
+- **Branch Protection**: All pull requests must pass the required GitHub Actions check `CI Quality Gates / Merge Gate` before they can be merged. That gate aggregates typecheck, lint, unit tests, security tests, accessibility tests, production build, and the bundle budget check.
 - **Squash Merge**: All PRs are squash-merged into `main`. The final commit message will be set to the PR title.
 - **Review SLA**: Maintainers aim to review pull requests within 5 business days.
 - **PR Description Template**:

@@ -12,9 +12,10 @@ async function deriveHkdfViaWorker(
   options: { info: string; keyLength: number; hash: 'SHA-256' | 'SHA-512' | 'SHA-1'; instrument: boolean }
 ): Promise<CipherResult> {
   const message: WorkerRequest = {
-    type: 'encrypt',
+    type: 'EXECUTE',
     requestId: crypto.randomUUID(),
     payload: {
+      type: 'encrypt',
       cipherId: 'hkdf',
       input: ikm,
       key: salt,

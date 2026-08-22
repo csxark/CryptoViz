@@ -36,9 +36,9 @@ export async function runCipherInWorker(request: PipelineWorkerRequest): Promise
     }
     worker.onerror = (event) => fail(new Error(event.message || 'Cipher worker failed'))
     const payload: WorkerRequest = {
-      type: request.type,
+      type: 'EXECUTE',
       requestId,
-      payload: { cipherId: request.cipherId, input: request.input, key: request.key, options: request.options }
+      payload: { type: request.type, cipherId: request.cipherId, input: request.input, key: request.key, options: request.options }
     }
     worker.postMessage(payload)
   })

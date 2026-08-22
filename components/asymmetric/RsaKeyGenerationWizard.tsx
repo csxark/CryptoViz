@@ -10,6 +10,7 @@ import {
   type RsaWizardInput,
 } from "../../lib/asymmetric/rsaKeyGenerationWizard";
 import { cryptoWorkerClient } from "../../lib/workers/cryptoWorkerClient";
+import Link from "next/link";
 
 export default function RsaKeyGenerationWizard() {
   const [input, setInput] = useState<RsaWizardInput>(DEFAULT_RSA_WIZARD_INPUT);
@@ -184,6 +185,13 @@ export default function RsaKeyGenerationWizard() {
                 )}
               </div>
             </div>
+
+            <Link
+              href="/modular-arithmetic"
+              className="mt-4 block w-full rounded-xl border border-teal-300/40 bg-teal-300/10 px-4 py-3 text-center text-sm font-bold text-teal-200 transition hover:bg-teal-300/20"
+            >
+              Verify p and q with Miller-Rabin
+            </Link>
 
             <button
               type="button"

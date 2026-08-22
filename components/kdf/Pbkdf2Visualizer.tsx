@@ -47,9 +47,10 @@ async function deriveKeyViaWorker(
   saltHex: string
 }> {
   const message: WorkerRequest = {
-    type: 'encrypt',
+    type: 'EXECUTE',
     requestId: crypto.randomUUID(),
     payload: {
+      type: 'encrypt',
       cipherId: 'pbkdf2',
       input: password,
       key: '',

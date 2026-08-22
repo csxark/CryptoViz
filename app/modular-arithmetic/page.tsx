@@ -3,13 +3,14 @@
 import React, { useState, useMemo } from 'react'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import Navbar from '../../components/layout/Navbar'
+import PrimalityTestLab from '../../components/math/PrimalityTestLab'
 
 export default function ModularArithmeticPage() {
   const [modulus, setModulus] = useState<number>(11)
   const [numA, setNumA] = useState<number>(5)
   const [numB, setNumB] = useState<number>(3)
   const [exponent, setExponent] = useState<number>(4)
-  const [activeTab, setActiveTab] = useState<'calc' | 'tables' | 'inverse'>('calc')
+  const [activeTab, setActiveTab] = useState<'calc' | 'tables' | 'inverse' | 'primality'>('calc')
 
   // Safe modulus handler to avoid negative or zero mod errors
   const safeMod = (n: number, m: number) => {
@@ -160,6 +161,16 @@ export default function ModularArithmeticPage() {
             Multiplication Table
           </button>
           <button
+            onClick={() => setActiveTab('primality')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'primality'
+                ? 'border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400'
+                : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400'
+            }`}
+          >
+            Primality Lab
+          </button>
+          <button
             onClick={() => setActiveTab('inverse')}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               activeTab === 'inverse'
@@ -170,6 +181,8 @@ export default function ModularArithmeticPage() {
             Modular Inverse
           </button>
         </div>
+
+        {activeTab === 'primality' && <PrimalityTestLab />}
 
         {/* Tab Content: Core Calculations */}
         {activeTab === 'calc' && (

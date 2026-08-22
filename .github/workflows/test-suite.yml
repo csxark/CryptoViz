@@ -1,16 +1,18 @@
-name: Test Suite
+name: Test Suite (Manual)
+
+# The mandatory PR pipeline lives in ci.yml.
+# This workflow is retained only as an explicit manual recovery/debug entry point
+# and must not create an additional merge-status requirement.
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   vitest:
+    name: Manual stable tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
 

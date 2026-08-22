@@ -33,9 +33,10 @@ async function deriveKeyViaWorker(
   params: { iterations: number; hash: 'SHA-256' | 'SHA-512'; keyLength: number; salt?: string }
 ): Promise<{ derivedKeyHex: string; saltHex: string }> {
   const message: WorkerRequest = {
-    type: 'encrypt', // arbitrary — pbkdf2 case ignores encrypt/decrypt distinction
+    type: 'EXECUTE',
     requestId: crypto.randomUUID(),
     payload: {
+      type: 'encrypt',
       cipherId: 'pbkdf2',
       input: password,
       key: '', // unused for KDF

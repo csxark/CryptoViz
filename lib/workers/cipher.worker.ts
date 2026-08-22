@@ -4,20 +4,14 @@
  * and progress reporting around their execution.
  */
 import { CipherError } from '../utils/errors'
-import type { WorkerRequest, WorkerResponse } from '../../types/worker'
+import type { WorkerExecuteMessage, WorkerMessage, WorkerResponse } from '../../types/worker'
+import { validateWorkerMessage } from './cipher-worker-protocol'
 import type { CipherResult } from '../cipher/types'
 import { getDispatcher } from './cipherDispatchRegistry'
 
 const workerScope = self as unknown as Worker & typeof globalThis
 const cancelledJobs = new Set<string>()
 const lastProgressAt = new Map<string, number>()
-
-// Interface representing incoming messages that could be a cancel action
-interface CancelMessage {
-  type?: string;
-  jobId?: string;
-  requestId?: string;
-}
 
 function postProgress(jobId: string, percent: number, currentMilestone: string, force = false) {
   const now = performance.now()
@@ -32,50 +26,67 @@ function postProgress(jobId: string, percent: number, currentMilestone: string, 
   })
 }
 
-workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest | Uint8Array | CancelMessage>) => {
-  let rawData = event.data
+workerScope.addEventListener('message', async (event: MessageEvent<unknown>) => {
+  let rawData: unknown = event.data
 
   if (rawData instanceof Uint8Array) {
     try {
-      rawData = JSON.parse(new TextDecoder().decode(rawData)) as WorkerRequest | CancelMessage
+      rawData = JSON.parse(new TextDecoder().decode(rawData)) as unknown
     } catch {
-      // Fallback if decoding fails
+      // Validation below returns a structured protocol error.
     }
   }
 
-  // Handle cancellation requests
-  const cancelCandidate = rawData as CancelMessage
-  if (cancelCandidate?.type === 'CANCEL') {
-    const id = cancelCandidate.jobId ?? cancelCandidate.requestId
-    if (id) cancelledJobs.add(id)
+  const validation = validateWorkerMessage(rawData)
+  if (!validation.success) {
+    workerScope.postMessage({
+      requestId: validation.requestId,
+      success: false,
+      payload: {
+        error: validation.error,
+        errorCode: 'INVALID_WORKER_MESSAGE',
+        errorMessage: validation.error,
+      },
+    } satisfies WorkerResponse)
     return
   }
 
-  const requestData = rawData as WorkerRequest
-  const requestId = requestData?.requestId ?? 'unknown'
-  const jobId = requestData?.jobId ?? requestId
+  const message: WorkerMessage = validation.value
+
+  if (message.type === 'PING') {
+    workerScope.postMessage({ type: 'PONG', requestId: message.requestId ?? 'unknown' })
+    return
+  }
+
+  if (message.type === 'CANCEL') {
+    cancelledJobs.add(message.jobId)
+    return
+  }
+
+  const requestData: WorkerExecuteMessage = message
+  const requestId = requestData.requestId
+  const jobId = requestData.jobId ?? requestData.payload.jobId ?? requestId
   const startTime = performance.now()
 
   try {
     if (cancelledJobs.has(jobId)) throw new DOMException('The user aborted the request.', 'AbortError')
-    
-    const { type, payload } = requestData
-    const { cipherId, input, key, options } = payload
+
+    const { payload } = requestData
+    const { type, cipherId, input, key, options } = payload
     const safeOptions = options || {}
-    
+
     postProgress(jobId, 0, 'Starting cipher', true)
 
     const dispatcher = await getDispatcher(cipherId)
     postProgress(jobId, 10, 'Loading cipher implementation', true)
-    
+
     if (cancelledJobs.has(jobId)) throw new DOMException('The user aborted the request.', 'AbortError')
 
     const handler = type === 'encrypt' ? dispatcher.encrypt : dispatcher.decrypt
     postProgress(jobId, 20, 'Executing cryptographic operation', true)
-    
+
     const result = (await handler(input, key, safeOptions)) as CipherResult
 
-    // Trace-aware progress gives the UI useful milestones without flooding postMessage.
     const steps = result.steps ?? []
     if (steps.length) {
       const total = steps.length
@@ -99,7 +110,7 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const errorCode = error instanceof CipherError ? error.code : undefined
-    
+
     workerScope.postMessage({
       requestId,
       success: false,
@@ -107,9 +118,7 @@ workerScope.addEventListener('message', async (event: MessageEvent<WorkerRequest
       timings: { durationMs: performance.now() - startTime },
     } satisfies WorkerResponse)
   } finally {
-    if (jobId) {
-      cancelledJobs.delete(jobId)
-      lastProgressAt.delete(jobId)
-    }
+    cancelledJobs.delete(jobId)
+    lastProgressAt.delete(jobId)
   }
 })

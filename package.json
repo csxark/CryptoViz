@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:a11y": "vitest run tests/unit/a11y",
-    "test:security": "vitest run tests/security"
+    "test:security": "vitest run tests/security",
+    "check:bundle-budget": "node scripts/check-bundle-budget.mjs"
   },
   "dependencies": {
     "@exodus/bytes": "^1.15.1",

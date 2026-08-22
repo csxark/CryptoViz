@@ -22,6 +22,16 @@ export interface AttackDemoItem {
 
 export const ATTACK_COLLECTION: AttackDemoItem[] = [
   {
+    id: 'signature-nonce-reuse',
+    slug: 'signature-nonce-reuse',
+    title: 'Signature Nonce-Reuse & Malleability',
+    category: 'Cryptanalysis',
+    riskLevel: 'Critical',
+    summary: 'Recovering an ECDSA private key from two secp256k1 signatures that reused the same nonce, plus signature malleability.',
+    educationalNote: 'The real bug behind the Sony PS3 signing-key leak and drained Bitcoin wallets — reusing k makes r repeat, letting anyone solve for the private key. Fixed by deterministic nonces (RFC 6979) or a CSPRNG.',
+    tags: ['ECDSA', 'secp256k1', 'Nonce Reuse', 'Malleability', 'Key Recovery'],
+  },
+  {
     id: 'automated-cryptanalysis',
     slug: 'automated-cryptanalysis',
     title: 'Automated Cryptanalysis Solver',

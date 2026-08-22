@@ -34,6 +34,14 @@ describe('RSA Asymmetric Cipher Unit Tests', () => {
     expect(hexRes.output).toBe('2790') // 0x41 === 65
   })
 
+  it('round-trips an integer-mode message >= 128 (#1278)', async () => {
+    // The old decrypt heuristic byte-decoded any single block >= 128, so 200
+    // came back as the replacement char instead of "200".
+    const enc = await encrypt('200', '3233,17', { inputEncoding: 'integer' })
+    const dec = await decrypt(enc.output, '3233,2753', { inputEncoding: 'integer' })
+    expect(dec.output).toBe('200')
+  })
+
   it('handles instrumented mode correctly for encryption and decryption', async () => {
     const encResult = await encrypt('65', '3233,17', { instrument: true })
     expect(encResult.steps.length).toBeGreaterThan(0)

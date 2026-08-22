@@ -1,10 +1,10 @@
-
 import type { CipherResult, CipherOptions } from '@/lib/cipher/types'
 
 export type WorkerRequestType = 'encrypt' | 'decrypt'
 export type WorkerPriority = 'INTERACTIVE' | 'NORMAL' | 'BACKGROUND'
 
 export interface WorkerRequestPayload {
+  type: WorkerRequestType
   cipherId: string
   input: string
   key: string
@@ -13,13 +13,27 @@ export interface WorkerRequestPayload {
   jobId?: string
 }
 
-export interface WorkerRequest {
-  type: WorkerRequestType
+export interface WorkerExecuteMessage {
+  type: 'EXECUTE'
   requestId: string
   payload: WorkerRequestPayload
   jobId?: string
   priority?: WorkerPriority
 }
+
+export interface WorkerCancelMessage {
+  type: 'CANCEL'
+  jobId: string
+  requestId?: string
+}
+
+export interface WorkerPingMessage {
+  type: 'PING'
+  requestId?: string
+}
+
+export type WorkerMessage = WorkerExecuteMessage | WorkerCancelMessage | WorkerPingMessage
+export type WorkerRequest = WorkerExecuteMessage
 
 export interface WorkerProgressMessage {
   type: 'PROGRESS'
@@ -31,7 +45,7 @@ export interface WorkerProgressMessage {
 export interface WorkerResponsePayload {
   result?: CipherResult
   error?: string
-  errorCode?: import('@/lib/utils/errors').CipherErrorCode
+  errorCode?: import('@/lib/utils/errors').CipherErrorCode | 'INVALID_WORKER_MESSAGE'
   errorMessage?: string
 }
 

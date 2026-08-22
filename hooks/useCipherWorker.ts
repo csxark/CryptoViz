@@ -148,11 +148,11 @@ export function useCipherWorker() {
       setError(null)
       setProgress({ percent: 0, currentMilestone: 'Queued', jobId: id })
       const requestMessage: WorkerRequest = {
-        type: action,
+        type: 'EXECUTE',
         requestId: id,
         jobId: id,
         priority: options?.priority ?? 'NORMAL',
-        payload: { cipherId, input, key, options: { ...(options as any), signal: undefined, priority: undefined, onProgress: undefined } },
+        payload: { type: action, cipherId, input, key, options: { ...(options as any), signal: undefined, priority: undefined, onProgress: undefined } },
       }
       try {
         const payloadBuffer = new TextEncoder().encode(JSON.stringify(requestMessage))

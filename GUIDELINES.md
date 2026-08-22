@@ -3,6 +3,8 @@
 
 This document defines all technical constraints, interfaces, coding conventions, and architectural budgets that apply to every contribution in the CryptoViz codebase. [README.md](./README.md) remains the primary developer reference; this document is the contributor-facing engineering specification.
 
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the layer overview and a map of every release-grade contract document, including per-contribution-type checklists, the simulation-vs-live-data policy, and the error taxonomy.
+
 ---
 
 ## 🏛️ Architectural Non-Negotiables

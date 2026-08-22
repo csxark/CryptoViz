@@ -21,9 +21,10 @@ async function deriveScryptKeyViaWorker(
   params: { N: number; r: number; p: number; dkLen: number; salt: string }
 ): Promise<{ derivedKeyHex: string; saltHex: string }> {
   const message: WorkerRequest = {
-    type: 'encrypt',
+    type: 'EXECUTE',
     requestId: crypto.randomUUID(),
     payload: {
+      type: 'encrypt',
       cipherId: 'scrypt',
       input: password,
       key: '',

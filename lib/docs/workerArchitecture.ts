@@ -47,7 +47,7 @@ export const WORKER_ARCHITECTURE_SECTIONS: WorkerArchitectureSection[] = [
       "Options carry mode, encoding, IV, instrumentation, and feature-specific settings.",
     ],
     codeExample:
-      "worker.postMessage({ type: 'encrypt', requestId, payload: { cipherId, input, key, options } })",
+      "worker.postMessage({ type: 'EXECUTE', requestId, payload: { type: 'encrypt', cipherId, input, key, options } })",
   },
   {
     id: "execution",

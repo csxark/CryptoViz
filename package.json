@@ -2,6 +2,10 @@
   "name": "cryptoviz",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "generate:sw": "node scripts/generate-sw-precache.mjs",
@@ -14,16 +18,19 @@
     "test": "vitest run",
     "test:a11y": "vitest run tests/unit/a11y",
     "test:security": "vitest run tests/security",
-    "check:bundle-budget": "node scripts/check-bundle-budget.mjs"
+    "check:bundle-budget": "node scripts/check-bundle-budget.mjs",
+    "security:audit": "npm audit --audit-level=high",
+    "security:licenses": "npx license-checker --production --summary --failOn 'GPLv3;AGPLv3'",
+    "security:sbom": "npx @cyclonedx/cyclonedx-npm --output-format JSON --output-file bom.json"
   },
   "dependencies": {
     "@exodus/bytes": "^1.15.1",
-    "@noble/curves": "^2.2.0",
-    "@noble/hashes": "^2.2.0",
-    "@noble/post-quantum": "^0.6.1",
+    "@noble/curves": "2.2.0",
+    "@noble/hashes": "2.2.0",
+    "@noble/post-quantum": "0.6.1",
     "@types/dompurify": "^3.0.5",
     "@vercel/analytics": "^2.0.1",
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "3.0.3",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.13",
     "framer-motion": "^12.42.2",
@@ -35,6 +42,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@cyclonedx/cyclonedx-npm": "^6.0.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -48,6 +56,7 @@
     "fast-check": "^4.9.0",
     "jest-axe": "^10.0.0",
     "jsdom": "^29.1.1",
+    "license-checker": "^25.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.8"

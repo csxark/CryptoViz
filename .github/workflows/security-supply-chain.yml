@@ -1,0 +1,38 @@
+name: "Supply Chain & Dependency Security Controls"
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  audit-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Setup Node.js Environment"
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: "Verify Lockfile Integrity"
+        run: npm ci --ignore-scripts
+
+      - name: "Evaluate Security Vulnerabilities"
+        run: npm run security:audit
+
+      - name: "Audit Compliance Licenses"
+        run: npm run security:licenses
+
+      - name: "Generate Release SBOM"
+        run: npm run security:sbom
+
+      - name: "Persist SBOM Artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: cyclonedx-sbom
+          path: bom.json

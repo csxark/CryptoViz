@@ -56,7 +56,7 @@ export class WorkerJobLifecycle {
     return { ...record }
   }
 
-  cancel(jobId: string, now = Date.now()): CancelResult {
+  cancel(jobId: string): CancelResult {
     const record = this.jobs.get(jobId)
     if (!record) {
       const terminal = this.terminalIds.get(jobId)

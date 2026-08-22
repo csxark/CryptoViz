@@ -55,6 +55,7 @@ export interface WorkerResponseTimings {
 
 export interface WorkerResponse {
   requestId: string
+  jobId?: string
   success: boolean
   payload: WorkerResponsePayload
   timings?: WorkerResponseTimings

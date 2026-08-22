@@ -139,7 +139,45 @@ describe('useCipherWorker', () => {
     })
 
     await expect(promise!).rejects.toThrowError(/aborted/)
-    expect(worker.terminate).toHaveBeenCalled()
+    expect(worker.postMessage).toHaveBeenCalledWith({ type: 'CANCEL', requestId: expect.any(String), jobId: expect.any(String) })
+  })
+
+
+  it('cancels cooperatively and ignores stale progress after cancellation', async () => {
+    const { result } = renderHook(() => useCipherWorker())
+    const controller = new AbortController()
+
+    let promise: Promise<any>
+    act(() => {
+      promise = result.current.runCipher('encrypt', 'caesar', 'hello', '3', { signal: controller.signal })
+    })
+
+    const worker = MockWorker.lastInstance()!
+    const sent = JSON.parse(new TextDecoder().decode(worker.postMessage.mock.calls[0][0] as Uint8Array))
+
+    act(() => controller.abort())
+    await expect(promise!).rejects.toThrowError(/aborted/)
+
+    expect(worker.postMessage).toHaveBeenLastCalledWith({ type: 'CANCEL', requestId: sent.requestId, jobId: sent.jobId })
+
+    act(() => {
+      worker.onmessage!({
+        data: { type: 'PROGRESS', jobId: sent.jobId, percent: 90, currentMilestone: 'stale' },
+      } as MessageEvent)
+    })
+
+    expect(result.current.progress).not.toEqual(expect.objectContaining({ currentMilestone: 'stale' }))
+
+    act(() => {
+      worker.onmessage!({
+        data: {
+          requestId: sent.requestId,
+          jobId: sent.jobId,
+          success: false,
+          payload: { error: 'The user aborted the request.', errorCode: 'ABORTED' },
+        },
+      } as MessageEvent)
+    })
   })
 
   it('triggers WORKER_TIMEOUT error after 10 seconds of inactivity', async () => {

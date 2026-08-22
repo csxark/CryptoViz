@@ -51,6 +51,7 @@ export function useCipherWorker() {
     timeoutId?: ReturnType<typeof setTimeout>
     cacheKey?: string
     onProgress?: (percent: number, message: string) => void
+    settled: boolean
   }>())
 
   const terminateWorkerAndRejectAll = useCallback((reason: Error) => {
@@ -76,8 +77,10 @@ export function useCipherWorker() {
           currentMilestone: String(data.currentMilestone ?? ''),
           jobId: String(data.jobId ?? ''),
         }
+        const request = activeRequestsRef.current.get(p.jobId)
+        if (request?.settled) return
         setProgress(p)
-        activeRequestsRef.current.get(p.jobId)?.onProgress?.(p.percent, p.currentMilestone)
+        request?.onProgress?.(p.percent, p.currentMilestone)
         return
       }
       const requestId = data.requestId
@@ -85,6 +88,7 @@ export function useCipherWorker() {
       if (!request) return
       if (request.timeoutId) clearTimeout(request.timeoutId)
       if (request.signal && request.onAbort) request.signal.removeEventListener('abort', request.onAbort)
+      request.settled = true
       if (data.success && data.payload?.result) {
         if (request.cacheKey) cacheResult(request.cacheKey, data.payload.result)
         request.resolve(data.payload.result)
@@ -108,8 +112,10 @@ export function useCipherWorker() {
 
   useEffect(() => {
     workerRef.current = createWorker()
-    return () => workerRef.current?.terminate()
-  }, [createWorker])
+    return () => {
+      terminateWorkerAndRejectAll(new Error('Worker lifecycle ended.'))
+    }
+  }, [createWorker, terminateWorkerAndRejectAll])
 
   const runCipher = useCallback((
     action: 'encrypt' | 'decrypt',
@@ -125,15 +131,17 @@ export function useCipherWorker() {
         workerRef.current = createWorker()
         if (!workerRef.current) return reject(new Error('Web Worker is not available on SSR.'))
       }
-      const id = crypto.randomUUID()
+      let id = crypto.randomUUID()
+      while (activeRequestsRef.current.has(id)) id = crypto.randomUUID()
       const signal = options?.signal
       if (signal?.aborted) return reject(new DOMException('The user aborted the request.', 'AbortError'))
       let onAbort: (() => void) | undefined
       onAbort = () => {
-        clearTimeout(timeoutId)
+        const request = activeRequestsRef.current.get(id)
+        if (!request || request.settled) return
+        request.settled = true
         workerRef.current?.postMessage({ type: 'CANCEL', requestId: id, jobId: id })
-        activeRequestsRef.current.delete(id)
-        setLoading(activeRequestsRef.current.size > 0)
+        setLoading([...activeRequestsRef.current.values()].some(entry => !entry.settled))
         reject(new DOMException('The user aborted the request.', 'AbortError'))
       }
       if (signal) signal.addEventListener('abort', onAbort, { once: true })
@@ -142,7 +150,7 @@ export function useCipherWorker() {
         terminateWorkerAndRejectAll(new Error('WORKER_TIMEOUT'))
       }, 30000)
       activeRequestsRef.current.set(id, {
-        resolve, reject, signal, onAbort, timeoutId, cacheKey, onProgress: options?.onProgress,
+        resolve, reject, signal, onAbort, timeoutId, cacheKey, onProgress: options?.onProgress, settled: false,
       })
       setLoading(true)
       setError(null)

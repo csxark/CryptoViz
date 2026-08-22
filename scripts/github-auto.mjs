@@ -3,7 +3,7 @@ import https from 'https';
 const TOKEN = process.env.GH_TOKEN;
 const UPSTREAM_REPO = 'csxark/CryptoViz';
 const FORK_USER = 'karan-chaos';
-const BRANCH = 'feature/sentiment-yield-screener';
+const BRANCH = 'feature/smart-money-tracker';
 
 const request = (path, method, body) => {
     return new Promise((resolve, reject) => {
@@ -41,17 +41,17 @@ async function main() {
     try {
         console.log(`Creating Issue on upstream ${UPSTREAM_REPO}...`);
         const issue = await request(`/repos/${UPSTREAM_REPO}/issues`, 'POST', {
-            title: 'Feature: Advanced Protocol Intelligence Screener',
-            body: 'Implement a comprehensive dashboard for tracking decentralized protocols with real-time sentiment and yield data.\n\n- Data Table with Sparklines\n- Recharts scatter plot (Yield vs Sentiment)\n- Multi-faceted filtering'
+            title: 'Feature: Whale Tracker and Smart Money Flow Analyzer',
+            body: 'Building a new robust surveillance module allowing insights into high net worth flow transactions. Includes a fully animated live-feed and Recharts dominance tracking.'
         });
         console.log(`Created Issue: ${issue.html_url} (#${issue.number})`);
 
         console.log(`Creating Pull Request on upstream ${UPSTREAM_REPO}...`);
         const pr = await request(`/repos/${UPSTREAM_REPO}/pulls`, 'POST', {
-            title: 'feat: Implement Advanced Protocol Intelligence Screener',
-            head: `${FORK_USER}:${BRANCH}`, // target the cross-repo branch
+            title: 'feat: Implement Whale Tracker and Smart Money Flow Analyzer',
+            head: `${FORK_USER}:${BRANCH}`,
             base: 'main',
-            body: `Closes #${issue.number}\n\nThis PR implements the requested Protocol Intelligence Screener feature, providing comprehensive sentiment, TVL, and yield tracking capabilities through an interactive UI with animated charts and sorting filtering.`
+            body: `Closes #${issue.number}\n\nIntroducing the fully responsive "Whale Surveillance Tracker".\n- Implements deterministic mock generation mapping out $50M+ capital flows.\n- Custom hooks aggregating buy/sell exchange pressure.\n- Glassmorphic animated Tailwind layout encompassing 700+ lines of codebase generation.`
         });
         console.log(`Created Pull Request: ${pr.html_url}`);
     } catch (error) {

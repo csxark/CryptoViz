@@ -64,6 +64,10 @@ export interface EvidenceReceipt {
   verifiedAt?: string;
 }
 
+import { getPersistentRepositories, ConcurrencyLock } from './repository';
+
+const domainExecutionLock = new ConcurrencyLock();
+
 export interface DomainOperationResult {
   id: string;
   category: DomainOperationCategory;
@@ -72,6 +76,7 @@ export interface DomainOperationResult {
   stateHistory: { state: DomainOperationState; timestamp: string; note?: string }[];
   evidence?: EvidenceReceipt;
   idempotencyKey: string;
+  payload?: Record<string, any>;
   isSimulation: boolean;
   durablePersisted: boolean;
   error?: string;
@@ -85,37 +90,12 @@ export interface DomainOperationExecutionOptions {
   overrideEvidence?: EvidenceReceipt;
 }
 
-// In-memory idempotency store for replay & duplicate request protection
-class IdempotencyStore {
-  private store = new Map<string, { payloadHash: string; result: DomainOperationResult }>();
-
-  private hashPayload(payload: Record<string, any>): string {
-    return JSON.stringify(payload);
+export const globalIdempotencyStore = {
+  clear: async () => {
+    const { operationRepository } = getPersistentRepositories();
+    await operationRepository.clear();
   }
-
-  public get(key: string, payload: Record<string, any>): { hit: boolean; result?: DomainOperationResult; conflict?: boolean } {
-    const existing = this.store.get(key);
-    if (!existing) return { hit: false };
-    const currentHash = this.hashPayload(payload);
-    if (existing.payloadHash !== currentHash) {
-      return { hit: true, conflict: true };
-    }
-    return { hit: true, result: existing.result };
-  }
-
-  public set(key: string, payload: Record<string, any>, result: DomainOperationResult): void {
-    this.store.set(key, {
-      payloadHash: this.hashPayload(payload),
-      result,
-    });
-  }
-
-  public clear(): void {
-    this.store.clear();
-  }
-}
-
-export const globalIdempotencyStore = new IdempotencyStore();
+};
 
 /**
  * Validates domain input fields server-side according to category constraints.
@@ -295,129 +275,143 @@ export async function executeDomainOperation(
   const now = new Date().toISOString();
   const history: { state: DomainOperationState; timestamp: string; note?: string }[] = [];
 
-  // Check Idempotency Key
-  const stored = globalIdempotencyStore.get(input.idempotencyKey, input.payload);
-  if (stored.hit) {
-    if (stored.conflict) {
-      throw new Error(`IDEMPOTENCY_CONFLICT: Idempotency key '${input.idempotencyKey}' reused with a different payload.`);
-    }
-    return stored.result!;
-  }
+  const { operationRepository } = getPersistentRepositories();
 
-  const operationId = isSim
-    ? `simulation-op-${Math.floor(Math.random() * 1000000)}`
-    : `op_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-
-  const result: DomainOperationResult = {
-    id: operationId,
-    category: input.category,
-    operationName: input.operationName,
-    state: 'REQUESTED',
-    stateHistory: history,
-    idempotencyKey: input.idempotencyKey,
-    isSimulation: isSim,
-    durablePersisted: false,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  history.push({ state: 'REQUESTED', timestamp: new Date().toISOString(), note: 'Operation requested' });
-
-  // Check explicit requested failure state override
-  if (options.simulateFailureState === 'REJECTED' || options.simulateFailureState === 'CANCELLED') {
-    result.state = options.simulateFailureState;
-    history.push({ state: result.state, timestamp: new Date().toISOString(), note: 'Operation terminated at request stage' });
-    result.error = `Operation manually set to ${options.simulateFailureState}.`;
-    globalIdempotencyStore.set(input.idempotencyKey, input.payload, result);
-    return result;
-  }
-
-  // 1. Authorization check
-  const authCheck = checkDomainAuthorization(input.category, options.authContext);
-  if (!authCheck.authorized) {
-    result.state = 'REJECTED';
-    result.error = authCheck.reason;
-    history.push({ state: 'REJECTED', timestamp: new Date().toISOString(), note: authCheck.reason });
-    globalIdempotencyStore.set(input.idempotencyKey, input.payload, result);
-    return result;
-  }
-
-  // 2. Input validation
-  result.state = 'VALIDATING';
-  history.push({ state: 'VALIDATING', timestamp: new Date().toISOString(), note: 'Validating domain inputs' });
-
-  const valCheck = validateDomainInput(input);
-  if (!valCheck.isValid) {
-    result.state = 'REJECTED';
-    result.error = valCheck.error;
-    history.push({ state: 'REJECTED', timestamp: new Date().toISOString(), note: valCheck.error });
-    globalIdempotencyStore.set(input.idempotencyKey, input.payload, result);
-    return result;
-  }
-
-  // Check failure state during validation
-  if (options.simulateFailureState === 'FAILED') {
-    result.state = 'FAILED';
-    result.error = 'Validation or domain submission failed.';
-    history.push({ state: 'FAILED', timestamp: new Date().toISOString(), note: result.error });
-    globalIdempotencyStore.set(input.idempotencyKey, input.payload, result);
-    return result;
-  }
-
-  // 3. Submitted / Pending
-  result.state = 'SUBMITTED_PENDING';
-  history.push({ state: 'SUBMITTED_PENDING', timestamp: new Date().toISOString(), note: 'Submitted to external system or chain' });
-
-  if (options.simulateFailureState === 'EXPIRED') {
-    result.state = 'EXPIRED';
-    result.error = 'Operation pending state timed out / expired.';
-    history.push({ state: 'EXPIRED', timestamp: new Date().toISOString(), note: result.error });
-    globalIdempotencyStore.set(input.idempotencyKey, input.payload, result);
-    return result;
-  }
-
-  // 4. Evidence Verification
-  const evidenceToVerify: EvidenceReceipt | undefined = options.overrideEvidence
-    ? options.overrideEvidence
-    : isSim
-    ? {
-        txHash: `simulation-tx-${input.category}-1001`,
-        sourceChainTx: `simulation-tx-src-${input.category}`,
-        targetChainTx: `simulation-tx-dst-${input.category}`,
-        oracleAttestationHash: `simulation-attestation-${input.category}`,
-        approvalSignatures: ['simulation-sig-1', 'simulation-sig-2'],
-        proofOfReserveProof: `simulation-por-${input.category}`,
-        settlementTxHash: `simulation-tx-settle-${input.category}`,
-        blockNumber: 18000000,
-        verifiedAt: new Date().toISOString(),
+  // Concurrency check lock
+  const unlock = await domainExecutionLock.acquire(input.idempotencyKey);
+  try {
+    // Check Idempotency Key in persistent repository
+    const stored = await operationRepository.findByIdempotencyKey(input.idempotencyKey);
+    if (stored) {
+      const currentHash = JSON.stringify(input.payload);
+      const storedHash = JSON.stringify(stored.payload);
+      if (storedHash !== currentHash) {
+        throw new Error(`IDEMPOTENCY_CONFLICT: Idempotency key '${input.idempotencyKey}' reused with a different payload.`);
       }
-    : undefined;
+      return stored;
+    }
 
-  const verCheck = verifyExternalEvidence(input.category, evidenceToVerify, isSim);
-  if (!verCheck.verified) {
-    result.state = 'REVERTED';
-    result.error = verCheck.error;
-    history.push({ state: 'REVERTED', timestamp: new Date().toISOString(), note: verCheck.error });
-    globalIdempotencyStore.set(input.idempotencyKey, input.payload, result);
+    const operationId = isSim
+      ? `simulation-op-${Math.floor(Math.random() * 1000000)}`
+      : `op_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    const result: DomainOperationResult = {
+      id: operationId,
+      category: input.category,
+      operationName: input.operationName,
+      state: 'REQUESTED',
+      stateHistory: history,
+      idempotencyKey: input.idempotencyKey,
+      payload: input.payload,
+      isSimulation: isSim,
+      durablePersisted: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    history.push({ state: 'REQUESTED', timestamp: new Date().toISOString(), note: 'Operation requested' });
+    await operationRepository.save(result);
+
+    // Check explicit requested failure state override
+    if (options.simulateFailureState === 'REJECTED' || options.simulateFailureState === 'CANCELLED') {
+      result.state = options.simulateFailureState;
+      history.push({ state: result.state, timestamp: new Date().toISOString(), note: 'Operation terminated at request stage' });
+      result.error = `Operation manually set to ${options.simulateFailureState}.`;
+      await operationRepository.save(result);
+      return result;
+    }
+
+    // 1. Authorization check
+    const authCheck = checkDomainAuthorization(input.category, options.authContext);
+    if (!authCheck.authorized) {
+      result.state = 'REJECTED';
+      result.error = authCheck.reason;
+      history.push({ state: 'REJECTED', timestamp: new Date().toISOString(), note: authCheck.reason });
+      await operationRepository.save(result);
+      return result;
+    }
+
+    // 2. Input validation
+    result.state = 'VALIDATING';
+    history.push({ state: 'VALIDATING', timestamp: new Date().toISOString(), note: 'Validating domain inputs' });
+    await operationRepository.save(result);
+
+    const valCheck = validateDomainInput(input);
+    if (!valCheck.isValid) {
+      result.state = 'REJECTED';
+      result.error = valCheck.error;
+      history.push({ state: 'REJECTED', timestamp: new Date().toISOString(), note: valCheck.error });
+      await operationRepository.save(result);
+      return result;
+    }
+
+    // Check failure state during validation
+    if (options.simulateFailureState === 'FAILED') {
+      result.state = 'FAILED';
+      result.error = 'Validation or domain submission failed.';
+      history.push({ state: 'FAILED', timestamp: new Date().toISOString(), note: result.error });
+      await operationRepository.save(result);
+      return result;
+    }
+
+    // 3. Submitted / Pending
+    result.state = 'SUBMITTED_PENDING';
+    history.push({ state: 'SUBMITTED_PENDING', timestamp: new Date().toISOString(), note: 'Submitted to external system or chain' });
+    await operationRepository.save(result);
+
+    if (options.simulateFailureState === 'EXPIRED') {
+      result.state = 'EXPIRED';
+      result.error = 'Operation pending state timed out / expired.';
+      history.push({ state: 'EXPIRED', timestamp: new Date().toISOString(), note: result.error });
+      await operationRepository.save(result);
+      return result;
+    }
+
+    // 4. Evidence Verification
+    const evidenceToVerify: EvidenceReceipt | undefined = options.overrideEvidence
+      ? options.overrideEvidence
+      : isSim
+      ? {
+          txHash: `simulation-tx-${input.category}-1001`,
+          sourceChainTx: `simulation-tx-src-${input.category}`,
+          targetChainTx: `simulation-tx-dst-${input.category}`,
+          oracleAttestationHash: `simulation-attestation-${input.category}`,
+          approvalSignatures: ['simulation-sig-1', 'simulation-sig-2'],
+          proofOfReserveProof: `simulation-por-${input.category}`,
+          settlementTxHash: `simulation-tx-settle-${input.category}`,
+          blockNumber: 18000000,
+          verifiedAt: new Date().toISOString(),
+        }
+      : undefined;
+
+    const verCheck = verifyExternalEvidence(input.category, evidenceToVerify, isSim);
+    if (!verCheck.verified) {
+      result.state = 'REVERTED';
+      result.error = verCheck.error;
+      history.push({ state: 'REVERTED', timestamp: new Date().toISOString(), note: verCheck.error });
+      await operationRepository.save(result);
+      return result;
+    }
+
+    result.evidence = evidenceToVerify;
+    result.state = 'EXTERNALLY_VERIFIED';
+    history.push({ state: 'EXTERNALLY_VERIFIED', timestamp: new Date().toISOString(), note: 'Cryptographic evidence externally verified' });
+    await operationRepository.save(result);
+
+    // 5. Persisted state
+    result.state = 'PERSISTED';
+    result.durablePersisted = true;
+    history.push({ state: 'PERSISTED', timestamp: new Date().toISOString(), note: 'State durably persisted' });
+    await operationRepository.save(result);
+
+    // 6. Completed state
+    result.state = 'COMPLETED';
+    result.updatedAt = new Date().toISOString();
+    history.push({ state: 'COMPLETED', timestamp: new Date().toISOString(), note: 'Domain operation completed successfully' });
+    await operationRepository.save(result);
+
     return result;
+  } finally {
+    unlock();
   }
-
-  result.evidence = evidenceToVerify;
-  result.state = 'EXTERNALLY_VERIFIED';
-  history.push({ state: 'EXTERNALLY_VERIFIED', timestamp: new Date().toISOString(), note: 'Cryptographic evidence externally verified' });
-
-  // 5. Persisted state
-  result.state = 'PERSISTED';
-  result.durablePersisted = true;
-  history.push({ state: 'PERSISTED', timestamp: new Date().toISOString(), note: 'State durably persisted' });
-
-  // 6. Completed state
-  result.state = 'COMPLETED';
-  result.updatedAt = new Date().toISOString();
-  history.push({ state: 'COMPLETED', timestamp: new Date().toISOString(), note: 'Domain operation completed successfully' });
-
-  // Store in idempotency store for replay durability
-  globalIdempotencyStore.set(input.idempotencyKey, input.payload, result);
-
-  return result;
 }

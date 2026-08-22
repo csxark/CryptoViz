@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    # Acceptance Criteria: Pin and segregate deep cryptographic primitives for manual audit
+    groups:
+      cryptographic-core:
+        patterns:
+          - "@noble/*"
+          - "bcryptjs"
+      framework-dependencies:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+      sanitization-tooling:
+        patterns:
+          - "dompurify"
+    labels:
+      - "dependencies"
+      - "security-audit"

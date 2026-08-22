@@ -1,8 +1,12 @@
 {
-  "name": "cryptoviz",
-  "version": "0.1.0",
+  "name": "cryptoviz-core",
+  "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
+    "preinstall": "npx only-allow npm",
     "dev": "next dev",
     "generate:sw": "node scripts/generate-sw-precache.mjs",
     "prebuild": "npm run generate:sw",
@@ -17,23 +21,24 @@
   },
   "dependencies": {
     "@exodus/bytes": "^1.15.1",
-    "@noble/curves": "^2.2.0",
-    "@noble/hashes": "^2.2.0",
+    "@noble/curves": "2.2.0",
+    "@noble/hashes": "2.2.0",
     "@noble/post-quantum": "^0.6.1",
     "@types/dompurify": "^3.0.5",
     "@vercel/analytics": "^2.0.1",
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "3.0.3",
     "clsx": "^2.1.1",
-    "dompurify": "^3.4.13",
+    "dompurify": "3.4.13",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.24.0",
-    "next": "^16.2.9",
+    "next": "^16.3.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.9.1",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@cyclonedx/cyclonedx-npm": "^6.0.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -47,6 +52,7 @@
     "fast-check": "^4.9.0",
     "jest-axe": "^10.0.0",
     "jsdom": "^29.1.1",
+    "license-checker": "^25.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.8"

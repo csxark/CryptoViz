@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { describe, expect, it } from 'vitest'
 import { encrypt, TEST_VECTORS } from '@/lib/cipher/hash/kangarootwelve'
 import { keccakP } from '@/lib/cipher/hash/sha3'

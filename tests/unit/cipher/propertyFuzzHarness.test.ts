@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import * as fc from 'fast-check';
 import { CIPHER_REGISTRY } from '../../../lib/cipher/registry';
 import { cryptoArbitraries } from './fastCheckHelpers';

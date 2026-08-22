@@ -618,6 +618,5 @@ export default function CipherPipelineBuilder() {
         </div>
       )}
     </div>
-    {result&&<section className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-5"><div className="flex items-center gap-2 text-xs font-bold uppercase text-purple-600">{result.success?<CheckCircle2 className="h-4 w-4"/>:<AlertTriangle className="h-4 w-4"/>}{result.cancelled?'Pipeline cancelled':result.success?'Pipeline completed':'Pipeline failed'} · {result.totalDurationMs.toFixed(2)} ms</div><pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-xl bg-white p-3 font-mono text-xs dark:bg-zinc-950">{result.finalOutput}</pre></section>}
-  </div>
+  );
 }

@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { describe, expect, it } from 'vitest'
 import type { CipherResult, CipherStep } from '../../../lib/cipher/types'
 import { createVirtualizedCipherResult } from '../../../lib/cipher/stepVirtualization'

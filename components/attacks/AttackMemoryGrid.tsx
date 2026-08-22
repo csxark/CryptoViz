@@ -1,4 +1,4 @@
-use client'
+'use client'
 import type { InteractiveByte } from '@/lib/attacks/interactiveStepper'
 
 export default function AttackMemoryGrid({ bytes }: { bytes: InteractiveByte[] }) {

@@ -236,11 +236,11 @@ export default function BloomFilterVisualizer() {
             )
           })}
         </div>
-      </div>
+      </Card>
 
       {/* Query / Action Result Display */}
       {lastActionResult && (
-        <div
+        <Card
           className={`rounded-xl border p-6 shadow-xs ${
             lastActionResult.type === 'insert'
               ? 'border-teal-300 bg-teal-50/70 dark:border-teal-900/80 dark:bg-teal-950/20'

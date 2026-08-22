@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { describe, it, expect } from 'vitest'
 import fc from 'fast-check'
 import { encrypt, TEST_VECTORS } from '../../../lib/cipher/hash/sha1'

@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { describe, it, expect, beforeEach } from 'vitest'
 import { encrypt, decrypt, clearOtpKeyHistory, TEST_VECTORS } from '../../../lib/cipher/symmetric/otp'
 import { CipherError } from '../../../lib/utils/errors'

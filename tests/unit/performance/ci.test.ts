@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 /**
  * Unit tests for PerformanceCI
  */

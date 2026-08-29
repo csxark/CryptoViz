@@ -1,4 +1,12 @@
-export type EncodingType = 'UTF-8' | 'ASCII' | 'Base64' | 'Hex' | 'URL-Encoding' | 'UTF-16BE';
+export type EncodingType =
+  | 'UTF-8'
+  | 'ASCII'
+  | 'Base64'
+  | 'Base58'
+  | 'Base85'
+  | 'Hex'
+  | 'URL-Encoding'
+  | 'UTF-16BE';
 
 export type FaultType =
   | 'INVALID_CHAR'

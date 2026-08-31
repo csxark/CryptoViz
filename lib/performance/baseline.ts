@@ -93,14 +93,14 @@ export class BaselineManager {
         return
       }
         // Node.js environment
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const [fs, path] = await Promise.all([
           import('node:fs'),
           import('node:path'),
         ])
 
         const dir = path.join(process.cwd(), '.performance-baselines')
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
 
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true })
@@ -172,12 +172,12 @@ export class BaselineManager {
         return
       }
         // Node.js environment
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const [fs, path] = await Promise.all([
           import('fs'),
           import('path')
         ])
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const filePath = path.join(process.cwd(), '.performance-baselines', 'baselines.json')
         
         if (fs.existsSync(filePath)) {

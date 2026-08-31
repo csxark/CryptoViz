@@ -33,7 +33,7 @@ export function useCryptoSonifier(config?: SonifierConfig): UseCryptoSonifierRet
       sonifierRef.current = null;
     };
     // config intentionally omitted — changes after mount are ignored
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const toggle = useCallback(() => {

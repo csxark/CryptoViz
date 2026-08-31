@@ -5,7 +5,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError } from '../../utils/errors'
-// @ts-ignore
+// @ts-expect-error
 import { shake128 } from '@noble/hashes/sha3'
 import { toHex } from '../../utils/encoding';
 

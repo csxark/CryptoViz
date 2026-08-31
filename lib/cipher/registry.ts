@@ -101,6 +101,18 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     recommendedNext: ["vigenere", "des"],
   },
   {
+    id: "trithemius",
+    name: "Trithemius Cipher",
+    category: "classical",
+    description:
+      "The simplest polyalphabetic cipher: each letter is shifted by its position index, producing an ever-increasing Caesar shift",
+    defaultKey: "",
+    defaultInput: "Hello, World!",
+    securityStatus: "broken",
+    prerequisites: ["caesar"],
+    recommendedNext: ["vigenere", "playfair"],
+  },
+  {
     id: "xor",
     name: "XOR Cipher",
     category: "symmetric",

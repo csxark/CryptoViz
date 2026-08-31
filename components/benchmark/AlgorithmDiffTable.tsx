@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { AlgorithmDiff } from "@/lib/utils/sessionComparison";
+import type { AlgorithmDiff } from "@/lib/utils/comparison";
 import { Search, ArrowUpDown } from "lucide-react";
 
 interface AlgorithmDiffTableProps {

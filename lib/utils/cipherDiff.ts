@@ -100,8 +100,27 @@ export function analyzeCipherOutputs(
   }
 }
 export function computeHexDiff(hexA: string, hexB: string): { xorHex: string; diffCount: number } {
-  const analysis = analyzeCipherOutputs(hexA, hexB, 'hex', 'hex')
-  return { xorHex: analysis.xorHex, diffCount: analysis.hammingDistance }
+  const cleanA = hexA.replace(/\s+/g, '').replace(/^0x/i, '')
+  const cleanB = hexB.replace(/\s+/g, '').replace(/^0x/i, '')
+  const maxLen = Math.max(cleanA.length, cleanB.length)
+  const evenLen = maxLen % 2 !== 0 ? maxLen + 1 : maxLen
+  const paddedA = cleanA.padEnd(evenLen, '0')
+  const paddedB = cleanB.padEnd(evenLen, '0')
+  const bytesA = hexToBytes(paddedA)
+  const bytesB = hexToBytes(paddedB)
+  const len = Math.max(bytesA.length, bytesB.length)
+  let diffCount = 0
+  let xorHex = ''
+
+  for (let i = 0; i < len; i++) {
+    const a = bytesA[i] ?? 0
+    const b = bytesB[i] ?? 0
+    const xor = a ^ b
+    diffCount += popcount(xor)
+    xorHex += xor.toString(16).padStart(2, '0')
+  }
+
+  return { xorHex, diffCount }
 }
 export function flipBitInHex(hexString: string, bitIndex: number): string {
   if (hexString.length % 2 !== 0) throw new Error('Hex string must have an even length.')
@@ -118,3 +137,4 @@ export function flipBitInString(str: string, bitIndex: number): string {
   bytes[byteIndex] ^= 1 << (7 - (bitIndex % 8))
   return new TextDecoder('utf-8', { fatal: false }).decode(bytes)
 }
+

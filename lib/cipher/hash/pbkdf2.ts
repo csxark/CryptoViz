@@ -6,7 +6,7 @@
  * Default iteration count: 600,000 (per current OWASP guidance for HMAC-SHA256)
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
-import { CipherError, validateInput } from '../../utils'
+import { CipherError, validateHashInput } from '../../utils'
 // Assuming hmac.ts exports a reusable HMAC function
 // import { hmac } from './hmac' 
 
@@ -69,17 +69,47 @@ function toHex(b: Uint8Array): string {
     return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
-    validateInput(input)
+    validateHashInput(input)
     const c = (options.iterations as number) || 600000
     const dkLen = (options.keyLength as number) || 32
     return pbkdf2Core(input, key, c, dkLen, !!options.instrument)
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     throw new CipherError('ALGORITHM_UNSUPPORTED', 'PBKDF2 is a KDF and cannot be decrypted.')
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: 'password', key: 'salt', expected: '120fb6cffcf8b32c43e7225256c4f837a86548c92ccc35480805987cb70be17b', description: 'RFC 6070-style vector (c=1, dkLen=32)' }
 ]

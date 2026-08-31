@@ -2,7 +2,7 @@ import { hmac } from '@noble/hashes/hmac.js'
 import { sha256, sha512 } from '@noble/hashes/sha2.js'
 import { sha1 } from '@noble/hashes/legacy.js'
 import { toByteArray, fromByteArray } from '../../utils/encoding'
-import { CipherError, validateInput } from '../../utils/errors'
+import { CipherError, validateHashInput } from '../../utils/errors'
 import type {
   CipherResult,
   CipherStep,
@@ -10,9 +10,6 @@ import type {
   CipherOptions,
   TestVector,
 } from '../types'
-if (options?.hexInput) {
-  // handling hex input directly without casting
-}
 
 const METADATA: CipherMetadata = {
   name: 'HKDF (HMAC Key Derivation)',
@@ -22,6 +19,14 @@ const METADATA: CipherMetadata = {
   breakingComplexity: '2^128+ operations (depends on underlying HMAC hash)',
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b',
@@ -71,17 +76,26 @@ function parseBytes(val: string): Uint8Array {
   return toByteArray(val, 'utf8')
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateHashInput(input)
 
   const hashName: HashName = (options.hash as HashName) || 'SHA-256'
   const { fn: hashFn, len: hashLen } = getHashInfo(hashName)
 
-  const keyLength = typeof options.keyLength === 'number' ? options.keyLength : typeof (options as any).length === 'number' ? (options as any).length : 32
+  const optLen = 'length' in options && typeof options.length === 'number' ? options.length : undefined
+  const keyLength = typeof options.keyLength === 'number' ? options.keyLength : optLen ?? 32
 
   if (keyLength <= 0) {
     throw new CipherError('INVALID_KEY_LENGTH', 'Derived key length L must be a positive integer.')
@@ -242,6 +256,14 @@ export function encrypt(
   }
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(): CipherResult {
   throw new CipherError(
     'ALGORITHM_UNSUPPORTED',

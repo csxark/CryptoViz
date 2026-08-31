@@ -212,7 +212,7 @@ For detailed visualizer component development patterns, including prop contracts
 | **Key Clearance** | Ensure sensitive keys are cleared on component unmount. | Validated in manual code review. |
 | **No Unsafe Logic** | Verify zero usage of `eval`, `innerHTML`, and constructor functions. | Checked by static analysis rules. |
 | **CSP Compliance** | Verify `worker-src blob:` and security nonces in `vercel.json`. | Checked by E2E security tests. |
-| **Dependency Scans** | Run dependency auditing to check for known CVEs. | `pnpm audit` runs on pull requests. |
+| **Dependency Scans** | Run dependency auditing to check for known CVEs. | `npm audit` runs on pull requests. |
 | **Secure Input Limits** | Ensure input size is restricted to a maximum of 4096 bytes. | Validated in unit test suite. |
 
 ---
@@ -221,7 +221,7 @@ For detailed visualizer component development patterns, including prop contracts
 
 | Metric | Budget | Fail Threshold | How Measured |
 | :--- | :--- | :--- | :--- |
-| **Main JS Bundle** | < 120 KB gzipped | > 150 KB gzipped | `pnpm analyze` |
+| **Main JS Bundle** | < 120 KB gzipped | > 150 KB gzipped | `npm run check:budgets` |
 | **LCP (Largest Contentful Paint)** | < 1.2s | > 2.5s | Playwright Core Web Vitals |
 | **CLS (Cumulative Layout Shift)**| < 0.05 | > 0.1 | Playwright Core Web Vitals |
 | **INP (Interaction to Next Paint)**| < 100ms | > 200ms | Playwright Core Web Vitals |
@@ -252,6 +252,19 @@ For detailed visualizer component development patterns, including prop contracts
 | `@mui/material` | Heavy CSS footprint, style override difficulties | Tailwind CSS v4 + Radix UI |
 | `contentlayer` | Unmaintained project | `next-mdx-remote` |
 | `algolia` | Requires a server runtime | `pagefind` (WASM) |
+| `pnpm` / `yarn` / `bun` | Non-standard lockfile fragmentation and resolution disparity | `npm` (v9.x+) with authoritative `package-lock.json` |
+
+---
+
+## 📦 Package Manager Standardization (NPM Exclusive)
+
+To ensure reproducible builds, deterministic CI execution, and eliminate multi-lockfile drift, **npm** is the authoritative package manager for CryptoViz.
+
+### Strict Policies:
+1. **Exclusive CLI Usage**: All contributors and CI pipelines must use standard `npm` commands (`npm install`, `npm test`, `npm run build`).
+2. **No Alternative Lockfiles**: `pnpm-lock.yaml`, `yarn.lock`, and `bun.lockb` are strictly prohibited in the repository tree. Automated CI checks reject any PR containing alternative lockfiles.
+3. **Deterministic Overrides**: Transitive security patches and dependency pins are configured exclusively via the `"overrides"` block in `package.json` and committed to `package-lock.json`.
+4. **CI Caching**: GitHub Actions workflows utilize `actions/setup-node` with `cache: 'npm'` keyed on `package-lock.json`.
 
 ---
 

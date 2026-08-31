@@ -5,24 +5,14 @@
 /**
  * Calculates the probability of at least one collision in a set of k randomly chosen values
  * from a hash space of size N (where N = 2^bits).
+ * Uses -Math.expm1(-k * (k - 1) / (2 * N)) for numerical stability without floating point underflow.
  */
 export function calculateCollisionProbability(k: number, N: number): number {
   if (k <= 1 || N <= 0) return 0;
   if (k > N) return 1.0;
 
-  // Use exact calculation for small k to preserve precision and avoid floating point issues
-  if (k < 100) {
-    let p = 1.0;
-    for (let i = 0; i < k; i++) {
-      p *= (N - i) / N;
-    }
-    return 1.0 - p;
-  }
-
-  // Use the standard exponential approximation for larger k: 1 - exp(-k * (k - 1) / (2 * N))
-  // We use standard numbers as floating point precision is sufficient for probability values
   const exponent = -(k * (k - 1)) / (2 * N);
-  return 1.0 - Math.exp(exponent);
+  return -Math.expm1(exponent);
 }
 
 /**
@@ -37,10 +27,11 @@ export function calculate50PercentThreshold(N: number): number {
 
 /**
  * Formats a hash value as a padded hexadecimal string based on the hash bit depth.
+ * Correctly handles 32-bit and larger hash bit depths to avoid 32-bit signed bitshift overflow.
  */
 export function formatHash(value: number, bits: number): string {
   const hexChars = Math.ceil(bits / 4);
-  const maxValue = (1 << bits) - 1;
+  const maxValue = bits >= 32 ? (bits >= 53 ? Number.MAX_SAFE_INTEGER : Math.pow(2, bits) - 1) : ((1 << bits) - 1) >>> 0;
   const clampedValue = Math.min(Math.max(0, value), maxValue);
   return clampedValue.toString(16).toUpperCase().padStart(hexChars, "0");
 }

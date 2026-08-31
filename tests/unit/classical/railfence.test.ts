@@ -26,10 +26,17 @@ describe('Rail Fence Cipher Unit Tests', () => {
     expect(result.steps.length).toBe(6)
   })
 
-  it('throws correct errors for invalid input and keys', () => {
+  it('throws correct errors for invalid input and keys (#1724)', () => {
     expect(() => encrypt('', '3')).toThrowError(CipherError)
     expect(() => encrypt('hello', '1')).toThrowError(CipherError)
+    expect(() => encrypt('hello', '0')).toThrowError(CipherError)
+    expect(() => encrypt('hello', '-1')).toThrowError(CipherError)
+    expect(() => encrypt('hello', '1.5')).toThrowError(CipherError)
     expect(() => encrypt('hello', 'abc')).toThrowError(CipherError)
+    expect(() => encrypt('hello', '3', { rails: 1 })).toThrowError(CipherError)
+    expect(() => decrypt('hello', '1')).toThrowError(CipherError)
+    expect(() => decrypt('hello', '0')).toThrowError(CipherError)
+    expect(() => decrypt('hello', '-2')).toThrowError(CipherError)
   })
 
   it('property-based fuzzing: encrypt then decrypt returns original', () => {

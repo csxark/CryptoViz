@@ -33,7 +33,9 @@ type CipherModule = {
 
 type ModuleLoader = () => Promise<CipherModule>;
 
-const MODULES = import.meta.glob<CipherModule>("../cipher/{classical,symmetric,hash,asymmetric}/*.ts");
+const MODULES = import.meta.glob(
+  "../cipher/{classical,symmetric,hash,asymmetric}/*.ts",
+) as Record<string, ModuleLoader>;
 
 const PATH_OVERRIDES: Record<string, string> = {
   "sha224": "../cipher/hash/sha2-truncated.ts",

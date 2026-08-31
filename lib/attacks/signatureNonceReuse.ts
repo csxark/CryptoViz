@@ -9,9 +9,8 @@
  *   k = (z1 − z2) · (s1 − s2)⁻¹  (mod n)
  *   d = (s1·k − z1) · r⁻¹        (mod n)
  *
- * This is the real bug that leaked the Sony PS3 code-signing key and drained
- * Bitcoin wallets whose wallet software reused nonces. This module also
- * demonstrates ECDSA signature *malleability* (s and n−s are both valid).
+ * This is the real bug that leaked the Sony PS3 code-signing key in 2010.
+ * This module also demonstrates ECDSA signature *malleability* (s and n−s are both valid).
  *
  * The signer here takes an explicit `k` on purpose so the reuse can be shown — a
  * correct implementation derives `k` deterministically (RFC 6979) or from a CSPRNG

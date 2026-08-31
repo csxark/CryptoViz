@@ -48,7 +48,7 @@ describe("Worker Communication Suite", () => {
 
   it("returns a structured error for malformed runtime messages", async () => {
     const addEventListenerSpy = vi.spyOn(globalThis as any, "addEventListener");
-    const postMessageSpy = vi.spyOn(globalThis as any, "postMessage").mockImplementation(() => {});
+    const postMessageSpy = vi.spyOn(globalThis as any, "postMessage").mockImplementation((data) => { structuredClone(data); });
 
     await import("@/lib/workers/cipher.worker");
     const messageCall = addEventListenerSpy.mock.calls.find(call => call[0] === "message");
@@ -77,7 +77,7 @@ describe("Worker Communication Suite", () => {
   it("should throw CipherError with ALGORITHM_UNSUPPORTED for unknown cipher IDs", async () => {
     // Setup global spies before importing the worker (which runs immediately)
     const addEventListenerSpy = vi.spyOn(globalThis as any, "addEventListener");
-    const postMessageSpy = vi.spyOn(globalThis as any, "postMessage").mockImplementation(() => {});
+    const postMessageSpy = vi.spyOn(globalThis as any, "postMessage").mockImplementation((data) => { structuredClone(data); });
 
     // Dynamically import the worker to execute its top-level event registration
     await import("@/lib/workers/cipher.worker");
@@ -105,13 +105,13 @@ describe("Worker Communication Suite", () => {
     // Verify the response
     expect(postMessageSpy).toHaveBeenCalled();
     const response = postMessageSpy.mock.calls
-      .map((c) => c[0])
+      .map((c) => c[0] as { requestId?: string; success?: boolean; payload?: { errorCode?: string; error?: string } })
       .find((msg) => msg?.requestId === "req-unknown");
 
     expect(response).toBeDefined();
-    expect(response.success).toBe(false);
-    expect(response.payload.errorCode).toBe("ALGORITHM_UNSUPPORTED");
-    expect(response.payload.error).toContain("fake-cipher-123");
+    expect(response?.success).toBe(false);
+    expect(response?.payload?.errorCode).toBe("ALGORITHM_UNSUPPORTED");
+    expect(response?.payload?.error).toContain("fake-cipher-123");
   });
 
   describe("Dynamic Cipher Module Lazy-Loading", () => {
@@ -143,4 +143,53 @@ describe("Worker Communication Suite", () => {
     });
   });
 });
+  it("rejects invalid cryptographic parameters before execution", async () => {
+    const addEventListenerSpy = vi.spyOn(globalThis as any, "addEventListener");
+    const postMessageSpy = vi
+      .spyOn(globalThis as any, "postMessage")
+      .mockImplementation((data) => {
+        structuredClone(data);
+      });
 
+    await import("@/lib/workers/cipher.worker");
+
+    const messageCall = addEventListenerSpy.mock.calls.find(
+      (call) => call[0] === "message",
+    );
+
+    expect(messageCall).toBeDefined();
+
+    const listener = messageCall![1] as any;
+
+    await listener({
+      data: {
+        type: "EXECUTE",
+        requestId: "req-invalid-aes-key",
+        payload: {
+          type: "encrypt",
+          cipherId: "aes",
+          input: "00112233445566778899aabbccddeeff",
+          key: "000102030405060708090a0b0c",
+          options: {
+            mode: "CBC",
+          },
+        },
+      },
+    });
+
+    const response = postMessageSpy.mock.calls
+      .map((call) => call[0] as any)
+      .find(
+        (message) =>
+          message?.requestId === "req-invalid-aes-key",
+      );
+
+    expect(response).toBeDefined();
+    expect(response.success).toBe(false);
+    expect(response.payload.errorCode).toBe("INVALID_KEY_LENGTH");
+    expect(response.payload.errorDetails).toMatchObject({
+      type: "parameter-validation",
+      cipherId: "aes",
+      parameter: "key",
+    });
+  });

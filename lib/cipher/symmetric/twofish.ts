@@ -252,26 +252,26 @@ function twofishEncrypt(block: Uint8Array, ctx: TwofishCtx): Uint8Array {
 
 // ── Block decrypt ─────────────────────────────────────────────────────────────
 function twofishDecrypt(block: Uint8Array, ctx: TwofishCtx): Uint8Array {
-    let R2_new = u32(readLE32(block, 0) ^ ctx.K[4])
-    let R3_new = u32(readLE32(block, 4) ^ ctx.K[5])
+    let R2 = u32(readLE32(block, 0) ^ ctx.K[4])
+    let R3 = u32(readLE32(block, 4) ^ ctx.K[5])
     let R0 = u32(readLE32(block, 8) ^ ctx.K[6])
     let R1 = u32(readLE32(block, 12) ^ ctx.K[7])
 
     for (let r = 15; r >= 0; r--) {
-        const [F0, F1] = F(R0, R1, r, ctx)
-        const R2_prev = u32(rotl32(R2_new, 1) ^ F0)
-        const R3_prev = u32(rotr32(u32(R3_new ^ F1), 1))
-        R2_new = R0
-        R3_new = R1
-        R0 = R2_prev
-        R1 = R3_prev
+        const [F0, F1] = F(R2, R3, r, ctx)
+        const R2_prev = u32(rotl32(R0, 1) ^ F0)
+        const R3_prev = u32(rotr32(u32(R1 ^ F1), 1))
+        R0 = R2
+        R1 = R3
+        R2 = R2_prev
+        R3 = R3_prev
     }
 
     const out = new Uint8Array(16)
-    writeLE32(u32(R2_new ^ ctx.K[0]), out, 0)
-    writeLE32(u32(R3_new ^ ctx.K[1]), out, 4)
-    writeLE32(u32(R0 ^ ctx.K[2]), out, 8)
-    writeLE32(u32(R1 ^ ctx.K[3]), out, 12)
+    writeLE32(u32(R0 ^ ctx.K[0]), out, 0)
+    writeLE32(u32(R1 ^ ctx.K[1]), out, 4)
+    writeLE32(u32(R2 ^ ctx.K[2]), out, 8)
+    writeLE32(u32(R3 ^ ctx.K[3]), out, 12)
     return out
 }
 
@@ -320,21 +320,50 @@ function twofishCore(input: string, key: string, doDecrypt: boolean, instrument:
     return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return twofishCore(input, key, false, !!options.instrument)
 }
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
-    throw new CipherError('ALGORITHM_UNSUPPORTED', 'Twofish decryption is not implemented.')
+    return twofishCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '00000000000000000000000000000000',
         key: '00000000000000000000000000000000',
         expected: '9f589f5cf6122c32b6bfec2f2ae8c35a',
-        skipDecrypt: true,
         description: 'Twofish spec: 128-bit zero key, zero plaintext',
     },
 ]

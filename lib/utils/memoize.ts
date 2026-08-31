@@ -2,13 +2,13 @@
  * A generic memoization utility with a configurable cache size limit.
  * Can be used for expensive pure functions to avoid recalculation.
  */
-export function memoize<T extends (...args: any[]) => any>(
-  fn: T,
+export function memoize<Args extends unknown[], R>(
+  fn: (...args: Args) => R,
   maxCacheSize: number = 100
-): T {
-  const cache = new Map<string, ReturnType<T>>();
+): (...args: Args) => R {
+  const cache = new Map<string, R>();
 
-  const memoized = (...args: Parameters<T>): ReturnType<T> => {
+  const memoized = (...args: Args): R => {
     // Basic serialization for cache key
     const key = JSON.stringify(args);
     if (cache.has(key)) {
@@ -29,5 +29,5 @@ export function memoize<T extends (...args: any[]) => any>(
     return result;
   };
 
-  return memoized as T;
+  return memoized;
 }

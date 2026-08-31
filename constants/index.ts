@@ -1,0 +1,61 @@
+/**
+ * CryptoViz Central Application & Storage Constants
+ *
+ * Lint-Friendly Naming Convention:
+ * All global storage keys, limits, event names, threshold values, and schema versions
+ * use the `CRYPTOVIZ_` prefix (e.g., `CRYPTOVIZ_BENCHMARK_HISTORY_KEY`, `CRYPTOVIZ_MAX_FAVORITE_CIPHERS`).
+ */
+
+// --- Local Storage Keys ---
+export const CRYPTOVIZ_BENCHMARK_HISTORY_KEY = "cryptoviz-benchmark-history";
+export const CRYPTOVIZ_SCALING_HISTORY_KEY = "cryptoviz-scaling-history";
+export const CRYPTOVIZ_FAVORITE_CIPHERS_STORAGE_KEY = "cryptoviz-favorite-ciphers";
+export const CRYPTOVIZ_RECENT_CIPHERS_STORAGE_KEY = "cryptoviz-recent-ciphers";
+export const CRYPTOVIZ_WORKSPACE_PRESETS_STORAGE_KEY = "cryptoviz-workspace-presets";
+export const CRYPTOVIZ_VISUALIZATION_SNAPSHOT_STORAGE_KEY = "cryptoviz-visualization-snapshots";
+export const CRYPTOVIZ_DOC_PROGRESS_STORAGE_KEY = "cryptoviz-doc-progress";
+export const CRYPTOVIZ_DYNAMIC_CIPHER_STORAGE_KEY = "cryptoviz-dynamic-cipher";
+export const CRYPTOVIZ_STEP_ANNOTATIONS_STORAGE_KEY = "cryptoviz-step-annotations";
+
+// --- History & Collection Limits ---
+export const CRYPTOVIZ_MAX_BENCHMARK_HISTORY = 20;
+export const CRYPTOVIZ_MAX_SCALING_HISTORY = 20;
+export const CRYPTOVIZ_MAX_FAVORITE_CIPHERS = 20;
+export const CRYPTOVIZ_MAX_RECENT_CIPHERS = 8;
+export const CRYPTOVIZ_MAX_WORKSPACE_PRESETS = 30;
+export const CRYPTOVIZ_MAX_CONVERSION_HISTORY_ENTRIES = 50;
+export const CRYPTOVIZ_STEP_NOTE_MAX_LENGTH = 1000;
+export const CRYPTOVIZ_VISUALIZER_PERMALINK_MAX_LENGTH = 4096;
+export const CRYPTOVIZ_DEFAULT_MAX_INPUT_BYTES = 1024 * 1024; // 1 MB
+
+// --- Event Names ---
+export const CRYPTOVIZ_FAVORITE_CIPHERS_CHANGED_EVENT = "cryptoviz:favorite-ciphers-changed";
+
+// --- Performance & Benchmark Thresholds ---
+export const CRYPTOVIZ_SPEEDUP_THRESHOLD = 1.02;
+export const CRYPTOVIZ_SLOWDOWN_THRESHOLD = 0.98;
+
+// --- Versions & Schema ---
+export const CRYPTOVIZ_WORKSPACE_PRESETS_VERSION = 1;
+export const CRYPTOVIZ_DOC_PROGRESS_VERSION = 1;
+export const CRYPTOVIZ_STEP_ANNOTATIONS_VERSION = 1;
+export const CRYPTOVIZ_TRACE_SCHEMA_VERSION = "1.0.0";
+export const CRYPTOVIZ_LESSON_SCHEMA_VERSION = "1.0.0";
+export const CRYPTOVIZ_LESSON_FILE_EXTENSION = ".cvpackage";
+
+// --- Backwards Compatibility Aliases ---
+export const BENCHMARK_HISTORY_KEY = CRYPTOVIZ_BENCHMARK_HISTORY_KEY;
+export const SCALING_HISTORY_KEY = CRYPTOVIZ_SCALING_HISTORY_KEY;
+export const MAX_BENCHMARK_HISTORY = CRYPTOVIZ_MAX_BENCHMARK_HISTORY;
+export const MAX_SCALING_HISTORY = CRYPTOVIZ_MAX_SCALING_HISTORY;
+export const FAVORITE_CIPHERS_STORAGE_KEY = CRYPTOVIZ_FAVORITE_CIPHERS_STORAGE_KEY;
+export const FAVORITE_CIPHERS_CHANGED_EVENT = CRYPTOVIZ_FAVORITE_CIPHERS_CHANGED_EVENT;
+export const MAX_FAVORITE_CIPHERS = CRYPTOVIZ_MAX_FAVORITE_CIPHERS;
+export const RECENT_CIPHERS_STORAGE_KEY = CRYPTOVIZ_RECENT_CIPHERS_STORAGE_KEY;
+export const MAX_RECENT_CIPHERS = CRYPTOVIZ_MAX_RECENT_CIPHERS;
+export const WORKSPACE_PRESETS_STORAGE_KEY = CRYPTOVIZ_WORKSPACE_PRESETS_STORAGE_KEY;
+export const WORKSPACE_PRESETS_VERSION = CRYPTOVIZ_WORKSPACE_PRESETS_VERSION;
+export const MAX_WORKSPACE_PRESETS = CRYPTOVIZ_MAX_WORKSPACE_PRESETS;
+export const VISUALIZATION_SNAPSHOT_STORAGE_KEY = CRYPTOVIZ_VISUALIZATION_SNAPSHOT_STORAGE_KEY;
+export const SPEEDUP_THRESHOLD = CRYPTOVIZ_SPEEDUP_THRESHOLD;
+export const SLOWDOWN_THRESHOLD = CRYPTOVIZ_SLOWDOWN_THRESHOLD;

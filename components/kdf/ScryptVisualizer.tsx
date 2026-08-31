@@ -38,6 +38,8 @@ async function deriveScryptKeyViaWorker(
   return response.payload.result as { derivedKeyHex: string; saltHex: string }
 }
 
+import { clampScryptParameters } from '@/lib/security/workloadLimits'
+
 export default function ScryptVisualizer() {
   const [password, setPassword] = useState('correct horse battery staple')
   const [costN, setCostN] = useState(16384)
@@ -46,6 +48,7 @@ export default function ScryptVisualizer() {
   const [keyLength, setKeyLength] = useState<16 | 24 | 32>(32)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
   const [stages, setStages] = useState<ScryptStageStep[]>([])
   const [derivedKeyHex, setDerivedKeyHex] = useState<string | null>(null)
   const [saltHex, setSaltHex] = useState<string | null>(null)
@@ -58,14 +61,26 @@ export default function ScryptVisualizer() {
 
   async function handleDerive() {
     setError(null)
+    setWarning(null)
     setLoading(true)
     setDerivedKeyHex(null)
+
+    const { clamped, modified, warnings } = clampScryptParameters({ N: costN, r: blockSizeR, p: parallelP })
+    if (modified) {
+      setWarning(warnings.join(' '))
+      if (clamped.N) setCostN(clamped.N)
+      if (clamped.p) setParallelP(clamped.p)
+    }
+
     try {
       const salt = randomSaltHex()
+      const effectiveN = clamped.N ?? costN
+      const effectiveR = clamped.r ?? blockSizeR
+      const effectiveP = clamped.p ?? parallelP
       const res = await deriveScryptKeyViaWorker(password, {
-        N: costN,
-        r: blockSizeR,
-        p: parallelP,
+        N: effectiveN,
+        r: effectiveR,
+        p: effectiveP,
         dkLen: keyLength,
         salt
       })
@@ -73,7 +88,7 @@ export default function ScryptVisualizer() {
       setSaltHex(activeSalt)
       setDerivedKeyHex(res.derivedKeyHex)
       setStages(
-        describeScryptStages(password.length, activeSalt, costN, blockSizeR, parallelP, keyLength)
+        describeScryptStages(password.length, activeSalt, effectiveN, effectiveR, effectiveP, keyLength)
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
@@ -228,6 +243,12 @@ export default function ScryptVisualizer() {
           {loading ? 'Executing derivation in Web Worker...' : 'Derive Key'}
         </button>
         
+        {warning && (
+          <div role="alert" className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-300">
+            <strong className="block font-bold">Workload Limit Enforced:</strong>
+            {warning}
+          </div>
+        )}
         {error && <p className="mt-3 text-xs text-red-600 dark:text-red-400">{error}</p>}
       </div>
 

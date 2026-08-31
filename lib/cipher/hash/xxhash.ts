@@ -25,6 +25,14 @@ const METADATA: CipherMetadata = {
   breakingComplexity: "Non-cryptographic hash; not collision resistant.",
 };
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: "",
@@ -131,6 +139,16 @@ function avalanche(value: number): number {
   return hash >>> 0;
 }
 
+/**
+ * Xxh32Hex cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param inputBytes Input required by the Xxh32Hex operation.
+ * @param seed Input required by the Xxh32Hex operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function xxh32Hex(inputBytes: Uint8Array, seed = 0): string {
   let offset = 0;
   let hash: number;
@@ -391,6 +409,14 @@ function xxhashInstrumented(
   };
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string = "0",
@@ -416,6 +442,14 @@ export function encrypt(
   };
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(): CipherResult {
   throw new CipherError(
     "ALGORITHM_UNSUPPORTED",

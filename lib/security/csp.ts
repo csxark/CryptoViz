@@ -1,6 +1,9 @@
-/**
- * Security utility module for Content Security Policy (CSP) parsing and nonce creation.
+﻿/**
+ * Security utility module for Content Security Policy (CSP) parsing, nonce creation, and re-exporting enforced security policy.
  */
+import { PRODUCTION_CSP_DIRECTIVES, buildCspHeaderString, PRODUCTION_SECURITY_HEADERS, getSecurityHeaders } from './securityHeaders';
+
+export { PRODUCTION_CSP_DIRECTIVES, buildCspHeaderString, PRODUCTION_SECURITY_HEADERS, getSecurityHeaders };
 
 /**
  * Creates a fallback cryptographic nonce if none is provided or generated.

@@ -132,6 +132,7 @@ export function exportBenchmarkAsMarkdown(
 ): string {
   const warmUpRuns = normalizeWarmUpRuns(options.warmUpRuns);
   const timestamp = new Date().toISOString();
+  const numberFormatter = new Intl.NumberFormat("en-US");
 
   if (results.length === 0) {
     return [

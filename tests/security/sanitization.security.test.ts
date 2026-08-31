@@ -21,17 +21,21 @@ describe("security: sanitization", () => {
     const r = sanitizePlainText(payload);
     expect(r.value).not.toMatch(/<script|<img|<svg|onerror=|onload=|javascript:/i);
   });
+  
   it("escapes HTML metacharacters", () => {
-    expect(escapeHtml(`<>&"'`)).toBe("&lt;&gt;&amp;&quot;&#39;");
+    expect(escapeHtml(`<>&"'\``)).toBe("&lt;&gt;&amp;&quot;&#39;&#96;");
   });
+  
   it("removes control characters", () => {
     expect(sanitizePlainText("safe\r\n\tvalue\u0007").value).toBe("safe value");
   });
+  
   it("preserves markdown newlines while neutralizing dangerous links", () => {
-    const r=sanitizeMarkdown("[x](javascript:alert(1))\n\ntext");
+    const r = sanitizeMarkdown("[x](javascript:alert(1))\n\ntext");
     expect(r.value).not.toMatch(/javascript:/i);
     expect(r.value).toContain("\n\n");
   });
+  
   it("strips angle brackets from search queries", () => {
     expect(sanitizeSearchQuery("<script>alert(1)</script>").value).not.toMatch(/[<>]/);
   });

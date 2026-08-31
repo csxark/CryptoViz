@@ -30,6 +30,14 @@ const METADATA: CipherMetadata = {
   standardBody: 'RFC 7919 / FIPS 196',
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '6,15', // a, b
@@ -60,6 +68,14 @@ export function getGeneratorOrder(g: bigint, p: bigint): bigint {
   return cur === 1n ? order : 0n
 }
 
+/**
+ * Check Primitive Root cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function checkPrimitiveRoot(
   g: bigint,
   p: bigint
@@ -138,6 +154,14 @@ function parseDhParams(keyStr: string): DhParams {
   )
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string = '',
@@ -362,6 +386,14 @@ export function encrypt(
   }
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   _key: string = '',

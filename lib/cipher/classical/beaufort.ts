@@ -138,6 +138,14 @@ function beaufortFast(input: string, key: string): CipherResult {
 }
 
 // Beaufort is self-inverse: encrypt and decrypt run the identical formula.
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string,
@@ -149,6 +157,14 @@ export function encrypt(
   return beaufortFast(input, key)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   key: string,
@@ -160,6 +176,14 @@ export function decrypt(
   return beaufortFast(input, key)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   { input: 'HELLO', key: 'KEY', expected: 'DANZQ' },
   { input: 'ATTACKATDAWN', key: 'LEMON', expected: 'LLTOLBETLNPR' },

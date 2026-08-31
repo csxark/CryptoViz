@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { encrypt, TEST_VECTORS } from '@/lib/cipher/hash/ascon-hash'
+import { encrypt, decrypt, TEST_VECTORS } from '@/lib/cipher/hash/ascon-hash'
 import { asconPermutation } from '@/lib/cipher/symmetric/ascon'
+import { CipherError } from '@/lib/utils/errors'
 
 describe('Ascon-Hash', () => {
     it('exports test vectors', () => expect(TEST_VECTORS.length).toBeGreaterThan(0))
@@ -30,10 +31,21 @@ describe('Ascon-Hash', () => {
         expect(h1.output).not.toBe(h2.output)
     })
 
+    it('supports instrumented execution tracing steps', () => {
+        const result = encrypt('01020304', '', { instrument: true })
+        expect(result.steps.length).toBeGreaterThan(0)
+    })
+
+    it('decrypt throws ALGORITHM_UNSUPPORTED', () => {
+        expect(() => decrypt('1234', '')).toThrow(CipherError)
+        expect(() => decrypt('1234', '')).toThrow(/Ascon-Hash is a hash function/)
+    })
+
     it('metadata flags secure status and NIST standardization', () => {
         const result = encrypt('', '')
         expect(result.metadata.securityStatus).toBe('secure')
         expect(result.metadata.standardBody).toContain('NIST')
         expect(result.metadata.name).toBe('Ascon-Hash')
+        expect(result.metadata.yearDesigned).toBe(2023)
     })
 })

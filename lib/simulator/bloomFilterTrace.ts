@@ -26,18 +26,18 @@ export const BLOOM_FILTER_PRESETS: BloomFilterPreset[] = [
     ],
   },
   {
-    name: 'Crypto Wallet Address Filter',
-    description: 'Simulates SPV (Simplified Payment Verification) crypto wallets filtering blockchain transactions for relevant user addresses.',
+    name: 'Network Device Address Filter',
+    description: 'Simulates network switches and routers filtering incoming hardware MAC/IP addresses for membership in high-speed lookup tables.',
     size: 64,
     numHashes: 4,
     initialElements: [
-      '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-      '0x1111111111111111111111111111111111111111',
-      '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
+      '00:1A:2B:3C:4D:5E',
+      'A1:B2:C3:D4:E5:F6',
+      '192.168.1.105',
     ],
     testElements: [
-      { element: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F', expectedStatus: 'possibly_present' },
-      { element: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', expectedStatus: 'definitely_not' },
+      { element: '00:1A:2B:3C:4D:5E', expectedStatus: 'possibly_present' },
+      { element: '10.0.0.99', expectedStatus: 'definitely_not' },
     ],
   },
   {

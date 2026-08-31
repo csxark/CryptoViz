@@ -137,7 +137,7 @@ export const CRYPTOGRAPHY_VIDEOS: CryptoVideo[] = [
     provider: "Curated lecture preview",
     tags: ["side channels", "timing", "cache"],
     description:
-      "Explains how implementation behaviour such as timing, memory access, or power can leak secrets.",
+      "Explains how implementation behavior such as timing, memory access, or power can leak secrets.",
     embedUrl: "https://www.youtube-nocookie.com/embed/7U-RbOKanYs",
     watchUrl: "https://www.youtube.com/watch?v=7U-RbOKanYs",
     recommendedFor: "Users exploring timing attacks, side-channel demos, and secure implementation practices.",

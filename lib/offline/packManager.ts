@@ -1,19 +1,46 @@
+export interface OfflinePackDocumentation {
+  title?: string;
+  topic?: string;
+  content?: string;
+  summary?: string;
+}
+
+export interface OfflinePack {
+  id: string;
+  title: string;
+  description: string;
+  version?: string;
+  category?: string;
+  topics?: string[];
+  documentation?: OfflinePackDocumentation[];
+  referenceCode?: Record<string, string>;
+  metadata?: {
+    id: string;
+    title: string;
+    description?: string;
+    version?: string;
+    category?: string;
+    topics?: string[];
+  };
+}
+
 /**
  * Validates the schema of an imported JSON pack matching exportPayload format.
  */
-export function validatePackSchema(data: any): boolean {
+export function validatePackSchema(data: unknown): data is OfflinePack {
   if (!data || typeof data !== 'object') return false;
+  const record = data as Record<string, unknown>;
   
   // Support both direct metadata objects and flattened schemas
-  const meta = data.metadata || data;
+  const meta = (record.metadata && typeof record.metadata === 'object' ? record.metadata : record) as Record<string, unknown>;
   if (!meta || typeof meta !== 'object') return false;
   
   if (typeof meta.id !== 'string') return false;
   if (typeof meta.title !== 'string') return false;
-  if (typeof meta.version !== 'string') return false;
+  if (typeof meta.version !== 'string' && typeof record.version !== 'string') return false;
   
   // Verify topics/documentation arrays exist
-  if (!Array.isArray(data.topics) && !Array.isArray(meta.topics)) return false;
+  if (!Array.isArray(record.topics) && !Array.isArray(meta.topics)) return false;
   
   return true;
 }
@@ -21,7 +48,7 @@ export function validatePackSchema(data: any): boolean {
 /**
  * Imports and persists a parsed JSON pack into local offline storage.
  */
-export async function importPackFromJson(jsonData: any): Promise<void> {
+export async function importPackFromJson(jsonData: unknown): Promise<void> {
   if (!validatePackSchema(jsonData)) {
     throw new Error("Invalid pack format: Missing required metadata fields (id, title, version) or topics array.");
   }
@@ -31,9 +58,9 @@ export async function importPackFromJson(jsonData: any): Promise<void> {
 
   const storageKey = 'cryptoviz_offline_packs';
   const existingPacksStr = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
-  const existingPacks = existingPacksStr ? JSON.parse(existingPacksStr) : [];
+  const existingPacks: OfflinePack[] = existingPacksStr ? JSON.parse(existingPacksStr) : [];
 
-  const isDuplicate = existingPacks.some((p: any) => (p.metadata?.id || p.id) === packId);
+  const isDuplicate = existingPacks.some((p: OfflinePack) => (p.metadata?.id || p.id) === packId);
   if (isDuplicate) {
     throw new Error(`Pack "${packTitle}" is already imported in offline storage.`);
   }
@@ -47,7 +74,7 @@ export async function importPackFromJson(jsonData: any): Promise<void> {
 /**
  * Exports an OfflinePack into a structured JSON string representation.
  */
-export function exportPackAsJson(pack: any): string {
+export function exportPackAsJson(pack: OfflinePack): string {
   return JSON.stringify({
     metadata: {
       id: pack.id,
@@ -69,7 +96,7 @@ export function exportPackAsJson(pack: any): string {
 /**
  * Exports an OfflinePack into a Markdown document string.
  */
-export function exportPackAsMarkdown(pack: any): string {
+export function exportPackAsMarkdown(pack: OfflinePack): string {
   let md = `# ${pack.title}\n\n`;
   md += `> ${pack.description}\n\n`;
   md += `**Category:** ${pack.category} | **Version:** ${pack.version || '1.0.0'}\n\n`;
@@ -78,7 +105,7 @@ export function exportPackAsMarkdown(pack: any): string {
     md += `- ${t}\n`;
   });
   md += `\n## Included Documentation & Formulas\n`;
-  (pack.documentation || []).forEach((d: any) => {
+  (pack.documentation || []).forEach((d: OfflinePackDocumentation) => {
     md += `### ${d.title || d.topic}\n${d.content || d.summary}\n\n`;
   });
   return md;
@@ -87,7 +114,7 @@ export function exportPackAsMarkdown(pack: any): string {
 /**
  * Exports an OfflinePack into a standalone single-file HTML document with embedded JavaScript.
  */
-export function exportPackAsSingleFileHtml(pack: any): string {
+export function exportPackAsSingleFileHtml(pack: OfflinePack): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,4 +174,3 @@ export function downloadFile(filename: string, content: string, mimeType: string
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-

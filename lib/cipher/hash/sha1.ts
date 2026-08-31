@@ -208,6 +208,14 @@ function validate(input: string): Uint8Array {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   _key: string,
@@ -227,6 +235,14 @@ export function encrypt(
 }
 
 // SHA-1 is a one-way hash — decryption is not defined.
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   _input: string,
   _key: string = '',
@@ -240,6 +256,14 @@ export function decrypt(
 
 // ─── Test Vectors ─────────────────────────────────────────────────────────────
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS = [
   {
     input: 'abc',

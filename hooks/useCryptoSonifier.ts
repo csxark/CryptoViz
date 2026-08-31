@@ -6,7 +6,7 @@ import { CryptoSonifier, type SonifierConfig } from '@/lib/accessibility/sonifie
 export interface UseCryptoSonifierReturn {
   /** Whether audio feedback is currently active */
   isEnabled: boolean;
-  /** Toggle audio on/off (lazily initialises AudioContext on first enable) */
+  /** Toggle audio on/off (lazily initializes AudioContext on first enable) */
   toggle: () => void;
   /** Play arpeggiated tone for a byte mutation at given state-matrix index */
   playByteMutation: (byte: number, index: number) => void;
@@ -18,7 +18,7 @@ export interface UseCryptoSonifierReturn {
  * useCryptoSonifier
  *
  * Provides real-time Web Audio feedback for cryptographic step animations.
- * AudioContext is lazily initialised on first user-initiated toggle to comply
+ * AudioContext is lazily initialized on first user-initiated toggle to comply
  * with browser autoplay policies.
  */
 export function useCryptoSonifier(config?: SonifierConfig): UseCryptoSonifierReturn {

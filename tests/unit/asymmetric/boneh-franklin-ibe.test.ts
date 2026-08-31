@@ -1,11 +1,44 @@
 import { describe, expect, it } from 'vitest'
-import { encrypt, decrypt, TEST_VECTORS } from '@/lib/cipher/asymmetric/boneh-franklin-ibe'
+import { encrypt, decrypt, pairing, TEST_VECTORS } from '../../../lib/cipher/asymmetric/boneh-franklin-ibe'
 
 describe('Boneh-Franklin IBE', () => {
-    it('exports test vectors', () => expect(TEST_VECTORS.length).toBeGreaterThan(0))
+    it('exports test vectors and matches expected output', () => {
+        expect(TEST_VECTORS.length).toBeGreaterThan(0)
+        for (const v of TEST_VECTORS) {
+            expect(encrypt(v.input, v.key).output).toBe(v.expected)
+        }
+    })
+
+    it('verifies pairing bilinearity e(aP, Q) === e(P, aQ)', () => {
+        const Q_mod = 0xFFFFFFFFFFFFFFC4n
+        const a = 12345n
+        const p1 = 67890n
+        const p2 = 54321n
+
+        const ap1 = (a * p1) % Q_mod
+        const ap2 = (a * p2) % Q_mod
+
+        const e1 = pairing(ap1, p2)
+        const e2 = pairing(p1, ap2)
+
+        expect(e1).toBe(e2)
+        expect(e1).not.toBe(1n)
+    })
+
+    it('verifies pairing non-degeneracy: distinct inputs produce distinct non-trivial outputs', () => {
+        const p1 = 123n, p2 = 456n
+        const p3 = 789n, p4 = 101112n
+
+        const e1 = pairing(p1, p2)
+        const e2 = pairing(p3, p4)
+
+        expect(e1).not.toBe(1n)
+        expect(e2).not.toBe(1n)
+        expect(e1).not.toBe(e2)
+    })
 
     it('round trips with correct identity', () => {
-        // Setup: PKG master secret s = 5, P = 1. P_pub = 5.
+        // Setup: PKG master secret s = 5, P_pub = 5.
         const s = 5n
         const P_pub = 5n
 

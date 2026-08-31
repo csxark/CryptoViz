@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useChartData } from "@/hooks/useChartData";
-import type { SessionDelta } from "@/lib/utils/sessionComparison";
+import type { SessionDelta } from "@/lib/utils/comparison";
 
 describe("useChartData", () => {
   it("returns an empty array when delta is null or undefined", () => {

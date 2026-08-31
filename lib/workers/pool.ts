@@ -1,5 +1,7 @@
+import type { WorkerPriority } from '../../types/worker'
 
-export type WorkerPriority = 'INTERACTIVE' | 'NORMAL' | 'BACKGROUND'
+export { type WorkerPriority } from '../../types/worker'
+
 export const WORKER_PRIORITY: Record<WorkerPriority, number> = {
   INTERACTIVE: 0,
   NORMAL: 1,
@@ -43,11 +45,15 @@ export class WorkerPool {
   private sequence = 0
   private interactiveWorker: Worker | null = null
 
+  private fallbackMode = false;
+  private fallbackWorker: Worker | null = null;
+
   constructor(
     private workerFactory: () => Worker,
     private poolSize: number = typeof navigator !== 'undefined'
       ? (navigator.hardwareConcurrency || 4)
       : 4,
+    private fallbackExecutor?: (message: unknown, onProgress?: ProgressCallback) => Promise<unknown> | unknown
   ) {
     this.poolSize = Math.max(1, this.poolSize)
   }
@@ -99,8 +105,6 @@ export class WorkerPool {
         options.signal.addEventListener('abort', onAbort, { once: true })
       }
 
-      // Interactive jobs get a dedicated lane. This means a user scrub/keypress
-      // never waits behind every occupied background worker.
       if (priority === 'INTERACTIVE') {
         if (!this.interactiveWorker) {
           this.interactiveWorker = this.createWorker()
@@ -126,17 +130,79 @@ export class WorkerPool {
 
   private enqueue(task: PoolTask) {
     this.taskQueue.push(task)
-    this.taskQueue.sort((a, b) =>
-      WORKER_PRIORITY[a.priority] - WORKER_PRIORITY[b.priority] ||
-      a.sequence - b.sequence,
+    this.taskQueue.sort(
+      (a, b) =>
+        WORKER_PRIORITY[a.priority] - WORKER_PRIORITY[b.priority] ||
+        a.sequence - b.sequence,
     )
   }
 
   private createWorker(): Worker {
-    const worker = this.workerFactory()
-    this.workers.push(worker)
-    this.setupWorker(worker)
-    return worker
+    if (this.fallbackMode && this.fallbackExecutor) {
+      return this.createFallbackWorker();
+    }
+
+    try {
+      if (this.fallbackMode) {
+        throw new DOMException('Sandbox', 'SecurityError');
+      }
+      const worker = this.workerFactory()
+      this.workers.push(worker)
+      this.setupWorker(worker)
+      return worker
+    } catch (error: any) {
+      if ((error?.name === 'SecurityError' || error?.message?.includes('sandbox')) && this.fallbackExecutor) {
+        this.fallbackMode = true;
+        return this.createFallbackWorker();
+      }
+      throw error;
+    }
+  }
+
+  private createFallbackWorker(): Worker {
+    
+    // Create a pseudo-Worker that executes inline
+    const worker = {
+      postMessage: async (message: any) => {
+        // Run asynchronously to simulate worker message passing
+        setTimeout(async () => {
+          try {
+            const result = await this.fallbackExecutor!(message, (progressPayload) => {
+              worker.onmessage?.({
+                data: {
+                  type: 'PROGRESS',
+                  payload: progressPayload
+                }
+              } as MessageEvent);
+            });
+            worker.onmessage?.({
+              data: {
+                type: "DONE",
+                payload: result
+              }
+            } as MessageEvent);
+          } catch (err: any) {
+            worker.onmessage?.({
+              data: {
+                type: "ERROR",
+                payload: { message: err?.message || String(err) }
+              }
+            } as MessageEvent);
+          }
+        }, 0);
+      },
+      terminate: () => {},
+      onmessage: null as any,
+      onerror: null as any,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => true
+    } as unknown as Worker;
+    
+    this.fallbackWorker = worker;
+    this.workers.push(worker);
+    this.setupWorker(worker);
+    return worker;
   }
 
   private setupWorker(worker: Worker) {
@@ -147,10 +213,19 @@ export class WorkerPool {
       const type = String(data.type ?? '').toUpperCase()
       const payload = data.payload ?? data
 
-      if (type === 'PROGRESS' || type === 'PROGRESS_UPDATE' || data.type === 'progress') {
+      if (
+        type === 'PROGRESS' ||
+        type === 'PROGRESS_UPDATE' ||
+        data.type === 'progress'
+      ) {
         task.onProgress?.({
-          percent: Math.max(0, Math.min(100, Number(payload.percent ?? 0))),
-          currentMilestone: String(payload.currentMilestone ?? payload.message ?? ''),
+          percent: Math.max(
+            0,
+            Math.min(100, Number(payload.percent ?? 0)),
+          ),
+          currentMilestone: String(
+            payload.currentMilestone ?? payload.message ?? '',
+          ),
           jobId: String(payload.jobId ?? task.jobId),
         })
         return
@@ -163,15 +238,30 @@ export class WorkerPool {
       }
 
       if (type === 'ERROR' || type === 'error') {
-        task.callback(new Error(payload?.message || payload?.error || 'Worker error'))
+        task.callback(
+          new Error(
+            payload?.message || payload?.error || 'Worker error',
+          ),
+        )
         this.finishTask(worker)
         return
       }
 
-      // Existing workers use {requestId, success, payload}; keep that protocol working.
       if ('success' in data && ('requestId' in data || 'id' in data)) {
-        if (data.success) task.callback(null, data.payload?.result ?? data.result ?? data.payload)
-        else task.callback(new Error(data.payload?.error ?? data.error ?? 'Worker error'))
+        if (data.success) {
+          task.callback(
+            null,
+            data.payload?.result ?? data.result ?? data.payload,
+          )
+        } else {
+          task.callback(
+            new Error(
+              data.payload?.error ??
+                data.error ??
+                'Worker error',
+            ),
+          )
+        }
         this.finishTask(worker)
         return
       }
@@ -192,13 +282,19 @@ export class WorkerPool {
     try {
       const message =
         task.message && typeof task.message === 'object'
-          ? { ...(task.message as Record<string, unknown>), jobId: task.jobId, priority: task.priority }
+          ? {
+              ...(task.message as Record<string, unknown>),
+              jobId: task.jobId,
+              priority: task.priority,
+            }
           : task.message
       if (task.transfer?.length) worker.postMessage(message, task.transfer)
       else worker.postMessage(message)
     } catch (error) {
       this.activeTasks.delete(worker)
-      task.callback(error instanceof Error ? error : new Error(String(error)))
+      task.callback(
+        error instanceof Error ? error : new Error(String(error)),
+      )
       this.makeWorkerAvailable(worker)
     }
   }
@@ -210,7 +306,9 @@ export class WorkerPool {
 
   private makeWorkerAvailable(worker: Worker) {
     if (worker === this.interactiveWorker) {
-      const nextInteractive = this.taskQueue.find((task) => task.priority === 'INTERACTIVE')
+      const nextInteractive = this.taskQueue.find(
+        (task) => task.priority === 'INTERACTIVE',
+      )
       if (nextInteractive) {
         this.taskQueue.splice(this.taskQueue.indexOf(nextInteractive), 1)
         this.runTask(worker, nextInteractive)
@@ -226,8 +324,8 @@ export class WorkerPool {
       } else {
         this.runTask(worker, nextTask)
       }
-    } else {
-      if (!this.idleWorkers.includes(worker)) this.idleWorkers.push(worker)
+    } else if (!this.idleWorkers.includes(worker)) {
+      this.idleWorkers.push(worker)
     }
   }
 

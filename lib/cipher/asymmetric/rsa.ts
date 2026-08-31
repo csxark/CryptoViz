@@ -164,6 +164,14 @@ const METADATA: CipherMetadata = {
   securityWarning: '⚠️ This demo uses a static RSA key pair embedded in source code.',
 }
 
+/**
+ * TEST VECTORS asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '65',
@@ -179,6 +187,16 @@ export const TEST_VECTORS: TestVector[] = [
   },
 ]
 
+/**
+ * Extended GCD asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param a Input required by the Extended GCD operation.
+ * @param b Input required by the Extended GCD operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function extendedGCD(a: bigint, b: bigint): { gcd: bigint; x: bigint; y: bigint } {
   if (a === 0n) return { gcd: b, x: 0n, y: 1n }
   const { gcd, x, y } = extendedGCD(b % a, a)
@@ -196,6 +214,16 @@ function lcm(a: bigint, b: bigint): bigint {
   return (a / gcd(a, b)) * b
 }
 
+/**
+ * Mod Inverse asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param e Input required by the Mod Inverse operation.
+ * @param lambda Input required by the Mod Inverse operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function modInverse(e: bigint, lambda: bigint): bigint {
   const { gcd, x } = extendedGCD(e, lambda)
   if (gcd !== 1n) {
@@ -204,6 +232,17 @@ export function modInverse(e: bigint, lambda: bigint): bigint {
   return ((x % lambda) + lambda) % lambda
 }
 
+/**
+ * Mod Pow asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param base Input required by the Mod Pow operation.
+ * @param exp Input required by the Mod Pow operation.
+ * @param mod Input required by the Mod Pow operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function modPow(base: bigint, exp: bigint, mod: bigint): bigint {
   let result = 1n
   let currentBase = base % mod
@@ -221,6 +260,14 @@ export function modPow(base: bigint, exp: bigint, mod: bigint): bigint {
 // ---------------------------------------------------------------------------
 // CRT Parameters, Garner's Recombination & Bellcore Fault Simulation
 // ---------------------------------------------------------------------------
+/**
+ * Rsa Crt Key Info asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export interface RsaCrtKeyInfo {
   n: bigint;
   p: bigint;
@@ -231,6 +278,17 @@ export interface RsaCrtKeyInfo {
   qInv: bigint;
 }
 
+/**
+ * Compute Crt Parameters asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param p Input required by the Compute Crt Parameters operation.
+ * @param q Input required by the Compute Crt Parameters operation.
+ * @param d Input required by the Compute Crt Parameters operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function computeCrtParameters(p: bigint, q: bigint, d: bigint): RsaCrtKeyInfo {
   const n = p * q;
   const dp = d % (p - 1n);
@@ -239,6 +297,14 @@ export function computeCrtParameters(p: bigint, q: bigint, d: bigint): RsaCrtKey
   return { n, p, q, d, dp, dq, qInv };
 }
 
+/**
+ * Decrypt Crt asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decryptCrt(
   c: bigint,
   crtKey: RsaCrtKeyInfo,
@@ -259,6 +325,18 @@ export function decryptCrt(
   return { m, mp, mq };
 }
 
+/**
+ * Execute Bellcore Attack asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param faultySignature Input required by the Execute Bellcore Attack operation.
+ * @param e Input required by the Execute Bellcore Attack operation.
+ * @param c Input required by the Execute Bellcore Attack operation.
+ * @param n Input required by the Execute Bellcore Attack operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function executeBellcoreAttack(faultySignature: bigint, e: bigint, c: bigint, n: bigint): bigint {
   // gcd(s'^e - c, n)
   const se = modPow(faultySignature, e, n);
@@ -387,6 +465,14 @@ function parseRsaKey(keyStr: string, isPrivateKey: boolean): { n: bigint; e?: bi
   throw new CipherError('INVALID_KEY', 'Invalid RSA key format.')
 }
 
+/**
+ * Encrypt asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string = '',
@@ -440,6 +526,14 @@ export function encrypt(
   }
 }
 
+/**
+ * Decrypt asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   key: string = '',

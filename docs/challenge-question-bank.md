@@ -1,27 +1,49 @@
-# Expanded Challenge Question Bank
+# Practice Challenge Question Bank
 
 ## Overview
 
-The **Challenge Question Bank** (`/challenge`) provides a comprehensive repository of 300+ curated multiple-choice questions, conceptual quizzes, and timed decryption challenges covering all cryptographic categories and difficulty levels.
+The **Practice Challenge Question Bank** (`/challenge`) provides curated
+multiple-choice questions covering core cryptography concepts across
+classical ciphers, symmetric cryptography, asymmetric cryptography, hash
+functions, and cryptographic attacks.
+
+The question bank is backed directly by `lib/challenge/questionBank.ts`.
+The repository currently contains **67 curated questions**.
+
+The question count should be treated as a repository metric rather than a
+fixed marketing claim. The application derives its displayed count directly
+from the question bank to prevent stale or inflated numbers.
 
 ---
 
 ## Question Bank Structure
 
-| Category | Question Count | Topics Covered |
-| --- | --- | --- |
-| **Classical Ciphers** | 60+ Questions | Caesar, ROT13, Atbash, Vigenère, Playfair, Railfence, Affine, Polybius, Bacon, Enigma, Hill |
-| **Symmetric Encryption** | 75+ Questions | AES, DES, 3DES, Blowfish, Twofish, ChaCha20, Salsa20, Block Cipher Modes (ECB, CBC, CTR, GCM), Padding (PKCS#7) |
-| **Asymmetric Cryptography** | 65+ Questions | RSA (Modular exponentiation, totient φ(n), OAEP), Diffie-Hellman, ECC (secp256k1, Curve25519, ECDSA), Post-Quantum PQC (ML-KEM / ML-DSA) |
-| **Hash & KDF Primitives** | 60+ Questions | SHA-256, SHA-512, SHA-3 (Keccak Sponge Construction), HMAC, PBKDF2, bcrypt, scrypt, Argon2id, HKDF |
-| **Attacks & Security** | 50+ Questions | Birthday Attacks, Padding Oracle, Replay Attacks, Timing Side-Channel Attacks, Nonce Reuse, Heartbleed, MITM |
+| Category | Topics Covered |
+| --- | --- |
+| **Classical Ciphers** | Caesar, ROT13, Atbash, Vigenère, Playfair, Rail Fence, Affine, Enigma |
+| **Symmetric Encryption** | AES, DES, 3DES, Blowfish, Twofish, ChaCha20, block cipher modes, padding |
+| **Asymmetric Cryptography** | RSA, Diffie-Hellman, ECC, ECDSA, post-quantum cryptography |
+| **Hash & KDF Primitives** | SHA-256, SHA-3, HMAC, PBKDF2, Argon2id and related concepts |
+| **Attacks & Security** | Padding oracles, replay attacks, birthday attacks, timing attacks and related security concepts |
 
 ---
 
-## Features & Features Controls
+## Question Format
 
-- **300+ Curated Question Pool**: Filterable by category (`Classical`, `Symmetric`, `Asymmetric`, `Hash`, `Attacks`) and difficulty (`Easy`, `Medium`, `Hard`).
-- **Real-Time Keyword Search**: Filter questions by algorithm name or topic.
-- **Detailed Explanations**: Instant mathematical explanations and historical context for every question option.
-- **Hints & Scoring**: Interactive hint reveals and real-time score tracking.
-- **Integration**: Seamlessly integrated alongside the Daily Quiz and Timed Interactive Decryption modes on `/challenge`.
+Each question is represented by a `QuizQuestion` object containing:
+
+- A unique question ID
+- A cryptographic category
+- A difficulty level
+- An optional cipher or primitive ID
+- The question prompt
+- Four answer options
+- The correct answer index
+- An explanation
+- A learning hint
+- Searchable tags
+
+The canonical type is defined in:
+
+```text
+lib/challenge/questionBank.ts

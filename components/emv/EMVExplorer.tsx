@@ -149,18 +149,18 @@ export default function EMVExplorer() {
       {/* Navigation Tabs */}
       <div className="flex overflow-x-auto gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 scrollbar-hide">
         {[
-          { id: 'pos', label: 'POS Terminal & Card Simulator', icon: ShoppingBag },
-          { id: 'cryptogram', label: 'ARQC / ARPC Cryptogram Inspector', icon: Lock },
-          { id: 'hierarchy', label: 'Key Derivation Hierarchy', icon: Sliders },
-          { id: 'fraud', label: 'POS Fraud & Security Sandbox', icon: ShieldAlert },
-          { id: 'theory', label: 'EMV Standards & HSM Theory', icon: BookOpen },
+          { id: 'pos' as const, label: 'POS Terminal & Card Simulator', icon: ShoppingBag },
+          { id: 'cryptogram' as const, label: 'ARQC / ARPC Cryptogram Inspector', icon: Lock },
+          { id: 'hierarchy' as const, label: 'Key Derivation Hierarchy', icon: Sliders },
+          { id: 'fraud' as const, label: 'POS Fraud & Security Sandbox', icon: ShieldAlert },
+          { id: 'theory' as const, label: 'EMV Standards & HSM Theory', icon: BookOpen },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
                 isActive
                   ? 'bg-blue-500 text-white dark:text-zinc-950 dark:font-bold shadow-md shadow-blue-500/20'
@@ -427,14 +427,14 @@ export default function EMVExplorer() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { id: 'NONE', label: '1. Valid Transaction', desc: 'Normal Payment Flow' },
-              { id: 'REPLAY_ATTACK', label: '2. Replay Attack', desc: 'Re-use previous ATC' },
-              { id: 'AMOUNT_FRAUD', label: '3. Amount Tampering', desc: 'POS alters $10 to $1,000' },
-              { id: 'FORGED_CHIP_KEY', label: '4. Forged Chip Key', desc: 'Cloned chip without MK' },
+              { id: 'NONE' as const, label: '1. Valid Transaction', desc: 'Normal Payment Flow' },
+              { id: 'REPLAY_ATTACK' as const, label: '2. Replay Attack', desc: 'Re-use previous ATC' },
+              { id: 'AMOUNT_FRAUD' as const, label: '3. Amount Tampering', desc: 'POS alters $10 to $1,000' },
+              { id: 'FORGED_CHIP_KEY' as const, label: '4. Forged Chip Key', desc: 'Cloned chip without MK' },
             ].map(m => (
               <button
                 key={m.id}
-                onClick={() => setAttackMode(m.id as any)}
+                onClick={() => setAttackMode(m.id)}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   attackMode === m.id
                     ? 'bg-blue-500 text-zinc-950 border-blue-400 font-bold shadow-lg shadow-blue-500/20'

@@ -15,7 +15,7 @@
  */
 
 import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVector } from '../types'
-import { CipherError, validateInput } from '../../utils'
+import { CipherError, validateHashInput } from '../../utils'
 
 const METADATA: CipherMetadata = {
   name: 'MD4',
@@ -159,16 +159,44 @@ function md4Digest(input: string, instrument: boolean): CipherResult {
   }
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param _key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, _key: string, options: CipherOptions = {}): CipherResult {
-  if (input === null || input === undefined || typeof input !== 'string') {
-    throw new CipherError('INPUT_REQUIRED', 'Input text is required.')
-  }
+  validateHashInput(input)
   return md4Digest(input, !!options.instrument)
 }
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param _input Input required by the Decrypt operation.
+ * @param _key Input required by the Decrypt operation.
+ * @param __options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(_input: string, _key: string, __options: CipherOptions = {}): CipherResult {
   throw new CipherError('ALGORITHM_UNSUPPORTED', 'MD4 is a one-way hash function — it has no decrypt operation.')
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   { input: '', key: '', expected: '31d6cfe0d16ae931b73c59d7e0c089c0', description: 'RFC 1320 test vector, empty input' },
   { input: 'abc', key: '', expected: 'a448017aaf21d8525fc10ae87aa6729d', description: 'RFC 1320 test vector, "abc"' },

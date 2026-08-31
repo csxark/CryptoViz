@@ -38,13 +38,12 @@ export default function VisualCryptographyPage() {
         <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
           Compare algebraic secret sharing over finite fields with visual cryptography.
         </p>
-        <Link
-          href="/shamir-secret-sharing"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-teal-600 hover:underline dark:text-teal-400"
-        >
-          View Shamir's Secret Sharing (Polynomial GF(256) Scheme) →
-        </Link>
-      </div>
+<Link
+  href="/visualizer/secret-recovery/"
+  className="inline-flex items-center gap-2 text-xs font-semibold text-teal-600 hover:underline dark:text-teal-400"
+>
+  Launch Shamir's Secret Sharing & Threshold Recovery Visualizer →
+</Link>      </div>
     </div>
   )
 }

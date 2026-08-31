@@ -1,31 +1,33 @@
-import { describe, it, expect } from 'vitest'
-import fs from 'fs'
-import path from 'path'
-import { generatePrecacheList } from '../../../scripts/generate-sw-precache.mjs'
+import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 
-describe('Service Worker Precache Generator', () => {
-  it('discovers routes dynamically from app directory', () => {
-    const precacheList = generatePrecacheList()
-    expect(precacheList).toBeInstanceOf(Array)
-    expect(precacheList.length).toBeGreaterThan(10)
+describe("service-worker release lifecycle", () => {
+  const swPath = path.resolve(process.cwd(), "public/sw.js");
+  const source = fs.readFileSync(swPath, "utf8");
 
-    // Verify key routes exist in generated list
-    expect(precacheList).toContain('/')
-    expect(precacheList).toContain('/offline/')
-    expect(precacheList).toContain('/docs/')
-    expect(precacheList).toContain('/resources/')
-    expect(precacheList).toContain('/benchmark/')
-    expect(precacheList).toContain('/cipher-sandbox/')
-    expect(precacheList).toContain('/visualizer/caesar/')
-  })
+  it("uses a release-versioned cache and removes previous releases", () => {
+    expect(source).toContain('const CACHE_NAME = `${CACHE_PREFIX}${RELEASE_VERSION}`');
+    expect(source).toContain("name.startsWith(CACHE_PREFIX)");
+    expect(source).toContain("name !== CACHE_NAME");
+  });
 
-  it('verifies public/sw.js contains auto-generated precache list', () => {
-    const swPath = path.resolve(process.cwd(), 'public/sw.js')
-    expect(fs.existsSync(swPath)).toBe(true)
+  it("does not activate a partially cached release", () => {
+    expect(source).toContain("cache.addAll(PRECACHE_URLS)");
+    expect(source).toContain("caches.delete(CACHE_NAME)");
+    expect(source).toContain("self.skipWaiting()");
+  });
 
-    const content = fs.readFileSync(swPath, 'utf8')
-    expect(content).toContain('CryptoViz Service Worker (Auto-Generated Precache)')
-    expect(content).toContain('PRECACHE_URLS')
-    expect(content).toContain('/visualizer/caesar/')
-  })
-})
+  it("supports a port-based version handshake and forced update", () => {
+    expect(source).toContain("event.ports?.[0]");
+    expect(source).toContain("CRYPTOVIZ_SW_SKIP_WAITING");
+    expect(source).toContain("protocolVersion: PROTOCOL_VERSION");
+  });
+
+  it("does not include missing /globals.css in PRECACHE_URLS", () => {
+    expect(source).not.toContain('"/globals.css"');
+    expect(source).toContain('"/"');
+    expect(source).toContain('"/icon.svg"');
+    expect(source).toContain('"/theme-init.js"');
+  });
+});

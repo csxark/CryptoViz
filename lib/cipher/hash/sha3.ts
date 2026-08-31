@@ -28,6 +28,14 @@ const METADATA: CipherMetadata = {
   standardBody: 'NIST FIPS 202',
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '',
@@ -101,13 +109,57 @@ function generateRhoOffsets(): number[][] {
 const ROUND_CONSTANTS = generateRoundConstants()
 const RHO_OFFSETS = generateRhoOffsets()
 
-// state[x + 5*y] holds lane (x,y). Mutates state in place.
-function keccakF1600(state: BigUint64Array, steps?: CipherStep[], stepLabelPrefix?: string): void {
-  for (let round = 0; round < 24; round++) {
+// Keccak-p[1600, n_r] permutation where n_r defaults to 24.
+// For KangarooTwelve, n_r = 12 (the last 12 rounds: 24 - 12 = 12..23).
+/**
+ * Keccak P cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export function keccakP(
+  state: BigUint64Array,
+  rounds?: number,
+  steps?: CipherStep[],
+  stepLabelPrefix?: string,
+): BigUint64Array
+/**
+ * Keccak P cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param state Input required by the Keccak P operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export function keccakP(state: bigint[], rounds?: number): bigint[]
+/**
+ * Keccak P cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export function keccakP(
+  state: BigUint64Array | bigint[],
+  rounds: number = 24,
+  steps?: CipherStep[],
+  stepLabelPrefix?: string,
+): BigUint64Array | bigint[] {
+  const isArray = Array.isArray(state)
+  const words = isArray
+    ? BigUint64Array.from(state.map((word) => BigInt.asUintN(64, word)))
+    : state
+
+  const startRound = 24 - rounds
+  for (let round = startRound; round < 24; round++) {
     // Theta: XOR each column's parity into every lane in that column's neighbors
     const C = new Array<bigint>(5)
     for (let x = 0; x < 5; x++) {
-      C[x] = state[x] ^ state[x + 5] ^ state[x + 10] ^ state[x + 15] ^ state[x + 20]
+      C[x] = words[x] ^ words[x + 5] ^ words[x + 10] ^ words[x + 15] ^ words[x + 20]
     }
     const D = new Array<bigint>(5)
     for (let x = 0; x < 5; x++) {
@@ -115,7 +167,7 @@ function keccakF1600(state: BigUint64Array, steps?: CipherStep[], stepLabelPrefi
     }
     for (let x = 0; x < 5; x++) {
       for (let y = 0; y < 5; y++) {
-        state[x + 5 * y] ^= D[x]
+        words[x + 5 * y] ^= D[x]
       }
     }
 
@@ -125,19 +177,19 @@ function keccakF1600(state: BigUint64Array, steps?: CipherStep[], stepLabelPrefi
       for (let y = 0; y < 5; y++) {
         const newX = y
         const newY = (2 * x + 3 * y) % 5
-        B[newX + 5 * newY] = rotl64(state[x + 5 * y], RHO_OFFSETS[x][y])
+        B[newX + 5 * newY] = rotl64(words[x + 5 * y], RHO_OFFSETS[x][y])
       }
     }
 
     // Chi: nonlinear mixing within each row
     for (let x = 0; x < 5; x++) {
       for (let y = 0; y < 5; y++) {
-        state[x + 5 * y] = B[x + 5 * y] ^ (~B[(x + 1) % 5 + 5 * y] & MASK64 & B[(x + 2) % 5 + 5 * y])
+        words[x + 5 * y] = B[x + 5 * y] ^ (~B[(x + 1) % 5 + 5 * y] & MASK64 & B[(x + 2) % 5 + 5 * y])
       }
     }
 
     // Iota: XOR the round constant into lane (0,0) to break symmetry
-    state[0] ^= ROUND_CONSTANTS[round]
+    words[0] ^= ROUND_CONSTANTS[round]
 
     if (steps) {
       steps.push({
@@ -145,11 +197,29 @@ function keccakF1600(state: BigUint64Array, steps?: CipherStep[], stepLabelPrefi
         label: `${stepLabelPrefix ?? 'Permutation'} — round ${round + 1}/24`,
         inputState: '',
         outputState: '',
-        table: [{ key: 'Lane (0,0) after iota', value: '0x' + state[0].toString(16).padStart(16, '0') }],
+        table: [{ key: 'Lane (0,0) after iota', value: '0x' + words[0].toString(16).padStart(16, '0') }],
         note: 'theta -> rho -> pi -> chi -> iota applied to the 1600-bit state.',
       })
     }
   }
+
+  if (isArray) {
+    return Array.from(words, (word) => BigInt.asUintN(64, word))
+  }
+  return words
+}
+
+/**
+ * Keccak F1600 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param state Input required by the Keccak F1600 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export function keccakF1600(state: BigUint64Array, steps?: CipherStep[], stepLabelPrefix?: string): void {
+  keccakP(state, 24, steps, stepLabelPrefix)
 }
 
 function padTenOne(inputBytes: Uint8Array): Uint8Array {
@@ -234,6 +304,17 @@ function sha3Instrumented(inputBytes: Uint8Array): CipherResult {
   }
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param _key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, _key: string = '', options: CipherOptions = {}): CipherResult {
   if (input === null || input === undefined || typeof input !== 'string') {
     throw new CipherError('INPUT_REQUIRED', 'Input is required.')
@@ -259,6 +340,14 @@ export function encrypt(input: string, _key: string = '', options: CipherOptions
   }
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(): CipherResult {
   throw new CipherError(
     'ALGORITHM_UNSUPPORTED',

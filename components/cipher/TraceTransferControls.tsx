@@ -8,8 +8,8 @@ import {
   getTraceFilename,
   parseCipherTraceJson,
   type CipherTraceFile,
-} from "../../lib/utils/cipherTrace";
-import {
+  type TraceExportMode,
+} from "../../lib/utils/cipherTrace";import {
   parseLessonPackageJson,
   verifyLessonIntegrity,
   type LessonPackage,
@@ -56,9 +56,14 @@ export default function TraceTransferControls({
   const lessonFileInputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
+  const [includeSensitiveValues, setIncludeSensitiveValues] = useState(false);
 
   const handleExport = () => {
     if (!result) return;
+
+    const exportMode: TraceExportMode = includeSensitiveValues
+      ? "full"
+      : "redacted";
 
     const trace = createCipherTrace({
       cipherId,
@@ -67,13 +72,17 @@ export default function TraceTransferControls({
       key: cipherKey,
       options,
       result,
+      exportMode,
     });
 
     downloadJson(trace);
     setIsError(false);
-    setMessage("Trace exported successfully.");
+    setMessage(
+      exportMode === "full"
+        ? "Trace exported successfully. The key and secrets are included — share it carefully."
+        : "Trace exported successfully. The key and secrets were redacted.",
+    );
   };
-
   const handleImport = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -169,12 +178,21 @@ export default function TraceTransferControls({
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
+      <label className="flex items-center gap-2 text-2xs text-zinc-500 dark:text-zinc-400">
+        <input
+          type="checkbox"
+          checked={includeSensitiveValues}
+          onChange={(e) => setIncludeSensitiveValues(e.target.checked)}
+          className="h-3 w-3"
+        />
+        Include key &amp; secrets in export (educational mode)
+      </label>
+
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={handleExport}
-          disabled={!result}
-          className="rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-teal-500 dark:hover:bg-teal-400"
+          disabled={!result}          className="rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-teal-500 dark:hover:bg-teal-400"
         >
           Export Trace
         </button>

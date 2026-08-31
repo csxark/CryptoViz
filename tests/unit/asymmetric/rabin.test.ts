@@ -31,4 +31,15 @@ describe('Rabin cryptosystem', () => {
   it('rejects a plaintext outside [0, n)', () => {
     expect(() => encrypt('9999', '437')).toThrow(/0 <= m < n/)
   })
+
+  it('performs strict round-trip decryption assertions across test inputs', () => {
+    const inputs = ['12', '45', '100', '200']
+    const key = '437'
+    const privKey = '19,23'
+    for (const msg of inputs) {
+      const encrypted = encrypt(msg, key)
+      const decryptedRoots = decrypt(encrypted.output, privKey).output.split(',')
+      expect(decryptedRoots).toContain(msg)
+    }
+  })
 })

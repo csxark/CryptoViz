@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/footer'
 import Breadcrumbs from '@/components/layout/Breadcrumbs'
@@ -29,14 +29,38 @@ function DashboardSkeleton() {
 }
 
 function ResetModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Handle accessibility close trigger on Escape keydown
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Focus Trap Base implementation: Force contextual focus inside container
+    modalRef.current?.focus();
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reset-dialog-title"
+      aria-describedby="reset-dialog-description"
+      ref={modalRef}
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm outline-none"
+    >
       <div className="w-full max-w-sm rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 shadow-2xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="rounded-full bg-rose-500/10 p-2"><AlertTriangle size={20} className="text-rose-500" /></div>
-          <h2 className="font-bold text-zinc-900 dark:text-zinc-50">Reset All Progress?</h2>
+          <h2 id="reset-dialog-title" className="font-bold text-zinc-900 dark:text-zinc-50">Reset All Progress?</h2>
         </div>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will permanently erase your algorithm visits, challenge stats, streaks, and bookmarks. This action cannot be undone.</p>
+        <p id="reset-dialog-description" className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will permanently erase your algorithm visits, challenge stats, streaks, and bookmarks. This action cannot be undone.</p>
         <div className="flex gap-3">
           <button onClick={onCancel} className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">Cancel</button>
           <button onClick={onConfirm} className="flex-1 rounded-lg bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 transition-colors">Reset Progress</button>

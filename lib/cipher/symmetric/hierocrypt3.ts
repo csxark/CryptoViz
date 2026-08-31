@@ -44,9 +44,9 @@ const S_BOX: number[] = [
     0xD4, 0x1D, 0x67, 0xA8, 0x33, 0x9B, 0xF4, 0x51, 0xBC, 0x03, 0x7B, 0xEA, 0x24, 0x8C, 0x65, 0xDF,
     0x43, 0x9A, 0x18, 0x7D, 0xB8, 0x2E, 0x60, 0xC6, 0x05, 0x88, 0xF1, 0x3A, 0xA7, 0x53, 0xD0, 0x4C,
     0xEE, 0x22, 0x8F, 0x11, 0x69, 0xC0, 0x37, 0xA9, 0x5F, 0xD7, 0x02, 0x74, 0xB2, 0x4D, 0x96, 0x80,
-    0x26, 0xF9, 0x48, 0xBB, 0x01, 0x75, 0xAC, 0x31, 0x99, 0x6E, 0xDE, 0x10, 0x8A, 0x57, 0xC5, 0x20,
-    0xF6, 0x32, 0x79, 0x0F, 0xA4, 0x59, 0xD2, 0x44, 0x8B, 0x1E, 0x66, 0xBF, 0x25, 0x9C, 0xE9, 0x30,
-    0x40, 0xC2, 0x55, 0xF3, 0x1F, 0x87, 0xAE, 0x2A, 0x61, 0xDB, 0x0D, 0x9E, 0x78, 0x34, 0xB6, 0x53
+    0x26, 0xF9, 0x48, 0xBB, 0x01, 0x75, 0xAC, 0x31, 0x99, 0x6E, 0x00, 0x10, 0x5C, 0x57, 0xC5, 0x20,
+    0xF6, 0x32, 0x79, 0x0F, 0xCA, 0x59, 0xD2, 0x44, 0xCE, 0x1E, 0x66, 0xBF, 0x25, 0xDA, 0xE9, 0x30,
+    0x40, 0xC2, 0x55, 0xF3, 0xDD, 0xE2, 0xAE, 0xEB, 0xEC, 0xDB, 0xED, 0xFB, 0xFC, 0xFD, 0xB6, 0xFF
 ]
 
 const S_BOX_INV: number[] = new Array(256).fill(0)
@@ -176,10 +176,10 @@ function outerDiffusion(state: number[]): number[] {
  */
 function outerDiffusionInv(state: number[]): number[] {
     const INV_OUTER_MDS: number[][] = [
-        [10, 11, 14, 15],
-        [15, 10, 11, 14],
-        [14, 15, 10, 11],
-        [11, 14, 15, 10]
+        [0x85, 0x4E, 0xA6, 0xA6],
+        [0xA6, 0x85, 0x4E, 0xA6],
+        [0xA6, 0xA6, 0x85, 0x4E],
+        [0x4E, 0xA6, 0xA6, 0x85]
     ]
 
     const out: number[] = new Array(16).fill(0)
@@ -332,16 +332,46 @@ function hierocrypt3Core(input: string, key: string, doDecrypt: boolean, instrum
     return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return hierocrypt3Core(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return hierocrypt3Core(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '00000000000000000000000000000000',

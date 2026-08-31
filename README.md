@@ -1,7 +1,7 @@
 <!-- README.md -->
 # CryptoViz
 
-Interact with Cryptography, Visualised in Real-Time.
+Interact with Cryptography, Visualized in Real-Time.
 
 ![CI Status](https://img.shields.io/github/actions/workflow/status/csxark/CryptoViz/ci.yml?branch=main&label=CI)
 ![License](https://img.shields.io/github/license/csxark/CryptoViz?color=blue&label=License)
@@ -27,20 +27,52 @@ CryptoViz is a fully static Next.js 15 cybersecurity visualizer and cryptography
 Visit the production site at [Live Demo](https://crypto-viz-liart.vercel.app). Explore the interactive visualizer ciphers, read built-in cybersecurity documentation, and browse our curated learning resources list.
 
 ---
+
 ## Table of Contents
 
-- [Features](#features)
+- [Why CryptoViz?](#why-cryptoviz)
+- [Live Demo](#-live-demo)
+- [Features](#-features)
+  - [Cipher Visualizer](#1-cipher-visualizer)
+  - [Docs Module](#2-docs-module)
+  - [Resources Module](#3-resources-module)
 - [Architecture](#architecture)
+  - [High-Level Architecture Diagram](#high-level-architecture-diagram)
+  - [Project Structure](#project-structure)
+  - [Data Flow](#data-flow)
+  - [Key Architectural Decisions](#key-architectural-decisions)
+  - [SaaS Architecture (Additive Layer)](#saas-architecture-additive-layer)
 - [Tech Stack](#tech-stack)
 - [Browser Compatibility](#browser-compatibility)
-- [Getting Started](#getting-started)
-- [Commands](#commands-reference)
+  - [Supported Desktop Browsers](#supported-desktop-browsers)
+  - [Supported Mobile Browsers](#supported-mobile-browsers)
+  - [Required Browser Features](#required-browser-features)
+  - [Recommended Browser Versions](#recommended-browser-versions)
+  - [Unsupported or Partially Supported Browsers](#unsupported-or-partially-supported-browsers)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Step-by-Step Setup](#step-by-step-setup)
+- [Commands Reference](#commands-reference)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [Frequently Asked Questions (FAQ)](#frequently-asked-questions-faq)
-- [License](#license)
-
----
+  - [`npm install` fails](#1-npm-install-fails)
+  - [`npm run build` fails](#2-npm-run-build-fails)
+  - [Development server does not start](#3-development-server-does-not-start)
+  - [Missing `.env.local` configuration](#4-missing-envlocal-configuration)
+  - [Node.js version mismatch](#5-nodejs-version-mismatch)
+  - [General Debugging Tips](#general-debugging-tips)
+- [Contributing](#-contributing)
+  - [Constants Naming Convention](#constants-naming-convention)
+- [Frequently Asked Questions (FAQ)](#-frequently-asked-questions-faq)
+  - [Which Node.js version is recommended?](#which-nodejs-version-is-recommended)
+  - [Does CryptoViz require a backend server?](#does-cryptoviz-require-a-backend-server)
+  - [Which browsers are officially supported?](#which-browsers-are-officially-supported)
+  - [Where are the cipher implementations located?](#where-are-the-cipher-implementations-located)
+  - [How do I add a new cipher?](#how-do-i-add-a-new-cipher)
+  - [How do I run tests before submitting a pull request?](#how-do-i-run-tests-before-submitting-a-pull-request)
+  - [Where can I report bugs or request new features?](#where-can-i-report-bugs-or-request-new-features)
+- [License](#-license)
+- [Acknowledgements](#-acknowledgements)
+- [Continuous Integration](#continuous-integration)
 
 ## ✨Features
 
@@ -136,7 +168,7 @@ cryptoviz/
 │   ├── store/            # Visualizer application stores
 │   ├── mdx/              # MDX remark/rehype processors
 │   ├── search/           # Pagefind index loaders
-│   └── utils/            # CSS classes merging and sanitisers
+│   └── utils/            # CSS classes merging and sanitizers
 ├── content/              # Raw data files
 │   ├── docs/             # MDX documents content
 │   └── resources.ts      # Statically-typed resource database
@@ -290,6 +322,23 @@ Ensure you have the following installed before launching:
 | **npm** | 10.x+ | `npm -v` |
 | **Git** | Latest | `git --version` |
 
+### Before You Begin
+
+Make sure you have:
+
+- Node.js 22.x LTS installed
+- npm 10.x or later installed
+- Git installed
+- A modern web browser such as Chrome, Edge, Firefox, or Safari
+
+You can verify the installed versions with:
+
+```bash
+node -v
+npm -v
+git --version
+```
+
 ### Step-by-Step Setup
 
 1. **Clone the repository**:
@@ -297,8 +346,9 @@ Ensure you have the following installed before launching:
    git clone https://github.com/csxark/CryptoViz.git
    cd CryptoViz
     ```
-
-2.  **Install node dependencies**:
+  > If you are contributing to CryptoViz, fork the repository first and clone your fork instead.
+  
+2. **Install Node.js dependencies**:
    ```bash
    npm install
    ```
@@ -308,17 +358,21 @@ Ensure you have the following installed before launching:
    *Successful dependency installation using `npm install`.*
 
 
-3. **Configure Environment Variables** (Required for OG metadata):
-   Create a `.env.local` file in the root directory:
-   ```bash
+3. **Configure environment variables**
+
+   Create a `.env.local` file in the root of the project:
+
+   ```env
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 
-4. **Launch the development server**:
+4. **Start the development server**
+
+   Start the Next.js development server:
+
    ```bash
    npm run dev
    ```
-  ![Running development server](./docs/screenshots/npm-run-dev.png)
 
 Open `http://localhost:3000` in your web browser. You should see the CryptoViz landing page with the navigation bar and theme toggle fully functional.
 
@@ -328,14 +382,18 @@ Open `http://localhost:3000` in your web browser. You should see the CryptoViz l
 
 ---
 
+
 ## Commands Reference
+
+Use the following commands during development:
 
 | Command | Description | When to use |
 | :--- | :--- | :--- |
-| `npm run dev` | Starts the development server. | Active development. |
-| `npm run build` | Builds the project for production. | Before deployment. |
-| `npm run lint` | Runs ESLint to check code quality. | Before committing changes. |
-| `npm start` | Starts the production server after running `npm run build`. | Previewing a production build locally. |
+| `npm install` | Installs project dependencies. | After cloning the repository or when dependencies change. |
+| `npm run dev` | Starts the development server. | During active development. |
+| `npm run build` | Creates a production build of the project. | Before deployment or when verifying a production build. |
+| `npm run lint` | Runs ESLint and checks the code for linting issues. | Before committing or opening a pull request. |
+| `npm start` | Starts the production server after a successful build. | When previewing the production build locally. |
 
 ---
 
@@ -446,6 +504,16 @@ If needed, upgrade to **Node.js 22.x LTS**, then reinstall dependencies using:
 npm install
 ```
 
+### 6. Windows PowerShell command issues
+
+If a command such as `rm -rf` does not work in Windows PowerShell, use the PowerShell equivalent instead:
+
+```powershell
+Remove-Item -Recurse -Force node_modules
+Remove-Item package-lock.json
+npm install
+```
+
 ---
 
 ### General Debugging Tips
@@ -465,6 +533,15 @@ We welcome contributions to CryptoViz. Please read [CONTRIBUTING.md](./CONTRIBUT
 - **To add a new cipher**: Create a pure mathematical module, add tests, and update the Web Worker router.
 - **To add a new doc**: Add a `.mdx` file to the content path with the required Zod frontmatter fields.
 - **To add a resource**: Update the static resource array database with verified HTTPS URLs.
+
+### Constants Naming Convention
+
+CryptoViz enforces a lint-friendly, centralized naming convention for application constants:
+
+- **Central Module**: All shared constants (storage keys, collection limits, event names, performance thresholds, and schema versions) are defined in [`constants/index.ts`](./constants/index.ts) and exported via `@/constants`.
+
+- **`CRYPTOVIZ_` Prefix**: All global constants use UPPER_SNAKE_CASE prefixed with **`CRYPTOVIZ_`** (e.g., `CRYPTOVIZ_BENCHMARK_HISTORY_KEY`, `CRYPTOVIZ_MAX_FAVORITE_CIPHERS`, `CRYPTOVIZ_SPEEDUP_THRESHOLD`).
+- **No Hard-coded Strings**: Modules across the codebase import constants directly from `@/constants` to ensure maintainability, avoid magic strings, and satisfy linter rules.
 
 
 ---

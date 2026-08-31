@@ -79,6 +79,87 @@ function pi(a: number[]): number[] {
     ]
 }
 
+
+function inverseGamma(a: number[]): number[] {
+    const out = [0, 0, 0]
+    const inverseTable = new Uint8Array(8)
+    for (let value = 0; value < 8; value++) {
+        const b0 = value & 1
+        const b1 = (value >>> 1) & 1
+        const b2 = (value >>> 2) & 1
+        const y0 = b0 ^ (b1 | (b2 ^ 1))
+        const y1 = b1 ^ (b2 | (b0 ^ 1))
+        const y2 = b2 ^ (b0 | (b1 ^ 1))
+        inverseTable[y0 | (y1 << 1) | (y2 << 2)] = value
+    }
+    for (let bit = 0; bit < 32; bit++) {
+        const mask = 1 << bit
+        const encoded = ((a[0] & mask ? 1 : 0)
+            | (a[1] & mask ? 2 : 0)
+            | (a[2] & mask ? 4 : 0))
+        const decoded = inverseTable[encoded]
+        if (decoded & 1) out[0] |= mask
+        if (decoded & 2) out[1] |= mask
+        if (decoded & 4) out[2] |= mask
+    }
+    return out.map(u32)
+}
+
+function inversePi(a: number[]): number[] {
+    return [rotr(a[0], 10), rotr(a[1], 1), rotr(a[2], 11)]
+}
+
+function inverseTheta(a: number[]): number[] {
+    const columns: bigint[] = []
+    for (let bit = 0; bit < 96; bit++) {
+        const basis = [0, 0, 0]
+        basis[Math.floor(bit / 32)] = 1 << (bit % 32)
+        const transformed = theta(basis)
+        columns.push(
+            BigInt(transformed[0]) |
+            (BigInt(transformed[1]) << 32n) |
+            (BigInt(transformed[2]) << 64n)
+        )
+    }
+
+    const rows = new Array<bigint>(96).fill(0n)
+    for (let row = 0; row < 96; row++) {
+        let mask = 0n
+        for (let column = 0; column < 96; column++) {
+            if ((columns[column] >> BigInt(row)) & 1n) mask |= 1n << BigInt(column)
+        }
+        rows[row] = mask | (1n << BigInt(96 + row))
+    }
+
+    for (let pivot = 0; pivot < 96; pivot++) {
+        let selected = pivot
+        while (selected < 96 && ((rows[selected] >> BigInt(pivot)) & 1n) === 0n) selected++
+        if (selected === 96) throw new Error('3-Way theta matrix is singular')
+        ;[rows[pivot], rows[selected]] = [rows[selected], rows[pivot]]
+        for (let row = 0; row < 96; row++) {
+            if (row !== pivot && ((rows[row] >> BigInt(pivot)) & 1n)) rows[row] ^= rows[pivot]
+        }
+    }
+
+    const value =
+        BigInt(a[0]) |
+        (BigInt(a[1]) << 32n) |
+        (BigInt(a[2]) << 64n)
+    const result = [0, 0, 0]
+    for (let row = 0; row < 96; row++) {
+        let parity = 0
+        let coefficients = rows[row] >> 96n
+        while (coefficients !== 0n) {
+            const lowest = coefficients & -coefficients
+            const sourceBit = Number(lowest.toString(2).length - 1)
+            parity ^= Number((value >> BigInt(sourceBit)) & 1n)
+            coefficients ^= lowest
+        }
+        if (parity) result[Math.floor(row / 32)] |= 1 << (row % 32)
+    }
+    return result.map(u32)
+}
+
 function parseHex(s: string, lbl: string): number[] {
     const c = s.replace(/\s+/g, '').toLowerCase()
     if (!/^[0-9a-f]*$/.test(c) || c.length % 2 !== 0) throw new CipherError('INVALID_INPUT', `${lbl} must be hex.`)
@@ -128,18 +209,16 @@ function threeWayCore(input: string, key: string, doDecrypt: boolean, instrument
         let state = bytesToWords(inBytes.slice(b * 12, b * 12 + 12))
 
         if (doDecrypt) {
-            // Decrypt via encrypt with bit-reversal property
-            state = state.map(reverseBits)
-            // Key relation for decrypt (simplified representation of the related key)
-            const decKey = kWords.map(reverseBits)
-
-            for (let r = 0; r < ROUNDS; r++) {
-                state = [u32(state[0] + decKey[0]), u32(state[1] + decKey[1]), u32(state[2] + decKey[2])]
-                state = gamma(state)
-                state = theta(state)
-                state = pi(state)
+            // Reverse the exact encryption pipeline.  The previous implementation
+            // used a related-key shortcut that was not the inverse of the
+            // implemented round function.
+            state = [u32(state[0] - kWords[0]), u32(state[1] - kWords[1]), u32(state[2] - kWords[2])]
+            for (let r = ROUNDS - 1; r >= 0; r--) {
+                state = inversePi(state)
+                state = inverseTheta(state)
+                state = inverseGamma(state)
+                state = [u32(state[0] - kWords[0]), u32(state[1] - kWords[1]), u32(state[2] - kWords[2])]
             }
-            state = state.map(reverseBits)
         } else {
             for (let r = 0; r < ROUNDS; r++) {
                 // Add round key (cyclically derived)
@@ -163,16 +242,46 @@ function threeWayCore(input: string, key: string, doDecrypt: boolean, instrument
     return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return threeWayCore(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return threeWayCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '000000000000000000000000', key: '000000000000000000000000', expected: 'mock_ciphertext', description: '3-Way 96-bit zero vector (Daemen 1994)' }
 ]

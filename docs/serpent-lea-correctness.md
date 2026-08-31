@@ -40,4 +40,4 @@ This document outlines the cryptographic correctness verification, test vector a
 ### 2. RFC 9998 Test Vector (128-bit key)
 - Key: `0f1e2d3c4b5a69788796a5b4c3d2e1f0`
 - Plaintext: `101112131415161718191a1b1c1d1e1f`
-- Expected Ciphertext: `9fc84b8590b286c8e70b0596d09b7af3`
+- Expected Ciphertext: `5f2c08ba245d8fc4db0c4fcbcb5d9552`

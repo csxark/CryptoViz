@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import type { AnimationSpeed } from '../cipher/StepAnimator'
 import type { CipherResult } from '../../lib/cipher/types'
+import { createVirtualizedCipherResult } from '../../lib/cipher/stepVirtualization'
 
 const StepAnimator = dynamic(() => import('../cipher/StepAnimator'), { ssr: false })
 
@@ -21,6 +23,11 @@ export default function StageList({
   onStepChange,
   onCopyStepLink,
 }: StageListProps) {
+  const virtualizedResult = useMemo(
+    () => (result ? createVirtualizedCipherResult(result) : null),
+    [result],
+  )
+
   if (!result || !result.steps || result.steps.length === 0) {
     return null
   }
@@ -31,7 +38,8 @@ export default function StageList({
         Step-by-Step Mathematical Trace
       </span>
       <StepAnimator
-        steps={result.steps}
+        steps={virtualizedResult?.steps ?? result.steps}
+        stepMetadata={virtualizedResult?.stepMetadata}
         currentStep={currentStep}
         onStepChange={onStepChange}
         speed={animationSpeed}

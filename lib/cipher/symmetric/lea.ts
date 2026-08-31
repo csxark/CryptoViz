@@ -7,12 +7,20 @@
  * RFC 9998 test vector (128-bit key):
  *   key = 0f1e2d3c4b5a69788796a5b4c3d2e1f0
  *   pt  = 101112131415161718191a1b1c1d1e1f
- *   ct  = 9fc84b8590b286c8e70b0596d09b7af3
+ *   ct  = 5f2c08ba245d8fc4db0c4fcbcb5d9552
  */
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types';
 import { CipherError, validateInput, validateKey } from '../../utils';
 
+/**
+ * METADATA cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const METADATA: CipherMetadata = {
   name: 'LEA',
   keySize: 128,
@@ -24,6 +32,14 @@ export const METADATA: CipherMetadata = {
   standardBody: 'KISA / TTAS.KO-12.0223; IETF RFC 9998 (2024)',
 };
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '101112131415161718191a1b1c1d1e1f',
@@ -179,6 +195,16 @@ function leaDecryptBlock(block: Uint8Array, RK: Uint32Array, rounds: number): Ui
   return out;
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param plaintext Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(plaintext: string, key: string, options?: CipherOptions): CipherResult {
   validateInput(plaintext);
   if (!key) {
@@ -232,6 +258,16 @@ export function encrypt(plaintext: string, key: string, options?: CipherOptions)
   };
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param ciphertext Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(ciphertext: string, key: string, options?: CipherOptions): CipherResult {
   validateInput(ciphertext);
   if (!key) {

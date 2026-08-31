@@ -98,8 +98,7 @@ export default function SignatureNonceReuseSimulator() {
         <h1 className="text-2xl font-bold text-white">Signature Nonce-Reuse Attack Lab</h1>
         <p className="text-sm text-slate-400">
           ECDSA leaks the signer&apos;s private key the moment a nonce <code>k</code> is reused across
-          two messages — the exact bug behind the Sony PS3 signing-key leak and drained Bitcoin
-          wallets. Sign two messages with the same nonce and watch the key fall out.
+          two messages — the exact bug behind the 2010 Sony PS3 signing-key leak. Sign two messages with the same nonce and watch the key fall out.
         </p>
       </header>
 

@@ -7,9 +7,15 @@ describe('DSA', () => {
     expect(encrypt(v.input, v.key).output).toBe(v.expected)
   })
 
-  it('verifies a valid signature', () => {
+  it('verifies a valid signature with H,r,s input format', () => {
     // H=15, r=5, s=9, public key p=47,q=23,g=4,y=37
     const result = decrypt('15,5,9', '47,23,4,37')
+    expect(result.output).toBe('VALID')
+  })
+
+  it('verifies a valid signature with key|sig input format', () => {
+    // H=15, r=5, s=9, public key p=47,q=23,g=4,y=37
+    const result = decrypt('15', '47,23,4,37|5,9')
     expect(result.output).toBe('VALID')
   })
 
@@ -25,3 +31,4 @@ describe('DSA', () => {
     expect(() => decrypt('15,0,9', '47,23,4,37')).toThrow(/\[1, q-1\]/)
   })
 })
+

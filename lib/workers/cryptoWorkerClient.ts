@@ -1,7 +1,8 @@
 
 import type { CryptoWorkerRequest, CryptoWorkerResponse } from './crypto.worker'
 import type { WorkerPriority } from './pool'
-
+import { generateRsaWizard, type RsaWizardInput } from '../asymmetric/rsaKeyGenerationWizard'
+import { encrypt, type AesMode } from '../cipher/symmetric/aes'
 export interface CryptoWorkerProgress {
   percent: number
   currentMilestone: string
@@ -14,8 +15,8 @@ export interface CryptoWorkerRunOptions {
 }
 
 type Resolvers = {
-  resolve: (value: any) => void
-  reject: (reason?: any) => void
+  resolve: (value: unknown) => void
+  reject: (reason?: unknown) => void
   onProgress?: (percent: number, message: string) => void
   signal?: AbortSignal
   onAbort?: () => void
@@ -25,12 +26,52 @@ class CryptoWorkerClient {
   private worker: Worker | null = null
   private pendingRequests = new Map<string, Resolvers>()
 
+  private isWorkerSupported(): boolean {
+    return typeof window !== 'undefined' && typeof Worker !== 'undefined'
+  }
+
+  private runSync(
+    operation: Extract<CryptoWorkerRequest, { operation: string }>['operation'],
+    payload: unknown,
+  ): unknown {
+    if (operation === 'rsaWizard') {
+      return generateRsaWizard(payload as RsaWizardInput)
+    }
+    if (operation === 'batchModesLab') {
+      const { text, flipped, key, iv, modes } = payload as {
+        text: string
+        flipped: string
+        key: string
+        iv: string
+        modes: AesMode[]
+      }
+      const ciphertextHex = (mode: AesMode, data: string) => {
+        const options = mode === 'ECB' ? { mode } : { mode, iv }
+        const out = encrypt(data, key, options).output
+        return mode === 'ECB' ? out : out.slice(32)
+      }
+      const hexToBytes = (hex: string) => {
+        const pairs: string[] = []
+        for (let i = 0; i < hex.length; i += 2) pairs.push(hex.slice(i, i + 2))
+        return pairs
+      }
+      return modes.map((mode) => {
+        const original = hexToBytes(ciphertextHex(mode, text))
+        const changed = hexToBytes(ciphertextHex(mode, flipped))
+        const diff = original.map((b: string, i: number) => b !== changed[i])
+        const changedCount = diff.filter(Boolean).length
+        return { modeId: mode, changed, diff, changedCount, total: changed.length }
+      })
+    }
+    throw new Error(`Unknown operation: ${operation}`)
+  }
+
   private initWorker() {
-    if (!this.worker && typeof window !== 'undefined') {
+    if (!this.worker && this.isWorkerSupported()) {
       this.worker = new Worker(new URL('./crypto.worker.ts', import.meta.url), { type: 'module' })
       this.worker.onmessage = (event: MessageEvent<CryptoWorkerResponse | CryptoWorkerProgress>) => {
-        const data = event.data as any
-        if (data?.type === 'PROGRESS') {
+        const data = event.data
+        if ('jobId' in data && 'percent' in data && 'currentMilestone' in data) {
           const request = this.pendingRequests.get(data.jobId)
           request?.onProgress?.(
             Math.max(0, Math.min(100, Number(data.percent))),
@@ -38,21 +79,23 @@ class CryptoWorkerClient {
           )
           return
         }
-        const id = data.id
-        const resolvers = this.pendingRequests.get(id)
-        if (!resolvers) return
-        this.pendingRequests.delete(id)
-        if (resolvers.signal && resolvers.onAbort) {
-          resolvers.signal.removeEventListener('abort', resolvers.onAbort)
+        if ('id' in data) {
+          const id = data.id
+          const resolvers = this.pendingRequests.get(id)
+          if (!resolvers) return
+          this.pendingRequests.delete(id)
+          if (resolvers.signal && resolvers.onAbort) {
+            resolvers.signal.removeEventListener('abort', resolvers.onAbort)
+          }
+          if (data.success) resolvers.resolve(data.result)
+          else resolvers.reject(new Error(data.error))
         }
-        if (data.success) resolvers.resolve(data.result)
-        else resolvers.reject(new Error(data.error))
       }
     }
   }
 
   public async runCryptoOperation<T>(
-    operation: CryptoWorkerRequest['operation'],
+    operation: Extract<CryptoWorkerRequest, { operation: string }>['operation'],
     payload: unknown,
     options?: CryptoWorkerRunOptions,
   ): Promise<T> {
@@ -66,7 +109,7 @@ class CryptoWorkerClient {
         reject(new DOMException('The user aborted the request.', 'AbortError'))
       }
       this.pendingRequests.set(id, {
-        resolve, reject, onProgress: options?.onProgress,
+        resolve: (value) => resolve(value as T), reject, onProgress: options?.onProgress,
         signal: options?.signal, onAbort,
       })
       if (options?.signal?.aborted) {
@@ -77,9 +120,14 @@ class CryptoWorkerClient {
       if (this.worker) {
         this.worker.postMessage({ id, operation, payload, jobId: id, priority })
       } else {
-        onAbort()
-      }
-    })
+        options?.signal?.removeEventListener('abort', onAbort)
+        this.pendingRequests.delete(id)
+        try {
+          resolve(this.runSync(operation, payload) as T)
+        } catch (error) {
+          reject(error instanceof Error ? error : new Error('Crypto operation failed'))
+        }
+      }    })
   }
 
   public terminate() {

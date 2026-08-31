@@ -1,33 +1,135 @@
 'use client'
 
-import { useRef, useState, useCallback, type KeyboardEvent } from 'react'
-
-/**
- * SBoxGrid — renders a substitution box as an accessible HTML table.
- * Highlights the active row, column, and resulting cell so a lookup is easy
- * to trace visually. Shared between the AES (16x16) and DES (4x16) views.
- *
- * Accessibility contract:
- *   Includes roving tabindex (Tab once into grid, Arrow keys / Home / End to navigate cells).
- */
+import {
+  memo,
+  useCallback,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react'
 
 interface SBoxGridProps {
-  /** Row-major grid of output values. */
   grid: number[][]
-  /** Row index to highlight, or null when nothing is selected. */
   activeRow: number | null
-  /** Column index to highlight, or null when nothing is selected. */
   activeCol: number | null
-  /** Accessible label for the table. */
   label: string
-  /** Render cell values in hex (AES) or decimal (DES nibble values). */
   format?: 'hex' | 'decimal'
-  /** Called when the user clicks or activates a cell directly. */
   onCellSelect?: (row: number, col: number) => void
+}
+
+interface SBoxCellProps {
+  row: number
+  col: number
+  value: number
+  format: 'hex' | 'decimal'
+  active: boolean
+  activeLine: boolean
+  tabbable: boolean
+  onSelect?: (row: number, col: number) => void
+  onNavigate: (
+    event: KeyboardEvent<HTMLButtonElement>,
+    row: number,
+    col: number,
+  ) => void
+  onFocus: (row: number, col: number) => void
+  register: (row: number, col: number, element: HTMLButtonElement | null) => void
 }
 
 function formatValue(value: number, format: 'hex' | 'decimal'): string {
   return format === 'hex' ? value.toString(16).padStart(2, '0') : String(value)
+}
+
+/**
+ * Individual cells are memoized because an S-box contains up to 256 cells.
+ * A lookup normally changes only one row, one column, and one selected cell.
+ * Keeping the cell component isolated means React can retain the other cells
+ * instead of reconciling 256 button subtrees for every lookup change.
+ */
+const SBoxCell = memo(function SBoxCell({
+  row,
+  col,
+  value,
+  format,
+  active,
+  activeLine,
+  tabbable,
+  onSelect,
+  onNavigate,
+  onFocus,
+  register,
+}: SBoxCellProps) {
+  const handleClick = useCallback(
+    (_event: MouseEvent<HTMLButtonElement>) => {
+      onSelect?.(row, col)
+    },
+    [col, onSelect, row],
+  )
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>) => {
+      onNavigate(event, row, col)
+    },
+    [col, onNavigate, row],
+  )
+
+  const handleFocus = useCallback(() => {
+    onFocus(row, col)
+  }, [col, onFocus, row])
+
+  const handleRef = useCallback(
+    (element: HTMLButtonElement | null) => {
+      register(row, col, element)
+    },
+    [col, register, row],
+  )
+
+  return (
+    <td
+      role="gridcell"
+      className={`border-b border-zinc-100 p-0 dark:border-zinc-800/60 ${
+        activeLine ? 'bg-teal-500/5' : ''
+      }`}
+    >
+      <button
+        ref={handleRef}
+        type="button"
+        tabIndex={tabbable ? 0 : -1}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
+        aria-selected={active}
+        aria-pressed={active}
+        aria-label={`Row ${row}, column ${col}: output ${formatValue(value, format)}`}
+        className={`h-7 w-7 rounded-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-950 sm:h-8 sm:w-8 ${
+          active
+            ? 'bg-teal-500 font-bold text-white'
+            : 'text-zinc-700 hover:bg-teal-500/20 dark:text-zinc-300'
+        }`}
+      >
+        {formatValue(value, format)}
+      </button>
+    </td>
+  )
+}, areCellPropsEqual)
+
+function areCellPropsEqual(
+  previous: Readonly<SBoxCellProps>,
+  next: Readonly<SBoxCellProps>,
+): boolean {
+  return (
+    previous.row === next.row &&
+    previous.col === next.col &&
+    previous.value === next.value &&
+    previous.format === next.format &&
+    previous.active === next.active &&
+    previous.activeLine === next.activeLine &&
+    previous.tabbable === next.tabbable &&
+    previous.onSelect === next.onSelect &&
+    previous.onNavigate === next.onNavigate &&
+    previous.onFocus === next.onFocus &&
+    previous.register === next.register
+  )
 }
 
 export default function SBoxGrid({
@@ -48,39 +150,53 @@ export default function SBoxGrid({
 
   const cellRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map())
 
-  // Keep focused cell synced if active selection changes externally
-  const effectiveRow = activeRow !== null ? activeRow : Math.min(focusedCell.row, rowCount - 1)
-  const effectiveCol = activeCol !== null ? activeCol : Math.min(focusedCell.col, colCount - 1)
+  const effectiveRow =
+    activeRow !== null
+      ? activeRow
+      : Math.min(focusedCell.row, Math.max(0, rowCount - 1))
+  const effectiveCol =
+    activeCol !== null
+      ? activeCol
+      : Math.min(focusedCell.col, Math.max(0, colCount - 1))
+
+  const registerCell = useCallback(
+    (row: number, col: number, element: HTMLButtonElement | null) => {
+      cellRefs.current.set(`${row}-${col}`, element)
+    },
+    [],
+  )
 
   const focusCell = useCallback(
     (row: number, col: number) => {
       const clampedRow = Math.max(0, Math.min(rowCount - 1, row))
       const clampedCol = Math.max(0, Math.min(colCount - 1, col))
       setFocusedCell({ row: clampedRow, col: clampedCol })
-
-      const key = `${clampedRow}-${clampedCol}`
-      cellRefs.current.get(key)?.focus()
+      cellRefs.current.get(`${clampedRow}-${clampedCol}`)?.focus()
     },
     [rowCount, colCount],
   )
 
+  const handleFocus = useCallback((row: number, col: number) => {
+    setFocusedCell({ row, col })
+  }, [])
+
   const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLButtonElement>, rIdx: number, cIdx: number) => {
-      let nextRow = rIdx
-      let nextCol = cIdx
+    (event: KeyboardEvent<HTMLButtonElement>, row: number, col: number) => {
+      let nextRow = row
+      let nextCol = col
 
       switch (event.key) {
         case 'ArrowRight':
-          nextCol = Math.min(cIdx + 1, colCount - 1)
+          nextCol = Math.min(col + 1, colCount - 1)
           break
         case 'ArrowLeft':
-          nextCol = Math.max(cIdx - 1, 0)
+          nextCol = Math.max(col - 1, 0)
           break
         case 'ArrowDown':
-          nextRow = Math.min(rIdx + 1, rowCount - 1)
+          nextRow = Math.min(row + 1, rowCount - 1)
           break
         case 'ArrowUp':
-          nextRow = Math.max(rIdx - 1, 0)
+          nextRow = Math.max(row - 1, 0)
           break
         case 'Home':
           nextRow = 0
@@ -97,7 +213,7 @@ export default function SBoxGrid({
       event.preventDefault()
       focusCell(nextRow, nextCol)
     },
-    [colCount, rowCount, focusCell],
+    [colCount, focusCell, rowCount],
   )
 
   if (rowCount === 0 || colCount === 0) return null
@@ -146,39 +262,28 @@ export default function SBoxGrid({
                 {rowIndex.toString(16)}
               </th>
               {row.map((value, colIndex) => {
-                const isActiveCell = rowIndex === activeRow && colIndex === activeCol
-                const isActiveLine = rowIndex === activeRow || colIndex === activeCol
-                const isTabbable = rowIndex === effectiveRow && colIndex === effectiveCol
+                const active =
+                  rowIndex === activeRow && colIndex === activeCol
+                const activeLine =
+                  rowIndex === activeRow || colIndex === activeCol
+                const tabbable =
+                  rowIndex === effectiveRow && colIndex === effectiveCol
 
                 return (
-                  <td
+                  <SBoxCell
                     key={colIndex}
-                    role="gridcell"
-                    className={`border-b border-zinc-100 p-0 dark:border-zinc-800/60 ${
-                      isActiveLine ? 'bg-teal-500/5' : ''
-                    }`}
-                  >
-                    <button
-                      ref={(el) => {
-                        cellRefs.current.set(`${rowIndex}-${colIndex}`, el)
-                      }}
-                      type="button"
-                      tabIndex={isTabbable ? 0 : -1}
-                      onClick={() => onCellSelect?.(rowIndex, colIndex)}
-                      onKeyDown={(event) => handleKeyDown(event, rowIndex, colIndex)}
-                      onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
-                      aria-selected={isActiveCell}
-                      aria-pressed={isActiveCell}
-                      aria-label={`Row ${rowIndex}, column ${colIndex}: output ${formatValue(value, format)}`}
-                      className={`h-7 w-7 rounded-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-950 sm:h-8 sm:w-8 ${
-                        isActiveCell
-                          ? 'bg-teal-500 font-bold text-white'
-                          : 'text-zinc-700 hover:bg-teal-500/20 dark:text-zinc-300'
-                      }`}
-                    >
-                      {formatValue(value, format)}
-                    </button>
-                  </td>
+                    row={rowIndex}
+                    col={colIndex}
+                    value={value}
+                    format={format}
+                    active={active}
+                    activeLine={activeLine}
+                    tabbable={tabbable}
+                    onSelect={onCellSelect}
+                    onNavigate={handleKeyDown}
+                    onFocus={handleFocus}
+                    register={registerCell}
+                  />
                 )
               })}
             </tr>
@@ -188,4 +293,3 @@ export default function SBoxGrid({
     </div>
   )
 }
-

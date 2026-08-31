@@ -1786,4 +1786,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: '64 hex characters (32-byte seed)',
     options: [{ name: 'Winternitz Parameter (w)', id: 'w', type: 'select', default: 4, choices: [{ label: 'w=2', value: 2 }, { label: 'w=4', value: 4 }, { label: 'w=8', value: 8 }] }]
   },
+  {
+    id: 'keyword-substitution',
+    name: 'Keyword Substitution Cipher',
+    category: 'classical',
+    description: 'A monoalphabetic substitution cipher using a keyword to generate a scrambled alphabet mapping.',
+    defaultKey: 'SECRET',
+    defaultInput: 'Hello, World!',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Keyword (e.g. SECRET)',
+    prerequisites: ['caesar'],
+    recommendedNext: ['vigenere', 'playfair'],
+  },
 ];

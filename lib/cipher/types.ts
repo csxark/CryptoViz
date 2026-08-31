@@ -223,6 +223,7 @@ export type CipherName =
   | "cmac"
   | "sha1"
   | "hkdf"
+  | "keyword-substitution"
   | "blake2s"
   | "bloom-filter"
   | "sm3";

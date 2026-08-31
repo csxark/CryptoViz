@@ -101,6 +101,20 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     recommendedNext: ["vigenere", "des"],
   },
   {
+    id: "affine",
+    name: "Affine Cipher",
+    category: "classical",
+    description:
+      "A monoalphabetic substitution cipher combining multiplicative and additive transformations: E(x) = (a·x + b) mod 26.",
+    defaultKey: "5,8",
+    defaultInput: "Hello, World!",
+    securityStatus: "broken",
+    keyPlaceholder: "a,b (e.g. 5,8)",
+    practicalUseCases: ["Educational: demonstrates modular arithmetic in cryptography", "Historical: formalized in classical cryptanalysis"]
+    prerequisites: ["caesar"],
+    recommendedNext: ["vigenere", "playfair"],
+  },
+  {
     id: "xor",
     name: "XOR Cipher",
     category: "symmetric",

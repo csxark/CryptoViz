@@ -109,6 +109,7 @@ export type CipherName =
   | "autokey"
   | "porta"
   | "adfgvx"
+  | "affine"
   | "bifid"
   | "foursquare"
   | "nihilist"

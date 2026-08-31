@@ -225,6 +225,7 @@ export type CipherName =
   | "hkdf"
   | "blake2s"
   | "bloom-filter"
+  | "gronsfeld"
   | "sm3";
 
 export interface TestVector {

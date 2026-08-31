@@ -82,50 +82,50 @@ export const logger = {
   log: (...args: unknown[]): void => {
     const redactedArgs = args.map(redact);
     if (isDev) {
-      // eslint-disable-next-line no-console
+       
       console.log(...redactedArgs);
     } else {
-      // eslint-disable-next-line no-console
+       
       console.log(JSON.stringify({ level: 'LOG', timestamp: new Date().toISOString(), messages: redactedArgs }));
     }
   },
   info: (...args: unknown[]): void => {
     const redactedArgs = args.map(redact);
     if (isDev) {
-      // eslint-disable-next-line no-console
+       
       console.info(...redactedArgs);
     } else {
-      // eslint-disable-next-line no-console
+       
       console.info(JSON.stringify({ level: 'INFO', timestamp: new Date().toISOString(), messages: redactedArgs }));
     }
   },
   warn: (...args: unknown[]): void => {
     const redactedArgs = args.map(redact);
     if (isDev) {
-      // eslint-disable-next-line no-console
+       
       console.warn(...redactedArgs);
     } else {
-      // eslint-disable-next-line no-console
+       
       console.warn(JSON.stringify({ level: 'WARN', timestamp: new Date().toISOString(), messages: redactedArgs }));
     }
   },
   error: (...args: unknown[]): void => {
     const redactedArgs = args.map(redact);
     if (isDev) {
-      // eslint-disable-next-line no-console
+       
       console.error(...redactedArgs);
     } else {
-      // eslint-disable-next-line no-console
+       
       console.error(JSON.stringify({ level: 'ERROR', timestamp: new Date().toISOString(), messages: redactedArgs }));
     }
   },
   structured: (log: StructuredTelemetry): void => {
     const redactedLog = redact(log) as StructuredTelemetry;
     if (isDev) {
-      // eslint-disable-next-line no-console
+       
       console.info(`[TELEMETRY] ${redactedLog.status} | Job: ${redactedLog.jobId ?? 'N/A'} | Alg: ${redactedLog.algorithmId ?? 'N/A'} | Msg: ${redactedLog.message}`, redactedLog);
     } else {
-      // eslint-disable-next-line no-console
+       
       console.info(JSON.stringify({
         level: 'TELEMETRY',
         timestamp: new Date().toISOString(),

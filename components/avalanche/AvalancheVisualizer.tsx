@@ -147,7 +147,7 @@ export default function AvalancheVisualizer() {
 
   useEffect(() => {
     if (input.length === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setOriginalOutput(null)
       setModifiedOutput(null)
       setError(null)

@@ -6,7 +6,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError } from '../../utils/errors'
-// @ts-ignore
+// @ts-expect-error
 import { bls12_381 } from '@noble/curves/bls12-381'
 
 const METADATA: CipherMetadata = {

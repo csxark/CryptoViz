@@ -134,6 +134,16 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultKey: "",
     defaultInput: "HELLO",
     securityStatus: "broken",
+    id: "affine",
+    name: "Affine Cipher",
+    category: "classical",
+    description:
+      "A monoalphabetic substitution cipher combining multiplicative and additive transformations: E(x) = (a·x + b) mod 26.",
+    defaultKey: "5,8",
+    defaultInput: "Hello, World!",
+    securityStatus: "broken",
+    keyPlaceholder: "a,b (e.g. 5,8)",
+    practicalUseCases: ["Educational: demonstrates modular arithmetic in cryptography", "Historical: formalized in classical cryptanalysis"]
     prerequisites: ["caesar"],
     recommendedNext: ["vigenere", "playfair"],
   },
@@ -2119,6 +2129,18 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: '64 hex characters (32-byte seed)',
     options: [{ name: 'Winternitz Parameter (w)', id: 'w', type: 'select', default: 4, choices: [{ label: 'w=2', value: 2 }, { label: 'w=4', value: 4 }, { label: 'w=8', value: 8 }] }]
+  },
+  {
+    id: 'gronsfeld',
+    name: 'Gronsfeld Cipher',
+    category: 'classical',
+    description: 'A numeric variant of the Vigenère cipher where the key is a sequence of digits (0-9) instead of letters, making it easier to use but weaker.',
+    defaultKey: '31415',
+    defaultInput: 'ATTACK AT DAWN',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Digits (e.g. 31415)',
+    prerequisites: ['vigenere'],
+    recommendedNext: ['caesar', 'playfair'],
   },
   {
     id: 'csidh',

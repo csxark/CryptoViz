@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useMemo, useState } from 'react'
-import PracticePageTemplate from "@/components/layout/PracticePageTemplate";
+import ReferencePageTemplate from "@/components/layout/ReferencePageTemplate";
 import { useSearchParams } from 'next/navigation'
 import WorkspaceLayout from '../../components/layout/WorkspaceLayout'
 import CipherComparisonPanel from '../../components/compare/CipherComparisonPanel'
@@ -119,13 +119,13 @@ function CompareContent() {
 
   return (
     <WorkspaceLayout activeCipherId={leftCipherId}>
-<PracticePageTemplate
+<ReferencePageTemplate
     title="Compare Ciphers Side by Side"
-    description="Run the same input through two algorithms while keeping separate keys, directions, options, results, loading states, and errors."
-    eyebrow="Comparison workspace"
+    description="Run identical inputs through two algorithms concurrently to evaluate differences in key schedules, output lengths, execution times, and security properties."
+    eyebrow="Side-by-Side Comparison"
     breadcrumbs={[
-      { label: "Practice" },
-      { label: "Compare Ciphers" },
+      { label: "Reference" },
+      { label: "Cipher Comparison" },
     ]}
   >
 
@@ -184,7 +184,7 @@ function CompareContent() {
             onResult={setRightResult}
           />
         </section>
-      </PracticePageTemplate>
+      </ReferencePageTemplate>
     </WorkspaceLayout>
   )
 }

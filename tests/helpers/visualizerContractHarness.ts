@@ -147,7 +147,7 @@ class ContractErrorBoundary extends React.Component<
 // ---------------------------------------------------------------------------
 
 export function testVisualizerContract(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   Component: React.ComponentType<any>,
   mockSteps: CipherStep[],
   options: ContractHarnessOptions = {},
@@ -371,7 +371,7 @@ export function testVisualizerContract(
 // ---------------------------------------------------------------------------
 
 export function testMatrixVisualizerContract(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   Component: React.ComponentType<any>,
   validMatrix: string[][] | string,
   options: {

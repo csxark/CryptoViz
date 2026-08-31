@@ -361,7 +361,7 @@ function BenchmarkContent() {
   return (
     <WorkspaceLayout activeCipherId={urlAlgorithms ? urlAlgorithms.split(",")[0] : undefined}>
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        <Breadcrumbs items={[{ label: "Practice" }, { label: "Performance Benchmark" }]} />
+        <Breadcrumbs items={[{ label: "Reference" }, { label: "Performance Benchmark" }]} />
         <header className="space-y-2">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

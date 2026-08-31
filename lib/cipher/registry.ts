@@ -126,6 +126,14 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     recommendedNext: ["vigenere", "des"],
   },
   {
+    id: "bacon",
+    name: "Bacon's Cipher",
+    category: "classical",
+    description:
+      'A steganographic cipher encoding each letter as a 5-bit binary string using two symbols (A and B), designed to hide messages in innocent-looking text.',
+    defaultKey: "",
+    defaultInput: "HELLO",
+    securityStatus: "broken",
     id: "affine",
     name: "Affine Cipher",
     category: "classical",

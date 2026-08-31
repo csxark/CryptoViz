@@ -13,9 +13,9 @@ export const AccessibleDialog = ({ isOpen, onClose, title, children }) => {
     const dialogNode = dialogRef.current;
     if (!dialogNode) return;
 
-    // Find all focusable elements inside the modal
+    // Find all enabled focusable elements inside the modal
     const focusableElements = dialogNode.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
     );
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];

@@ -12,7 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CipherResult } from '../../lib/cipher/types'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
+import { useCipherWorker } from '@/hooks/useCipherWorker'
 import {
   computeByteCells,
   diffStats,
@@ -36,7 +36,7 @@ interface AvalancheAlgorithm {
 
 /**
  * The subset of the registry that produces a fixed-width hex digest/ciphertext
- * where the avalanche effect is meaningful to visualise.
+ * where the avalanche effect is meaningful to visualize.
  */
 const ALGORITHMS: AvalancheAlgorithm[] = [
   {
@@ -147,6 +147,7 @@ export default function AvalancheVisualizer() {
 
   useEffect(() => {
     if (input.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOriginalOutput(null)
       setModifiedOutput(null)
       setError(null)
@@ -351,7 +352,7 @@ export default function AvalancheVisualizer() {
             <div>
               <h3 className="text-sm font-bold text-red-800 dark:text-red-300">Computation Error</h3>
               <p className="mt-1 text-sm text-red-700 dark:text-red-400">
-                {error || workerError?.message || workerError?.code || 'The cipher worker reported an error.'}
+                {error || workerError || 'The cipher worker reported an error.'}
               </p>
             </div>
           </div>

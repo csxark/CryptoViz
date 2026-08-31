@@ -12,7 +12,7 @@ const ReedSolomonVisualizer: React.FC<Props> = ({ encoded, errorPositions }) => 
       {encoded.map((symbol, idx) => (
         <div
           key={`symbol-${idx}-${symbol}`}
-          className={`p-2 rounded text-center border ${errorPositions.includes(idx) ? 'bg-amber-200 border-amber-500' : 'bg-gray-200 border-gray-400'} dark:${errorPositions.includes(idx) ? 'bg-amber-800' : 'bg-gray-800'} dark:border-gray-600`}
+          className={`p-2 rounded text-center border ${errorPositions.includes(idx) ? 'bg-[var(--diff-highlight-bg)] text-[var(--diff-highlight-fg)] border-[var(--diff-highlight-border)]' : 'bg-gray-200 border-gray-400'} dark:${errorPositions.includes(idx) ? 'bg-[var(--diff-highlight-bg)] text-[var(--diff-highlight-fg)]' : 'bg-gray-800'} dark:border-gray-600`}
         >
           {symbol}
         </div>

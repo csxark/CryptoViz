@@ -77,7 +77,7 @@ $$
 ## Real-World Applications
 
 - **Malicious URL Protection**: Google Chrome uses a compact local Bloom filter to check whether a URL is safe before making an API request to Safe Browsing servers.
-- **Crypto SPV Wallets**: Bitcoin Simplified Payment Verification (SPV) clients use Bloom filters to request transactions matching their addresses without revealing their exact public keys to full nodes.
+- **Network Routing & Distributed Systems**: Distributed hash tables and packet routers use Bloom filters for fast prefix and membership lookup without expensive full-table scans.
 - **Database Query Optimization**: Apache Cassandra, RocksDB, and PostgreSQL use Bloom filters to skip reading disk SSTables for keys that do not exist.
 - **CDNs & Web Caching**: Akamai and Varnish use Bloom filters to avoid caching one-hit-wonder web requests.
 

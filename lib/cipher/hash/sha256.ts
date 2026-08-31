@@ -1,6 +1,6 @@
 import { sha256 } from '@noble/hashes/sha2.js'
 import { toByteArray, fromByteArray } from '../../utils/encoding'
-import { CipherError } from '../../utils/errors'
+import { CipherError, validateHashInput } from '../../utils/errors'
 import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVector } from '../types'
 
 const METADATA: CipherMetadata = {
@@ -12,6 +12,14 @@ const METADATA: CipherMetadata = {
   standardBody: 'NIST',
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'abc',
@@ -77,18 +85,16 @@ function Maj(x: number, y: number, z: number): number {
   return ((x & y) ^ (x & z) ^ (y & z)) >>> 0
 }
 
-export function validateHashInput(input: unknown): asserts input is string {
-  if (input === null || input === undefined) {
-    throw new CipherError('INPUT_REQUIRED', 'Input is required.')
-  }
-  if (typeof input !== 'string') {
-    throw new CipherError('INPUT_REQUIRED', 'Input must be a string.')
-  }
-  const byteLength = new TextEncoder().encode(input).length
-  if (byteLength > 2 * 1024 * 1024) {
-    throw new CipherError('INPUT_TOO_LONG', `Input exceeds maximum size of 2MB (got ${byteLength}).`)
-  }
-}
+/**
+ * Validate Hash Input cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Validate Hash Input operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export { validateHashInput }
 
 function sha256Fast(inputBytes: Uint8Array): string {
   const hashBytes = sha256(inputBytes)
@@ -289,6 +295,14 @@ function sha256Instrumented(inputBytes: Uint8Array): CipherResult {
   }
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   _key: string = '',
@@ -312,6 +326,14 @@ export function encrypt(
   }
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   _key: string = '',

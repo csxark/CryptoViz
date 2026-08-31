@@ -107,4 +107,15 @@ describe('RSA Asymmetric Cipher Unit Tests', () => {
     const decResult = await decrypt('2790', '61,53,17')
     expect(decResult.output).toBe('65')
   })
+
+  it('asserts strict round-trip decrypt(encrypt(m, pub), priv) === m across various inputs', async () => {
+    const pubKey = '3233,17'
+    const privKey = '3233,2753'
+    const testMessages = ['10', '65', '100', '255', '1000']
+    for (const msg of testMessages) {
+      const encrypted = await encrypt(msg, pubKey, { inputEncoding: 'integer' })
+      const decrypted = await decrypt(encrypted.output, privKey, { inputEncoding: 'integer' })
+      expect(decrypted.output).toBe(msg)
+    }
+  })
 })

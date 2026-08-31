@@ -15,6 +15,7 @@ export interface BanBelief {
   statement: string;
   isHolds: boolean;
   explanation: string;
+  isOpen?: boolean;
 }
 
 export interface VerificationResult {
@@ -42,7 +43,7 @@ export function evaluateProtocolTransition(
       isValidTransition: false,
       vulnerabilityDetected: 'Lowe’s Attack Detected: Replayed Ticket_B accepted without fresh nonce challenge verification (P |≡ #(N_b) FAILS).',
       beliefs: [
-        { statement: 'A ⊲ {Kab, A}Ks', isHolds: true, isOpen: true, explanation: 'Agent A sees encrypted ticket from server.' } as any,
+        { statement: 'A ⊲ {Kab, A}Ks', isHolds: true, isOpen: true, explanation: 'Agent A sees encrypted ticket from server.' },
         { statement: 'B |≡ (A ≷{Kab} B)', isHolds: false, explanation: 'Freshness failure: Bob cannot verify if shared session key Kab is freshly generated in this session.' },
       ],
       nextState: currentState,

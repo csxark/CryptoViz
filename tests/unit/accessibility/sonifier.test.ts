@@ -55,6 +55,7 @@ const AudioContextMock = vi.fn(function (this: any) {
     .mockReturnValueOnce(createMockMasterGain())   // 1st call → master gain
     .mockImplementation(() => createMockGainNode()); // subsequent → tone gains
   this.close = mockContextClose;
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
   mockCtx = this; // expose reference for assertions
 });
 
@@ -138,7 +139,7 @@ describe('CryptoSonifier', () => {
       expect(sonifier.isEnabled()).toBe(false);
     });
 
-    it('initialises AudioContext on first enable', () => {
+    it('initializes AudioContext on first enable', () => {
       sonifier.setEnabled(true);
       expect(AudioContextMock).toHaveBeenCalledOnce();
       expect(sonifier.isEnabled()).toBe(true);
@@ -228,7 +229,7 @@ describe('CryptoSonifier', () => {
       expect(sonifier.isEnabled()).toBe(false);
     });
 
-    it('is safe to call when never initialised', () => {
+    it('is safe to call when never initialized', () => {
       expect(() => sonifier.dispose()).not.toThrow();
     });
   });

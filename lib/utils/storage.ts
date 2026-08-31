@@ -83,6 +83,22 @@ export function safeGetItemJson<T>(
 }
 
 /**
+ * Generic typed getter wrapper for localStorage operations.
+ * Safely reads and deserializes JSON from localStorage, returning defaultValue on missing key or error.
+ *
+ * @param key Storage key
+ * @param defaultValue Default fallback value
+ * @param validator Optional predicate validator function
+ */
+export function getItem<T>(
+  key: string,
+  defaultValue: T,
+  validator?: (val: unknown) => boolean,
+): T {
+  return safeGetItemJson<T>(key, defaultValue, validator)
+}
+
+/**
  * Safely writes a raw string to localStorage.
  * Returns true on success, false if unavailable, quota exceeded, or permission denied.
  */
@@ -113,6 +129,17 @@ export function safeSetItemJson<T>(key: string, value: T): boolean {
 }
 
 /**
+ * Generic typed setter wrapper for localStorage operations.
+ * Safely serializes value to JSON and writes it to localStorage.
+ *
+ * @param key Storage key
+ * @param value Value to serialize and store
+ */
+export function setItem<T>(key: string, value: T): boolean {
+  return safeSetItemJson<T>(key, value)
+}
+
+/**
  * Safely removes an item from localStorage.
  */
 export function safeRemoveItem(key: string): boolean {
@@ -129,6 +156,15 @@ export function safeRemoveItem(key: string): boolean {
 }
 
 /**
+ * Generic typed item removal wrapper for localStorage.
+ *
+ * @param key Storage key to remove
+ */
+export function removeItem(key: string): boolean {
+  return safeRemoveItem(key)
+}
+
+/**
  * Safely clears all items from localStorage.
  */
 export function safeClear(): boolean {
@@ -142,4 +178,11 @@ export function safeClear(): boolean {
   } catch {
     return false
   }
+}
+
+/**
+ * Generic clear wrapper for localStorage.
+ */
+export function clearStorage(): boolean {
+  return safeClear()
 }

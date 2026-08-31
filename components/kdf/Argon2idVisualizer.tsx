@@ -29,6 +29,7 @@ export default function Argon2idVisualizer() {
   );
   const [selectedBlockIndex, setSelectedBlockIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
   const result = useMemo(() => {
     try {
@@ -61,7 +62,22 @@ export default function Argon2idVisualizer() {
     value: Argon2idVisualizerParams[K],
   ) {
     setSelectedBlockIndex(0);
-    setParams((current) => ({ ...current, [key]: value }));
+    setWarningMessage(null);
+    let newVal = value;
+    if (key === "memoryBlocks") {
+      const numVal = Number(value);
+      if (numVal > 64) {
+        newVal = 64 as Argon2idVisualizerParams[K];
+        setWarningMessage("Memory blocks clamped to maximum safe limit of 64 blocks (64 MB).");
+      }
+    } else if (key === "iterations") {
+      const numVal = Number(value);
+      if (numVal > 10) {
+        newVal = 10 as Argon2idVisualizerParams[K];
+        setWarningMessage("Iterations clamped to maximum safe limit of 10 iterations.");
+      }
+    }
+    setParams((current) => ({ ...current, [key]: newVal }));
   }
 
   return (
@@ -159,12 +175,23 @@ export default function Argon2idVisualizer() {
               type="button"
               onClick={() => {
                 setSelectedBlockIndex(0);
+                setWarningMessage(null);
                 setParams(DEFAULT_ARGON2ID_PARAMS);
               }}
               className="mt-6 w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-slate-200 transition hover:border-cyan-300/50 hover:text-cyan-100"
             >
               Reset demo parameters
             </button>
+
+            {warningMessage ? (
+              <div
+                role="alert"
+                className="mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200"
+              >
+                <p className="font-bold">Workload Limit Enforced</p>
+                <p className="mt-1">{warningMessage}</p>
+              </div>
+            ) : null}
 
             {error ? (
               <div

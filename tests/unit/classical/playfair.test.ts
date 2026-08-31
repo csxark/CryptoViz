@@ -44,6 +44,28 @@ describe('Playfair Cipher Unit Tests', () => {
     expect(dec.output).toBe('HEEH')
   })
 
+  it('correctly splits repeated "XX" digraphs using "Q" filler (#1721)', () => {
+    // "FOXXES" -> "FO", "XQ", "XE", "SX" -> prepared string "FOXQXESX"
+    expect(preparePlaintext('FOXXES')).toBe('FOXQXESX')
+
+    // "XX" -> "XQ", "XQ" -> prepared string "XQXQ"
+    expect(preparePlaintext('XX')).toBe('XQXQ')
+
+    // "XXX" -> "XQ", "XQ", "XQ" -> prepared string "XQXQXQ"
+    expect(preparePlaintext('XXX')).toBe('XQXQXQ')
+
+    // "FOX" -> "FO", "XQ" -> prepared string "FOXQ"
+    expect(preparePlaintext('FOX')).toBe('FOXQ')
+  })
+
+  it('encrypts and decrypts inputs containing repeated "XX" digraphs losslessly', () => {
+    const key = 'PLAYFAIR EXAMPLE'
+    const input = 'FOXXES'
+    const enc = encrypt(input, key)
+    const dec = decrypt(enc.output, key)
+    expect(dec.output).toBe(preparePlaintext(input))
+  })
+
   it('property-based fuzzing: encrypt then decrypt returns prepared plaintext', () => {
     fc.assert(
       fc.property(

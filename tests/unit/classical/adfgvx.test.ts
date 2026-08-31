@@ -39,12 +39,38 @@ describe('ADFGVX Cipher Unit Tests', () => {
     expect(result.steps[0].isMilestone).toBe(true)
   })
 
-  it('property-based fuzzing: encrypt then decrypt returns the cleaned plaintext', () => {
+  it('handles transposition keys with duplicate letters losslessly (#1726)', () => {
+    const keysWithDuplicates = [
+      'PICTURE,BALLOON',
+      'SECRET,MISSISSIPPI',
+      'KEY,COMMITTEE',
+      'GRID,BOOKKEEPER',
+      'ALPHABET,SUCCESS',
+    ]
+
+    for (const key of keysWithDuplicates) {
+      const plaintext = 'ATTACKATDAWN123'
+      const enc = encrypt(plaintext, key)
+      const dec = decrypt(enc.output, key)
+      expect(dec.output).toBe(plaintext)
+    }
+  })
+
+  it('property-based fuzzing: encrypt then decrypt returns the cleaned plaintext across keys with duplicate letters', () => {
+    const keyArb = fc.constantFrom(
+      'PICTURE,GERMAN',
+      'PICTURE,BALLOON',
+      'SECRET,MISSISSIPPI',
+      'KEY,COMMITTEE',
+      'GRID,BOOKKEEPER',
+      'ALPHABET,SUCCESS'
+    )
+
     fc.assert(
       fc.property(
         fc.string({ minLength: 1, maxLength: 60 }).map((s) => (s.replace(/[^a-zA-Z0-9]/g, '') || 'AB')),
-        (input) => {
-          const key = 'PICTURE,GERMAN'
+        keyArb,
+        (input, key) => {
           const enc = encrypt(input, key)
           const dec = decrypt(enc.output, key)
           expect(dec.output).toBe(input.toUpperCase())

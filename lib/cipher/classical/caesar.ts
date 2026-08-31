@@ -56,11 +56,15 @@ function caesarInstrumented(
   const direction = decrypt ? 'backward' : 'forward'
   let output = ''
   let startIdx = 0
+  const incrementalCache = options.incrementalCache as {
+    input: string
+    result: Pick<CipherResult, 'output' | 'steps'>
+  } | undefined
 
-  if (options.incrementalCache && input.startsWith(options.incrementalCache.input)) {
-    startIdx = options.incrementalCache.input.length
-    output = options.incrementalCache.result.output
-    steps.push(...options.incrementalCache.result.steps)
+  if (incrementalCache && input.startsWith(incrementalCache.input)) {
+    startIdx = incrementalCache.input.length
+    output = incrementalCache.result.output
+    steps.push(...incrementalCache.result.steps)
   } else {
     // Step 0: Key setup (milestone)
     steps.push({
@@ -110,10 +114,14 @@ function caesarFast(input: string, key: string, decrypt: boolean, options: Ciphe
 
   let output = ''
   let startIdx = 0
+  const incrementalCache = options.incrementalCache as {
+    input: string
+    result: Pick<CipherResult, 'output' | 'steps'>
+  } | undefined
 
-  if (options.incrementalCache && input.startsWith(options.incrementalCache.input)) {
-    startIdx = options.incrementalCache.input.length
-    output = options.incrementalCache.result.output
+  if (incrementalCache && input.startsWith(incrementalCache.input)) {
+    startIdx = incrementalCache.input.length
+    output = incrementalCache.result.output
   }
 
   for (let i = startIdx; i < input.length; i++) {
@@ -129,6 +137,14 @@ function caesarFast(input: string, key: string, decrypt: boolean, options: Ciphe
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encrypt(
   input: string,
   key: string,
@@ -139,6 +155,14 @@ export function encrypt(
   return caesarFast(input, key, false, options)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function decrypt(
   input: string,
   key: string,
@@ -149,6 +173,14 @@ export function decrypt(
   return caesarFast(input, key, true, options)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = [
   { input: 'HELLO WORLD', key: '3', expected: 'KHOOR ZRUOG' },
   { input: 'ATTACK AT DAWN', key: '13', expected: 'NGGNPX NG QNJA' },

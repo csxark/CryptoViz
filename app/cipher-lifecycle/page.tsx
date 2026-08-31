@@ -53,8 +53,7 @@ export default function CipherLifecyclePage() {
       <LearnPageTemplate
         title="Cryptographic Security Lifecycle"
         description="Standardized security classification badges for every algorithm in CryptoViz based on NIST SP 800-57 guidelines and modern cryptanalysis standards."
-        eyebrow="CIPHER LIFECYCLE BADGES #496"
-        breadcrumbs={[
+eyebrow="CIPHER LIFECYCLE & SECURITY STATUS"        breadcrumbs={[
           { label: "Learn" },
           { label: "Cipher Lifecycle" },
         ]}
@@ -66,8 +65,7 @@ export default function CipherLifecyclePage() {
           <div className="max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-bold text-teal-600 dark:text-teal-400">
               <Sparkles className="h-3.5 w-3.5" />
-              CIPHER LIFECYCLE BADGES #496
-            </div>
+CIPHER LIFECYCLE & SECURITY STATUS            </div>
             <h1 id="lifecycle-hero-title" className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-900 dark:text-white">
               Cryptographic <span className="text-teal-500">Security Lifecycle</span>
             </h1>

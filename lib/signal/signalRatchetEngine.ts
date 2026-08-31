@@ -168,7 +168,7 @@ export class SignalSession {
     name: 'Alice' | 'Bob',
     sharedRootKeyHex: string,
     initialDHSendingKey: KeyPair,
-    initialDHReceivingPubKey: string
+    initialDHReceivingPubKey = ''
   ) {
     this.name = name;
     this.rootKeyHex = sharedRootKeyHex;
@@ -240,7 +240,7 @@ export class SignalSession {
       this.prevChainLength = this.sendMessageCount;
       this.sendMessageCount = 0;
       this.recvMessageCount = 0;
-      this.dhSendingKeyPair = generateKeyPair(`${this.name}_dh_next_${Date.now()}`);
+      this.dhSendingKeyPair = generateKeyPair(`${this.name}_dh_next_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`);
 
       const dhSendSecret = calculateECDH(this.dhSendingKeyPair.privateKeyHex, this.dhReceivingPublicKeyHex);
       const rkRes2 = kdfRootStep(this.rootKeyHex, dhSendSecret);
@@ -290,7 +290,7 @@ export function createSignalConversation() {
   const bobDH0 = generateKeyPair('bob_dh0');
 
   const aliceSession = new SignalSession('Alice', x3dh.sharedRootKeyHex, aliceDH0, bobDH0.publicKeyHex);
-  const bobSession = new SignalSession('Bob', x3dh.sharedRootKeyHex, bobDH0, aliceDH0.publicKeyHex);
+  const bobSession = new SignalSession('Bob', x3dh.sharedRootKeyHex, bobDH0, '');
 
   return {
     x3dh,

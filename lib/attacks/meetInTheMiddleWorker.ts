@@ -2,14 +2,14 @@ import { CryptoTaskScheduler } from '../workers/cryptoTaskScheduler';
 import { WorkerTask, WorkerResponse } from '../workers/types';
 
 // Mock Web Worker Context
-const ctx: Worker = self as any;
+const ctx: Worker = self as unknown as Worker;
 
 ctx.onmessage = async (event: MessageEvent<WorkerTask>) => {
   const task = event.data;
   
   if (task.type === 'MEET_IN_THE_MIDDLE' || task.type === 'BRUTE_FORCE') {
     const scheduler = new CryptoTaskScheduler();
-    const { startIdx, endIdx } = task.payload;
+    const { startIdx, endIdx } = task.payload as { startIdx: number; endIdx: number };
     const total = endIdx - startIdx;
     
     try {
@@ -39,11 +39,11 @@ ctx.onmessage = async (event: MessageEvent<WorkerTask>) => {
         result
       } as WorkerResponse);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       ctx.postMessage({
         taskId: task.id,
         status: 'ERROR',
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       } as WorkerResponse);
     }
   }

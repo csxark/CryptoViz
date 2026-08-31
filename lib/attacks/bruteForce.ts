@@ -105,6 +105,11 @@ export function calculateEstimatedTime(
   };
 }
 
+/**
+ * Re-export standardized duration formatter from centralized lib/formatters.
+ * Formats durations from milliseconds up to billions of years, transitioning
+ * cleanly to scientific notation for astronomically large keyspaces (>= 1,000 universe lifetimes).
+ */
 export { formatDuration } from "@/lib/formatters";
 
 export interface StrengthInfo {

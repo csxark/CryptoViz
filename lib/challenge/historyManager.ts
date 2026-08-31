@@ -3,7 +3,7 @@
  * Handles safe reading, saving, analytics computation, and clearing of past session runs in localStorage.
  */
 
-export type ChallengeDifficulty = 'beginner' | 'intermediate' | 'advanced'
+export type ChallengeDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'easy' | 'medium' | 'hard'
 
 export interface QuestionRunHistory {
   cipherId: string

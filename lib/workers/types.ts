@@ -1,14 +1,14 @@
 export interface WorkerTask {
   id: string;
   type: 'MEET_IN_THE_MIDDLE' | 'BRUTE_FORCE';
-  payload: any;
+  payload: unknown;
 }
 
 export interface WorkerResponse {
   taskId: string;
   status: 'PROGRESS' | 'SUCCESS' | 'ERROR';
   progress?: number;
-  result?: any;
+  result?: unknown;
   error?: string;
 }
 

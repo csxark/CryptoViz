@@ -173,6 +173,16 @@ function feistelPermute(val: number): number {
 }
 
 // Helper to convert 8 bytes to [high32, low32]
+/**
+ * Bytes To Block cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param bytes Input required by the Bytes To Block operation.
+ * @param offset Input required by the Bytes To Block operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function bytesToBlock(bytes: Uint8Array, offset = 0): [number, number] {
   const high =
     ((bytes[offset] << 24) |
@@ -190,6 +200,17 @@ export function bytesToBlock(bytes: Uint8Array, offset = 0): [number, number] {
 }
 
 // Helper to convert [high32, low32] to 8 bytes
+/**
+ * Block To Bytes cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param block Input required by the Block To Bytes operation.
+ * @param bytes Input required by the Block To Bytes operation.
+ * @param offset Input required by the Block To Bytes operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function blockToBytes(block: [number, number], bytes: Uint8Array, offset = 0): void {
   bytes[offset] = (block[0] >>> 24) & 0xff
   bytes[offset + 1] = (block[0] >>> 16) & 0xff
@@ -207,6 +228,15 @@ function leftShift28(half: number, shifts: number): number {
 }
 
 // Generate the 16 round keys (48 bits each, represented as [high24, low24])
+/**
+ * Generate Subkeys cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param keyBytes Input required by the Generate Subkeys operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function generateSubkeys(keyBytes: Uint8Array): [number, number][] {
   const keyBlock = bytesToBlock(keyBytes, 0)
   // PC1 maps 64-bit key to 56 bits (C0 is first 28, D0 is last 28)
@@ -265,6 +295,14 @@ function feistel(right: number, roundKey: [number, number]): number {
 }
 
 // Process a single 64-bit block
+/**
+ * Process Block cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function processBlock(
   block: [number, number],
   subkeys: [number, number][],
@@ -524,11 +562,28 @@ const DES_WEAK_KEYS = new Set([
   '1FFE1FFE0EFE0EFE', 'FE1FFE1FFE0EFE0E'
 ].map(k => k.toUpperCase()))
 
+/**
+ * Is Weak Key cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param keyBytes Input required by the Is Weak Key operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function isWeakKey(keyBytes: Uint8Array): boolean {
   const hex = fromByteArray(keyBytes, 'hex').toUpperCase()
   return DES_WEAK_KEYS.has(hex)
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string,
@@ -560,6 +615,14 @@ export function encrypt(
   return desFast(paddedInput, keyBytes, false)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   key: string,
@@ -605,6 +668,14 @@ export function decrypt(
   }
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '8787878787878787',

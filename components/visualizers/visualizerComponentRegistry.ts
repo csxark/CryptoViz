@@ -64,27 +64,31 @@ const IdeaCipherVisualizer = dynamic(
   { ssr: false },
 );
 
+/**
+ * Safely extracts a step by index bounded by step bounds[cite: 2].
+ */
 function getStep(
   result: CipherResult,
-  currentStep: number,
-): CipherStep {
-  return result.steps[
-    Math.min(
-      Math.max(currentStep, 0),
-      Math.max(result.steps.length - 1, 0),
-    )
-  ];
+  activeStep: number,
+): CipherStep | undefined {
+  if (!result?.steps || result.steps.length === 0) return undefined;
+  const index = Math.min(
+    Math.max(activeStep, 0),
+    result.steps.length - 1,
+  );
+  return result.steps[index];
 }
+
+/* ============================================================================
+ * EXPLICIT ADAPTER HELPERS FOR LEGACY VISUALIZERS (#1334)
+ * ============================================================================ */
 
 function PlayfairVisualizerAdapter({
   result,
-  currentStep,
+  activeStep,
 }: VisualizerComponentProps) {
-  const step = getStep(result, currentStep);
-
-  if (!step.matrix) {
-    return null;
-  }
+  const step = getStep(result, activeStep);
+  if (!step?.matrix) return null;
 
   return createElement(PlayfairGrid, {
     matrix: step.matrix,
@@ -94,13 +98,10 @@ function PlayfairVisualizerAdapter({
 
 function RailFenceVisualizerAdapter({
   result,
-  currentStep,
+  activeStep,
 }: VisualizerComponentProps) {
-  const step = getStep(result, currentStep);
-
-  if (!step.matrix) {
-    return null;
-  }
+  const step = getStep(result, activeStep);
+  if (!step?.matrix) return null;
 
   return createElement(RailFenceViz, {
     matrix: step.matrix,
@@ -109,27 +110,27 @@ function RailFenceVisualizerAdapter({
 }
 
 function DhVisualizerAdapter({
-  currentStep,
+  activeStep,
 }: VisualizerComponentProps) {
-  return createElement(DHVisualizer, { currentStep });
+  return createElement(DHVisualizer, { currentStep: activeStep });
 }
 
 function HmacVisualizerAdapter({
-  currentStep,
+  activeStep,
   result,
 }: VisualizerComponentProps) {
   return createElement(HmacVisualizer, {
-    currentStep,
+    currentStep: activeStep,
     result,
   });
 }
 
 function Sm3VisualizerAdapter({
-  currentStep,
+  activeStep,
   result,
 }: VisualizerComponentProps) {
   return createElement(Sm3Visualizer, {
-    currentStep,
+    currentStep: activeStep,
     result,
   });
 }
@@ -178,6 +179,9 @@ function IdeaCipherVisualizerAdapter(
 
 type RegisteredVisualizer = ComponentType<VisualizerComponentProps>;
 
+/**
+ * Strict central registry enforced by VisualizerComponentProps contract[cite: 2].
+ */
 const VISUALIZER_REGISTRY: Readonly<
   Record<string, RegisteredVisualizer>
 > = {
@@ -186,7 +190,6 @@ const VISUALIZER_REGISTRY: Readonly<
   dh: DhVisualizerAdapter,
   hmac: HmacVisualizerAdapter,
   sm3: Sm3VisualizerAdapter,
-
   aes: AesKeyExpansionVisualizerAdapter,
   des: DesKeyScheduleVisualizerAdapter,
   frodokem: FrodoKemVisualizerAdapter,

@@ -1,3 +1,13 @@
+import DOMPurify from "dompurify";
+// @ts-ignore
+import { JSDOM } from "jsdom";
+
+const domWindow =
+  typeof window !== "undefined"
+    ? (window as unknown as Window & typeof globalThis)
+    : (new JSDOM("").window as unknown as Window & typeof globalThis);
+const purifier = DOMPurify(domWindow);
+
 export type SanitizedInputKind =
   | "plain-text"
   | "hex"
@@ -14,6 +24,8 @@ export interface SanitizationOptions {
   collapseWhitespace?: boolean;
   preserveCase?: boolean;
   escapeHtml?: boolean;
+  allowedTags?: string[];
+  allowedAttributes?: string[];
 }
 
 export interface SanitizationResult {
@@ -68,6 +80,8 @@ export function sanitizeCryptoInput(value: unknown, options: SanitizationOptions
 
   if (options.escapeHtml === true) {
     sanitized = escapeHtml(sanitized);
+    // Neutralize inline event handler attributes (e.g., onerror=, onload=) in unquoted attribute contexts
+    sanitized = sanitized.replace(/on\w+\s*=/gi, "data-sanitized-event=");
   }
 
   const warnings: string[] = [];
@@ -85,10 +99,33 @@ export function sanitizeCryptoInput(value: unknown, options: SanitizationOptions
 }
 
 export function sanitizePlainText(value: unknown, options: SanitizationOptions = {}): SanitizationResult {
-  return sanitizeCryptoInput(value, {
-    escapeHtml: options.escapeHtml ?? true,
+  const result = sanitizeCryptoInput(value, {
+    escapeHtml: false,
     ...options,
   });
+
+  let val = result.value;
+
+  if (options.escapeHtml === false) {
+    const purifyConfig = {
+      ALLOWED_TAGS: options.allowedTags || ["b", "i", "em", "strong", "p", "br", "span"],
+      ALLOWED_ATTR: options.allowedAttributes || ["class", "id"],
+      FORCE_BODY: true,
+      RETURN_DOM: false,
+    };
+    val = purifier.sanitize(val, purifyConfig);
+  } else {
+    // Neutralize dangerous event listener attributes and URL protocols for plain-text escaping
+    val = val.replace(/(on[a-z]+)\s*=\s*("[^"]*"|'[^']*'|[^>\s]*)/gi, "");
+    val = val.replace(/(javascript|data|vbscript)\s*:/gi, "$1_blocked:");
+    val = escapeHtml(val);
+  }
+
+  return {
+    ...result,
+    value: val,
+    changed: val !== normalizeInput(value),
+  };
 }
 
 export function sanitizeSearchQuery(value: unknown, maxLength = 160): SanitizationResult {
@@ -209,7 +246,7 @@ export function sanitizeMarkdown(value: unknown, maxLength = DEFAULT_MAX_LENGTH)
   });
 
   const withoutDangerousLinks = plain.value.replace(
-    /\]\(\s*(javascript:|data:text\/html|vbscript:)[^)]+\)/gi,
+    /\]\(\s*(javascript:|javascript_blocked:|data:text\/html|vbscript:)[^)]+\)/gi,
     "](#)",
   );
   const withoutRawHtml = withoutDangerousLinks.replace(/&lt;\/?(script|iframe|object|embed|style)[^&]*&gt;/gi, "");

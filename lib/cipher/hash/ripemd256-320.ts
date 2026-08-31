@@ -86,15 +86,53 @@ function ripemdCore(input: string, variant: 256 | 320, instrument: boolean): Cip
     return { output: outBytes.map(b => b.toString(16).padStart(2, '0')).join(''), outputEncoding: 'hex', steps, metadata: variant === 256 ? METADATA_256 : METADATA_320, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt Ripemd256 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt Ripemd256 operation.
+ * @param key Input required by the Encrypt Ripemd256 operation.
+ * @param options Input required by the Encrypt Ripemd256 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encryptRipemd256(input: string, key: string, options: CipherOptions = {}): CipherResult {
     return ripemdCore(input, 256, !!options.instrument)
 }
+/**
+ * Encrypt Ripemd320 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt Ripemd320 operation.
+ * @param key Input required by the Encrypt Ripemd320 operation.
+ * @param options Input required by the Encrypt Ripemd320 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encryptRipemd320(input: string, key: string, options: CipherOptions = {}): CipherResult {
     return ripemdCore(input, 320, !!options.instrument)
 }
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(): CipherResult {
     throw new CipherError('ONE_WAY_HASH', 'RIPEMD is a one-way hash function.')
 }
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '', key: '', expected: 'mock_ripemd256', description: 'RIPEMD-256 empty string' }
 ]

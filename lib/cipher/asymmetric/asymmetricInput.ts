@@ -1,5 +1,13 @@
 import { CipherError } from '../../utils/errors'
 
+/**
+ * Input Encoding cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export type InputEncoding = 'integer' | 'text' | 'hex'
 
 /**

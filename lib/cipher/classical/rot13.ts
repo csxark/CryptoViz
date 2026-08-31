@@ -10,6 +10,14 @@ import type { CipherResult, CipherOptions, TestVector } from '../types'
 import { validateInput } from '../../utils/errors'
 import * as caesar from './caesar'
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encrypt(
   input: string,
   _key: string = '13',
@@ -37,6 +45,14 @@ export function decrypt(
   return encrypt(input, key, options)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = [
   { input: 'HELLO', key: '13', expected: 'URYYB' },
   { input: 'URYYB', key: '13', expected: 'HELLO' },

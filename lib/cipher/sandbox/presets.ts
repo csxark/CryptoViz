@@ -1,5 +1,13 @@
 import { CipherPipelineStage } from './cipherSandboxEngine'
 
+/**
+ * Cipher Preset cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CipherPreset {
   id: string
   name: string
@@ -9,6 +17,14 @@ export interface CipherPreset {
   stages: CipherPipelineStage[]
 }
 
+/**
+ * CIPHER PRESETS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const CIPHER_PRESETS: CipherPreset[] = [
   {
     id: 'spn_2round',

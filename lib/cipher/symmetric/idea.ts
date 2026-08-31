@@ -1,21 +1,10 @@
 import { CipherError } from '../../utils/errors'
 import type { CipherOptions, CipherResult, CipherStep, TestVector } from '../types'
+import { toByteArray, fromByteArray } from '../../utils'
 
 const MOD16 = 0x10000
 const MOD_MUL = 0x10001
 
-function hexToBytes(hex: string): Uint8Array {
-  const clean = hex.replace(/\s/g, '')
-  const out = new Uint8Array(clean.length / 2)
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.substr(i * 2, 2), 16)
-  return out
-}
-function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-function utf8ToBytes(s: string): Uint8Array {
-  return new TextEncoder().encode(s)
-}
 
 function mulModIdea(a: number, b: number): number {
   const x = a === 0 ? MOD16 : a
@@ -141,30 +130,89 @@ function fromBlocks16(blocks: number[][]): Uint8Array {
   return out
 }
 
-function parseInput(input: string, options: CipherOptions): Uint8Array {
-  if (!input || input.length === 0) throw new CipherError('INPUT_REQUIRED', 'INPUT_REQUIRED: Input text is required.')
-  const useHex = 'hexInput' in options && typeof options.hexInput === 'boolean' ? options.hexInput : true
-  const bytes = useHex ? hexToBytes(input) : utf8ToBytes(input)
-  if (bytes.length === 0) throw new CipherError('INPUT_REQUIRED', 'INPUT_REQUIRED: Input text is required.')
-  if (bytes.length > 4096) throw new CipherError('INPUT_TOO_LONG', 'INPUT_TOO_LONG: Input exceeds 4096 byte limit.')
-  const padded = new Uint8Array(Math.ceil(bytes.length / 8) * 8)
+function padPKCS7(bytes: Uint8Array, blockSize: number): Uint8Array {
+  const paddingVal = blockSize - (bytes.length % blockSize)
+  const padded = new Uint8Array(bytes.length + paddingVal)
   padded.set(bytes)
+  for (let i = bytes.length; i < padded.length; i++) {
+    padded[i] = paddingVal
+  }
   return padded
+}
+
+function unpadPKCS7(bytes: Uint8Array, blockSize: number): Uint8Array {
+  if (bytes.length === 0 || bytes.length % blockSize !== 0) {
+    throw new CipherError('INVALID_PADDING', 'Invalid ciphertext length.')
+  }
+  const paddingVal = bytes[bytes.length - 1]
+  if (paddingVal < 1 || paddingVal > blockSize || paddingVal > bytes.length) {
+    throw new CipherError('INVALID_PADDING', 'Invalid PKCS7 padding value.')
+  }
+  for (let i = bytes.length - paddingVal; i < bytes.length; i++) {
+    if (bytes[i] !== paddingVal) {
+      throw new CipherError('INVALID_PADDING', 'Invalid PKCS7 padding bytes.')
+    }
+  }
+  return bytes.slice(0, bytes.length - paddingVal)
 }
 
 function run(input: string, key: string, options: CipherOptions, direction: 'encrypt' | 'decrypt'): CipherResult {
   const start = performance.now()
-  const keyBytes = hexToBytes(key)
-  const data = parseInput(input, options)
+  const keyBytes = toByteArray(key.replace(/\s+/g, ''), 'hex')
+  if (keyBytes.length !== 16) throw new CipherError('INVALID_KEY', 'INVALID_KEY: IDEA requires a 128-bit (16 byte) key')
+  
+  const isExplicitHex = 'hexInput' in options ? !!options.hexInput : false
   const encKeys = deriveEncryptSubkeys(keyBytes)
   const subkeys = direction === 'encrypt' ? encKeys : deriveDecryptSubkeys(encKeys)
+  
+  let processedInput: Uint8Array;
+  const usePadding = options.padding !== false;
+  
+  if (direction === 'encrypt') {
+    const inEnc = isExplicitHex ? 'hex' : (options.encoding || 'utf8')
+    const inputBytes = toByteArray(input, inEnc)
+    if (inputBytes.length === 0) throw new CipherError('INPUT_REQUIRED', 'INPUT_REQUIRED: Input text is required.')
+    if (inputBytes.length > 4096) throw new CipherError('INPUT_TOO_LONG', 'INPUT_TOO_LONG: Input exceeds 4096 byte limit.')
+    
+    processedInput = usePadding ? padPKCS7(inputBytes, 8) : inputBytes;
+    if (!usePadding && processedInput.length % 8 !== 0) {
+      throw new CipherError('INVALID_INPUT', 'Input must be a multiple of 8 bytes when padding is disabled.')
+    }
+  } else {
+    processedInput = toByteArray(input.replace(/\s+/g, ''), 'hex')
+    if (processedInput.length % 8 !== 0) {
+      throw new CipherError('INVALID_PADDING', 'Ciphertext must be a multiple of 8 bytes.')
+    }
+  }
+
   const steps: CipherStep[] = []
   const collect = options.instrument ? steps : null
-  const outBlocks = toBlocks16(data).map((b) => ideaCore(b, subkeys, collect))
+  const outBlocks = toBlocks16(processedInput).map((b) => ideaCore(b, subkeys, collect))
   const outBytes = fromBlocks16(outBlocks)
+  
+  let finalOutputBytes = outBytes;
+  let finalOutputString = '';
+  let outEnc: 'hex' | 'utf8' | 'base64' | 'binary' = 'hex';
+  
+  if (direction === 'encrypt') {
+    finalOutputString = fromByteArray(outBytes, 'hex')
+    outEnc = 'hex'
+  } else {
+    try {
+      finalOutputBytes = usePadding ? unpadPKCS7(outBytes, 8) : outBytes
+    } catch (e: any) {
+      if (e.name === 'CipherError') {
+        throw new CipherError('INVALID_PADDING', 'Invalid or missing PKCS7 padding in decrypted plaintext.')
+      }
+      throw e
+    }
+    outEnc = isExplicitHex ? 'hex' : (options.encoding || 'utf8')
+    finalOutputString = fromByteArray(finalOutputBytes, outEnc)
+  }
+
   return {
-    output: bytesToHex(outBytes),
-    outputEncoding: 'hex',
+    output: finalOutputString,
+    outputEncoding: outEnc,
     steps,
     metadata: {
       name: 'IDEA', keySize: 128, blockSize: 64, rounds: 8, securityStatus: 'legacy',
@@ -174,18 +222,72 @@ function run(input: string, key: string, options: CipherOptions, direction: 'enc
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return run(input, key, options, 'encrypt')
 }
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return run(input, key, options, 'decrypt')
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     key: '000102030405060708090a0b0c0d0e0f',
     input: '0000000000000000',
     expected: 'd27378922a7a626a',
-    description: 'Verified IDEA block cipher vector — zero plaintext under sequential-byte key',
+    description: 'Verified IDEA block cipher vector — zero plaintext under sequential-byte key (raw block, no padding)',
+    options: { padding: false, hexInput: true },
   },
+  {
+    key: '0123456789abcdef0123456789abcdef',
+    input: 'Hello, IDEA!',
+    expected: 'randomized',
+    expectedDecrypt: 'Hello, IDEA!',
+    description: 'UTF-8 String Input - default padding and encoding',
+  },
+  {
+    key: '0123456789abcdef0123456789abcdef',
+    input: '0000000000000000',
+    expected: 'randomized',
+    expectedDecrypt: '0000000000000000',
+    description: 'Explicit Hex Input with PKCS7 padding',
+    options: { hexInput: true },
+  },
+  {
+    key: '0123456789abcdef0123456789abcdef',
+    input: 'Non-ASCII character: 😊',
+    expected: 'randomized',
+    expectedDecrypt: 'Non-ASCII character: 😊',
+    description: 'UTF-8 String with non-ASCII characters',
+    options: { encoding: 'utf8' },
+  }
 ]

@@ -1,0 +1,10 @@
+# Allow optional dependencies and their build scripts
+optional-dependencies=true
+
+# Improve dependency resolution
+auto-install-peers=true
+strict-peer-dependencies=false
+
+# Allow scripts to run for optional dependencies
+# This addresses the sharp@0.34.5 and unrs-resolver@1.12.2 build warnings
+node-linker=hoisted

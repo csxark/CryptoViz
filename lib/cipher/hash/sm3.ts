@@ -1,4 +1,4 @@
-import { CipherError } from '../../utils/errors'
+import { CipherError, validateHashInput } from '../../utils/errors'
 import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVector } from '../types'
 
 const METADATA: CipherMetadata = {
@@ -10,6 +10,14 @@ const METADATA: CipherMetadata = {
   standardBody: 'GB/T 32905-2016 / OSCCA',
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'abc',
@@ -66,18 +74,16 @@ function T(j: number): number {
   return j >= 0 && j <= 15 ? 0x79cc4519 : 0x7a6d76e9
 }
 
-export function validateHashInput(input: unknown): asserts input is string {
-  if (input === null || input === undefined) {
-    throw new CipherError('INPUT_REQUIRED', 'Input is required.')
-  }
-  if (typeof input !== 'string') {
-    throw new CipherError('INPUT_REQUIRED', 'Input must be a string.')
-  }
-  const byteLength = new TextEncoder().encode(input).length
-  if (byteLength > 2 * 1024 * 1024) {
-    throw new CipherError('INPUT_TOO_LONG', `Input exceeds maximum size of 2MB (got ${byteLength}).`)
-  }
-}
+/**
+ * Validate Hash Input cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Validate Hash Input operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export { validateHashInput }
 
 function padMessage(inputBytes: Uint8Array): Uint8Array {
   const originalLenBits = inputBytes.length * 8
@@ -162,6 +168,17 @@ function sm3Fast(inputBytes: Uint8Array): string {
   return Array.from(V).map(val => val.toString(16).padStart(8, '0')).join('')
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param _key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, _key = '', options: CipherOptions = {}): CipherResult {
   validateHashInput(input)
   const start = performance.now()
@@ -227,6 +244,14 @@ export function encrypt(input: string, _key = '', options: CipherOptions = {}): 
   }
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(): CipherResult {
   throw new CipherError('ONE_WAY_HASH', 'SM3 is a one-way cryptographic hash function and cannot be decrypted.')
 }

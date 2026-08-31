@@ -8,6 +8,7 @@
  * @see lib/utils/security.ts
  */
 
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   isDangerousKey,

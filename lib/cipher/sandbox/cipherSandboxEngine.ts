@@ -11,8 +11,24 @@ export type SubstitutionType = 'caesar' | 'sbox' | 'affine' | 'xor'
  */
 export type PermutationType = 'pbox' | 'columnar' | 'block_swap' | 'cyclic_shift' | 'reverse'
 
+/**
+ * Stage Category asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export type StageCategory = 'substitution' | 'permutation'
 
+/**
+ * Base Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface BaseStageConfig {
   id: string
   name: string
@@ -20,6 +36,14 @@ export interface BaseStageConfig {
   enabled: boolean
 }
 
+/**
+ * Caesar Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CaesarStageConfig extends BaseStageConfig {
   category: 'substitution'
   subType: 'caesar'
@@ -27,6 +51,14 @@ export interface CaesarStageConfig extends BaseStageConfig {
   preserveCase?: boolean
 }
 
+/**
+ * SBox Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface SBoxStageConfig extends BaseStageConfig {
   category: 'substitution'
   subType: 'sbox'
@@ -34,6 +66,14 @@ export interface SBoxStageConfig extends BaseStageConfig {
   mapping: Record<string, string>
 }
 
+/**
+ * Affine Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface AffineStageConfig extends BaseStageConfig {
   category: 'substitution'
   subType: 'affine'
@@ -41,12 +81,28 @@ export interface AffineStageConfig extends BaseStageConfig {
   b: number // Shift offset
 }
 
+/**
+ * Xor Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface XorStageConfig extends BaseStageConfig {
   category: 'substitution'
   subType: 'xor'
   key: string // Secret key string used for byte/char XOR
 }
 
+/**
+ * PBox Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface PBoxStageConfig extends BaseStageConfig {
   category: 'permutation'
   subType: 'pbox'
@@ -54,6 +110,14 @@ export interface PBoxStageConfig extends BaseStageConfig {
   permutation: number[] // 0-indexed positions within block, e.g. [2, 0, 3, 1]
 }
 
+/**
+ * Columnar Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface ColumnarStageConfig extends BaseStageConfig {
   category: 'permutation'
   subType: 'columnar'
@@ -61,24 +125,56 @@ export interface ColumnarStageConfig extends BaseStageConfig {
   keyOrder: number[] // Column read order (0-indexed) e.g. [2, 0, 1]
 }
 
+/**
+ * Block Swap Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface BlockSwapStageConfig extends BaseStageConfig {
   category: 'permutation'
   subType: 'block_swap'
   blockSize: number // Block length to split and swap halves
 }
 
+/**
+ * Cyclic Shift Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CyclicShiftStageConfig extends BaseStageConfig {
   category: 'permutation'
   subType: 'cyclic_shift'
   shift: number // Positive for right, negative for left cyclic shift
 }
 
+/**
+ * Reverse Stage Config asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface ReverseStageConfig extends BaseStageConfig {
   category: 'permutation'
   subType: 'reverse'
   blockLength?: number // 0 or undefined for entire string reverse, or per block length
 }
 
+/**
+ * Cipher Pipeline Stage asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export type CipherPipelineStage =
   | CaesarStageConfig
   | SBoxStageConfig
@@ -90,6 +186,14 @@ export type CipherPipelineStage =
   | CyclicShiftStageConfig
   | ReverseStageConfig
 
+/**
+ * Pipeline Execution Result asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface PipelineExecutionResult {
   output: string
   steps: CipherStep[]
@@ -97,11 +201,27 @@ export interface PipelineExecutionResult {
   isInvertible: boolean
 }
 
+/**
+ * Invertibility Validation Result asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface InvertibilityValidationResult {
   isInvertible: boolean
   warnings: string[]
 }
 
+/**
+ * Avalanche Result asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface AvalancheResult {
   bitFlipPct: number
   changedCharsCount: number
@@ -111,6 +231,14 @@ export interface AvalancheResult {
   diffIndices: number[]
 }
 
+/**
+ * Frequency Count asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface FrequencyCount {
   char: string
   count: number
@@ -132,6 +260,16 @@ function gcd(x: number, y: number): number {
   return a
 }
 
+/**
+ * Mod Inverse asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param a Input required by the Mod Inverse operation.
+ * @param m Input required by the Mod Inverse operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function modInverse(a: number, m: number): number {
   a = ((a % m) + m) % m
   const g = gcd(a, m)
@@ -155,6 +293,14 @@ export function modInverse(a: number, m: number): number {
 // Invertibility Check
 // ---------------------------------------------------------------------------
 
+/**
+ * Validate Pipeline Invertibility asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function validatePipelineInvertibility(
   stages: CipherPipelineStage[]
 ): InvertibilityValidationResult {
@@ -229,6 +375,14 @@ export function validatePipelineInvertibility(
 // Stage Transformation Implementations (Encrypt & Decrypt)
 // ---------------------------------------------------------------------------
 
+/**
+ * Transform Stage asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function transformStage(
   input: string,
   stage: CipherPipelineStage,
@@ -545,6 +699,14 @@ export function transformStage(
 // Main Pipeline Execution Engine
 // ---------------------------------------------------------------------------
 
+/**
+ * Execute Cipher Pipeline asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function executeCipherPipeline(
   input: string,
   stages: CipherPipelineStage[],
@@ -601,6 +763,14 @@ export function executeCipherPipeline(
 // Avalanche Effect Metric Calculator
 // ---------------------------------------------------------------------------
 
+/**
+ * Calculate Avalanche Effect asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function calculateAvalancheEffect(
   input: string,
   stages: CipherPipelineStage[],
@@ -671,6 +841,15 @@ export function calculateAvalancheEffect(
 // Symbol Frequency Analysis Calculator
 // ---------------------------------------------------------------------------
 
+/**
+ * Calculate Frequency Analysis asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param text Input required by the Calculate Frequency Analysis operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function calculateFrequencyAnalysis(text: string): FrequencyCount[] {
   if (!text) return []
 

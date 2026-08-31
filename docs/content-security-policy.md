@@ -18,7 +18,7 @@ In `vercel.json`:
 
 ```json
 {
-  "Content-Security-Policy": "default-src 'self'; base-uri 'self'; form-action 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://avatars.githubusercontent.com https://github.githubassets.com https://images.unsplash.com; font-src 'self' data:; connect-src 'self' https://api.github.com https://*.vercel-insights.com https://*.supabase.co; worker-src 'self' blob:; frame-src 'self' https://www.youtube-nocookie.com; child-src 'self' blob:; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
+  "Content-Security-Policy": "default-src 'self'; base-uri 'self'; form-action 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://avatars.githubusercontent.com https://github.githubassets.com https://images.unsplash.com; font-src 'self' data:; connect-src 'self' https://api.github.com https://vercel-insights.com https://supabase.co; worker-src 'self' blob:; frame-src 'self' https://www.youtube-nocookie.com; child-src 'self' blob:; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",

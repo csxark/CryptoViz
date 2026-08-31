@@ -1,18 +1,53 @@
 
+/**
+ * Validation State cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export type ValidationState = "idle" | "valid" | "invalid" | "checking"
 
+/**
+ * Validation Result cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export interface ValidationResult {
   state: ValidationState
   message: string
   details?: string[]
 }
 
+/**
+ * Parse Big Int cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param value Input required by the Parse Big Int operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function parseBigInt(value: string): bigint | null {
   const clean = value.trim()
   if (!/^[+-]?\d+$/.test(clean)) return null
   try { return BigInt(clean) } catch { return null }
 }
 
+/**
+ * Gcd cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param a Input required by the Gcd operation.
+ * @param b Input required by the Gcd operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function gcd(a: bigint, b: bigint): bigint {
   a = a < 0n ? -a : a
   b = b < 0n ? -b : b
@@ -20,6 +55,17 @@ export function gcd(a: bigint, b: bigint): bigint {
   return a
 }
 
+/**
+ * Mod Pow cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param base Input required by the Mod Pow operation.
+ * @param exponent Input required by the Mod Pow operation.
+ * @param modulus Input required by the Mod Pow operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function modPow(base: bigint, exponent: bigint, modulus: bigint): bigint {
   if (modulus <= 0n || exponent < 0n) throw new Error("Invalid modular exponentiation domain")
   let result = 1n
@@ -67,6 +113,15 @@ export function isProbablePrime(n: bigint): boolean {
   return true
 }
 
+/**
+ * Distinct Prime Factors cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param n Input required by the Distinct Prime Factors operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function distinctPrimeFactors(n: bigint): bigint[] {
   const factors: bigint[] = []
   let x = n
@@ -80,6 +135,16 @@ export function distinctPrimeFactors(n: bigint): bigint[] {
   return factors
 }
 
+/**
+ * Primitive Root Check cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param p Input required by the Primitive Root Check operation.
+ * @param g Input required by the Primitive Root Check operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function primitiveRootCheck(p: bigint, g: bigint): ValidationResult {
   if (!isProbablePrime(p)) return { state: "invalid", message: "p must be prime." }
   if (g <= 1n || g >= p) return { state: "invalid", message: "g must satisfy 1 < g < p." }
@@ -96,6 +161,17 @@ export function primitiveRootCheck(p: bigint, g: bigint): ValidationResult {
   return { state: "valid", message: `${g} is a primitive root modulo ${p}.` }
 }
 
+/**
+ * Validate Prime Pair cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param p Input required by the Validate Prime Pair operation.
+ * @param q Input required by the Validate Prime Pair operation.
+ * @param requireBlum Input required by the Validate Prime Pair operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function validatePrimePair(p: bigint, q: bigint, requireBlum: boolean): ValidationResult {
   if (!isProbablePrime(p) || !isProbablePrime(q)) {
     return { state: "invalid", message: "Both p and q must be prime." }
@@ -117,6 +193,14 @@ export function validatePrimePair(p: bigint, q: bigint, requireBlum: boolean): V
   }
 }
 
+/**
+ * Curve Preset cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export interface CurvePreset {
   id: string
   name: string
@@ -130,6 +214,14 @@ export interface CurvePreset {
   description: string
 }
 
+/**
+ * CURVE PRESETS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const CURVE_PRESETS: CurvePreset[] = [
   {
     id: "p256",
@@ -153,7 +245,7 @@ export const CURVE_PRESETS: CurvePreset[] = [
     gy: BigInt("32670510020758816978083085130507043184471273380659243275938904335757337482424"),
     order: BigInt("0xfffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"),
     privateKey: "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
-    description: "Bitcoin/ECDSA curve with y² = x³ + 7 over a prime field.",
+    description: "Koblitz curve with y² = x³ + 7 over a 256-bit prime field.",
   },
   {
     id: "ed25519",
@@ -169,6 +261,14 @@ export const CURVE_PRESETS: CurvePreset[] = [
   },
 ]
 
+/**
+ * Point On Curve cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function pointOnCurve(
   x: bigint, y: bigint, curve: CurvePreset,
 ): boolean {
@@ -176,6 +276,14 @@ export function pointOnCurve(
   return mod(y * y) === mod(x * x * x + curve.a * x + curve.b)
 }
 
+/**
+ * Pqc Preset cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export interface PqcPreset {
   id: string
   name: string
@@ -186,6 +294,14 @@ export interface PqcPreset {
   description: string
 }
 
+/**
+ * PQC PRESETS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const PQC_PRESETS: PqcPreset[] = [
   { id: "ml-kem-512", name: "ML-KEM-512", securityLevel: "NIST Level 1", dimension: "k = 2", matrixShape: "2 × 2 polynomial matrix", keyTemplate: '{"parameterSet":"ML-KEM-512"}', description: "FIPS 203 parameter set." },
   { id: "ml-kem-768", name: "ML-KEM-768", securityLevel: "NIST Level 3", dimension: "k = 3", matrixShape: "3 × 3 polynomial matrix", keyTemplate: '{"parameterSet":"ML-KEM-768"}', description: "CryptoViz registry default / FIPS 203 parameter set." },

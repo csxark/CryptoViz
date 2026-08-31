@@ -151,3 +151,5 @@ export const AutomatedCryptanalysisWorkbench: React.FC = () => {
     </div>
   );
 };
+
+export default AutomatedCryptanalysisWorkbench;

@@ -169,7 +169,7 @@ export default function Home() {
  
               <p className="mt-6 max-w-xl text-base leading-relaxed text-zinc-600 dark:text-[#B3B3B8]">
                 Learn encryption, hashing and secure communication through
-                beautiful interactive visualisations designed for students,
+                beautiful interactive visualizations designed for students,
                 developers and security enthusiasts.
               </p>
  

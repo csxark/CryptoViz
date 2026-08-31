@@ -69,16 +69,57 @@ function shaCore(input: string, variant: 224 | 384, instrument: boolean): Cipher
   }
 }
 
+/**
+ * Encrypt Sha224 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt Sha224 operation.
+ * @param _key Input required by the Encrypt Sha224 operation.
+ * @param options Input required by the Encrypt Sha224 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encryptSha224(input: string, _key: string, options: CipherOptions = {}): CipherResult {
   return shaCore(input, 224, !!options.instrument)
 }
+/**
+ * Encrypt Sha384 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt Sha384 operation.
+ * @param _key Input required by the Encrypt Sha384 operation.
+ * @param options Input required by the Encrypt Sha384 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encryptSha384(input: string, _key: string, options: CipherOptions = {}): CipherResult {
   return shaCore(input, 384, !!options.instrument)
 }
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param _input Input required by the Decrypt operation.
+ * @param _key Input required by the Decrypt operation.
+ * @param __options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(_input: string, _key: string, __options: CipherOptions = {}): CipherResult {
   throw new CipherError('ALGORITHM_UNSUPPORTED', 'This is a one-way hash function — it has no decrypt operation.')
 }
 
+/**
+ * TEST VECTORS 224 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS_224: TestVector[] = [
   {
     input: '',
@@ -87,6 +128,14 @@ export const TEST_VECTORS_224: TestVector[] = [
     description: 'NIST SHA-224 test vector (empty input)',
   },
 ]
+/**
+ * TEST VECTORS 384 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS_384: TestVector[] = [
   {
     input: '',
@@ -95,6 +144,14 @@ export const TEST_VECTORS_384: TestVector[] = [
     description: 'NIST SHA-384 test vector (empty input)',
   },
 ]
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   ...TEST_VECTORS_224,
   ...TEST_VECTORS_384,

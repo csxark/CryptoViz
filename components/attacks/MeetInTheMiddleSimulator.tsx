@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useId } from 'react'
 import { doubleDesEncrypt, meetInTheMiddleAttack, type MitmStep } from '@/lib/attacks/meetInTheMiddle'
-import { useAttackWorker } from '@/lib/hooks/useAttackWorker'
+import { useAttackWorker } from '@/hooks/useAttackWorker'
 import AttackControlBar from './AttackControlBar'
 import OracleQueryLogViewer from './OracleQueryLogViewer'
 
@@ -13,6 +13,10 @@ const DEFAULT_P='0123456789abcdef', DEFAULT_A='00000000000012ab', DEFAULT_B='000
 export default function MeetInTheMiddleSimulator(){
   const [plaintext,setPlaintext]=useState(DEFAULT_P),[keyA,setKeyA]=useState(DEFAULT_A),[keyB,setKeyB]=useState(DEFAULT_B),[bits,setBits]=useState(16)
   const [steps,setSteps]=useState<MitmStep[]>([]),[cursor,setCursor]=useState(-1),[running,setRunning]=useState(false),[error,setError]=useState<string|null>(null)
+  const plaintextId = useId();
+  const keyAId = useId();
+  const keyBId = useId();
+  const bitsId = useId();
   const {runMitmAttack,cancel}=useAttackWorker()
   const current=steps[cursor]
   const log=useMemo(()=>steps.slice(0,cursor+1).map((s,i)=>({index:i,label:s.label,detail:s.detail,status:s.label.includes('collision')?'match' as const:'info' as const})),[steps])
@@ -32,9 +36,9 @@ export default function MeetInTheMiddleSimulator(){
   }
   return <div className="space-y-5">
     <div className="grid gap-3 rounded-lg border p-5">
-      <label className="text-sm">Known plaintext<input className="mt-1 w-full rounded border px-2 py-2 font-mono" value={plaintext} onChange={e=>setPlaintext(e.target.value)}/></label>
-      <div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">Target key 1<input className="mt-1 w-full rounded border px-2 py-2 font-mono" value={keyA} onChange={e=>setKeyA(e.target.value)}/></label><label className="text-sm">Target key 2<input className="mt-1 w-full rounded border px-2 py-2 font-mono" value={keyB} onChange={e=>setKeyB(e.target.value)}/></label></div>
-      <label className="text-sm">Reduced keyspace: {bits} bits<input type="range" min={8} max={20} value={bits} onChange={e=>setBits(+e.target.value)} className="w-full"/></label>
+      <div className="flex flex-col"><label htmlFor={plaintextId} className="text-sm">Known plaintext</label><input id={plaintextId} className="mt-1 w-full rounded border px-2 py-2 font-mono" value={plaintext} onChange={e=>setPlaintext(e.target.value)}/></div>
+      <div className="grid gap-3 sm:grid-cols-2"><div className="flex flex-col"><label htmlFor={keyAId} className="text-sm">Target key 1</label><input id={keyAId} className="mt-1 w-full rounded border px-2 py-2 font-mono" value={keyA} onChange={e=>setKeyA(e.target.value)}/></div><div className="flex flex-col"><label htmlFor={keyBId} className="text-sm">Target key 2</label><input id={keyBId} className="mt-1 w-full rounded border px-2 py-2 font-mono" value={keyB} onChange={e=>setKeyB(e.target.value)}/></div></div>
+      <div className="flex flex-col"><label htmlFor={bitsId} className="text-sm">Reduced keyspace: {bits} bits</label><input id={bitsId} type="range" min={8} max={20} value={bits} onChange={e=>setBits(+e.target.value)} className="w-full"/></div>
       <button onClick={run} disabled={running} className="w-fit rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{running?'Building trace…':'Prepare interactive MitM'}</button>
       {error&&<p className="text-sm text-red-600">{error}</p>}
     </div>

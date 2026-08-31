@@ -48,7 +48,7 @@ export function inferDataType(cipher: CipherDefinition, direction: 'encrypt'|'de
   if (cipher.id === 'hex-encode') return 'hex-string'
   if (cipher.id === 'base64-encode') return 'base64-string'
   if (cipher.id === 'hex-decode' || cipher.id === 'base64-decode') return 'utf8-text'
-  if (cipher.category === 'hash' || cipher.category === 'kdf') return 'hex-string'
+  if (cipher.category === 'hash') return 'hex-string'
   if (cipher.category === 'asymmetric') return 'raw-bytes'
   if (cipher.category === 'symmetric') return 'raw-bytes'
   return 'utf8-text'
@@ -58,7 +58,7 @@ export function getStageTypes(cipher: CipherDefinition, direction: 'encrypt'|'de
   if (cipher.id === 'hex-decode') return { inputType:'hex-string', outputType:'utf8-text' }
   if (cipher.id === 'base64-encode') return { inputType:'utf8-text', outputType:'base64-string' }
   if (cipher.id === 'base64-decode') return { inputType:'base64-string', outputType:'utf8-text' }
-  if (cipher.category === 'hash' || cipher.category === 'kdf') return { inputType:'utf8-text', outputType:'hex-string' }
+  if (cipher.category === 'hash') return { inputType:'utf8-text', outputType:'hex-string' }
   if (cipher.category === 'symmetric') return { inputType: direction === 'decrypt' ? 'raw-bytes' : 'utf8-text', outputType:'raw-bytes' }
   if (cipher.category === 'asymmetric') return { inputType:'utf8-text', outputType:'raw-bytes' }
   return { inputType:'utf8-text', outputType:'utf8-text' }

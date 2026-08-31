@@ -45,4 +45,15 @@ describe('Paillier cryptosystem', () => {
     const dec = decrypt('4613', '13,17')
     expect(dec.output).toBe('15')
   })
+
+  it('verifies round-trip decryption decrypt(encrypt(m, pub), priv) === m for multiple values', () => {
+    const pubKey = '221,222'
+    const privKey = '221,48,198'
+    const testValues = ['0', '1', '42', '100', '220']
+    for (const val of testValues) {
+      const encrypted = encrypt(val, pubKey)
+      const decrypted = decrypt(encrypted.output, privKey)
+      expect(decrypted.output).toBe(val)
+    }
+  })
 })

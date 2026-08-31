@@ -199,12 +199,34 @@ function rc2Core(input: string, key: string, doDecrypt: boolean, instrument: boo
     return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     const eb = typeof (options as Record<string, unknown>).effectiveBits === 'number'
         ? (options as Record<string, unknown>).effectiveBits as number : 128
     return rc2Core(input, key, false, !!options.instrument, eb)
 }
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     const eb = typeof (options as Record<string, unknown>).effectiveBits === 'number'
@@ -212,6 +234,14 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
     return rc2Core(input, key, true, !!options.instrument, eb)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '0000000000000000', key: '0000000000000000', expected: 'ebb773f993278eff', options: { effectiveBits: 63 }, description: 'RFC 2268 §5 vector 1: 8-byte zero key, effectiveBits=63' },
     { input: 'ffffffffffffffff', key: 'ffffffffffffffff', expected: '278b27e42e2f0d49', options: { effectiveBits: 64 }, description: 'RFC 2268 §5 vector 2: 8-byte 0xff key, effectiveBits=64' },

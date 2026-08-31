@@ -114,18 +114,18 @@ export default function SignalMessagingLab() {
       {/* Navigation Tabs */}
       <div className="flex overflow-x-auto gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 scrollbar-hide">
         {[
-          { id: 'chat', label: 'Interactive Ratchet Chat', icon: MessageSquare },
-          { id: 'state', label: 'Ratchet State & Trees', icon: Layers },
-          { id: 'attack', label: 'Self-Healing Security Lab', icon: Flame },
-          { id: 'x3dh', label: 'X3DH Handshake Setup', icon: UserCheck },
-          { id: 'theory', label: 'Protocol Architecture & Theory', icon: BookOpen },
+          { id: 'chat' as const, label: 'Interactive Ratchet Chat', icon: MessageSquare },
+          { id: 'state' as const, label: 'Ratchet State & Trees', icon: Layers },
+          { id: 'attack' as const, label: 'Self-Healing Security Lab', icon: Flame },
+          { id: 'x3dh' as const, label: 'X3DH Handshake Setup', icon: UserCheck },
+          { id: 'theory' as const, label: 'Protocol Architecture & Theory', icon: BookOpen },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
                 isActive
                   ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20'

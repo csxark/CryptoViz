@@ -36,8 +36,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run TypeScript type checking
-        run: npm run typecheck
+      - name: Run TypeScript type checking (explicit CLI)
+        run: npx tsc --noEmit
+
+      - name: Validate CI pipeline quality gates
+        run: node scripts/validate-ci-pipeline.mjs
 
       - name: Run ESLint
         run: npm run lint

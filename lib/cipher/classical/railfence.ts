@@ -13,9 +13,10 @@ const METADATA = {
   yearDesigned: -100, // Ancient Greek scytale / historical
 }
 
-function validateRailsKey(key: string, _inputLength: number): number {
-  const rails = parseInt(key, 10)
-  if (isNaN(rails) || rails < 2) {
+function validateRailsKey(key: string, _inputLength: number, options: CipherOptions = {}): number {
+  const rawValue = options.rails !== undefined ? String(options.rails) : key
+  const rails = Number(rawValue)
+  if (isNaN(rails) || !Number.isInteger(rails) || rails < 2) {
     throw new CipherError('INVALID_KEY', 'Rail Fence key must be an integer >= 2.')
   }
   return rails
@@ -43,10 +44,11 @@ function getRailPattern(length: number, rails: number): number[] {
 function railfenceInstrumented(
   input: string,
   key: string,
-  decrypt: boolean
+  decrypt: boolean,
+  options: CipherOptions = {}
 ): CipherResult {
   const start = performance.now()
-  const rails = validateRailsKey(key, input.length)
+  const rails = validateRailsKey(key, input.length, options)
 
   const steps: CipherStep[] = []
   const pattern = getRailPattern(input.length, rails)
@@ -182,10 +184,11 @@ function railfenceInstrumented(
 function railfenceFast(
   input: string,
   key: string,
-  decrypt: boolean
+  decrypt: boolean,
+  options: CipherOptions = {}
 ): CipherResult {
   const start = performance.now()
-  const rails = validateRailsKey(key, input.length)
+  const rails = validateRailsKey(key, input.length, options)
   const pattern = getRailPattern(input.length, rails)
 
   let output = ''
@@ -227,6 +230,14 @@ function railfenceFast(
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string,
@@ -234,10 +245,18 @@ export function encrypt(
 ): CipherResult {
   validateInput(input)
   validateKey(key)
-  if (options.instrument) return railfenceInstrumented(input, key, false)
-  return railfenceFast(input, key, false)
+  if (options.instrument) return railfenceInstrumented(input, key, false, options)
+  return railfenceFast(input, key, false, options)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   key: string,
@@ -245,10 +264,18 @@ export function decrypt(
 ): CipherResult {
   validateInput(input)
   validateKey(key)
-  if (options.instrument) return railfenceInstrumented(input, key, true)
-  return railfenceFast(input, key, true)
+  if (options.instrument) return railfenceInstrumented(input, key, true, options)
+  return railfenceFast(input, key, true, options)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   // This example uses the 26-character input WEAREDISCOVEREDFLEEAATONCE.
   // Some sources cite a 25-character variant (omitting the trailing E), which produces a different

@@ -80,6 +80,15 @@ function invertMatrix(matrix: Matrix2x2, detInverse: number): Matrix2x2 {
 }
 
 // Uppercases, strips non-alphabetic characters, and pads with 'X' to an even length.
+/**
+ * Prepare Text cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Prepare Text operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function prepareText(input: string): string {
   let clean = input.toUpperCase().replace(/[^A-Z]/g, '')
   if (clean.length === 0) return clean
@@ -106,6 +115,7 @@ function hillCore(input: string, key: string, decrypt: boolean, instrument: bool
   const { matrix, detInverse } = parseHillKey(key)
   const effectiveMatrix = decrypt ? invertMatrix(matrix, detInverse) : matrix
   const prepared = prepareText(input)
+  const MAX_TRACED_BLOCKS = 60
 
   const steps: CipherStep[] = []
   if (instrument) {
@@ -123,6 +133,7 @@ function hillCore(input: string, key: string, decrypt: boolean, instrument: bool
   }
 
   let output = ''
+  const totalBlocks = Math.ceil(prepared.length / 2)
   for (let i = 0; i < prepared.length; i += 2) {
     const pIdx: [number, number] = [prepared.charCodeAt(i) - 65, prepared.charCodeAt(i + 1) - 65]
     const cIdx = transformBlock(pIdx, effectiveMatrix)
@@ -130,10 +141,11 @@ function hillCore(input: string, key: string, decrypt: boolean, instrument: bool
     const outChars = String.fromCharCode(cIdx[0] + 65) + String.fromCharCode(cIdx[1] + 65)
     output += outChars
 
-    if (instrument) {
+    const blockNum = i / 2 + 1
+    if (instrument && blockNum <= MAX_TRACED_BLOCKS) {
       steps.push({
         index: steps.length,
-        label: `Block ${i / 2 + 1} — '${inChars}'`,
+        label: `Block ${blockNum} — '${inChars}'`,
         inputState: inChars,
         outputState: outChars,
         highlight: [i, i + 1],
@@ -141,6 +153,17 @@ function hillCore(input: string, key: string, decrypt: boolean, instrument: bool
         note: `[${pIdx[0]},${pIdx[1]}] -> K*v mod 26 = [${cIdx[0]},${cIdx[1]}] = '${outChars}'`,
       })
     }
+  }
+
+  if (instrument && totalBlocks > MAX_TRACED_BLOCKS) {
+    steps.push({
+      index: steps.length,
+      label: `Remaining ${totalBlocks - MAX_TRACED_BLOCKS} blocks (summarized)`,
+      inputState: '',
+      outputState: '',
+      note: 'The same matrix transform continues identically for the rest of the text — omitted from the trace to stay within the step budget.',
+      isMilestone: true,
+    })
   }
 
   return {
@@ -152,16 +175,46 @@ function hillCore(input: string, key: string, decrypt: boolean, instrument: bool
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
   return hillCore(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
   return hillCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELP',

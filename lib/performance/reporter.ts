@@ -80,7 +80,7 @@ export class PerformanceReporter {
 
     if (isNode) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const os = await import('node:os')
         return {
           nodeVersion: process.version,
@@ -408,9 +408,9 @@ export class PerformanceReporter {
       throw new Error('File export is only available in Node.js environment')
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const fs = await import('node:fs')
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const path = await import('node:path')
 
     const content = format === 'json' 

@@ -101,7 +101,7 @@ export function useSandboxState({ cipher }: UseSandboxStateProps): UseSandboxSta
   const [history, setHistory] = useState<ConversionHistoryEntry[]>([]);
 
   // Restore a shared visualizer configuration from the URL (runs once per cipher).
-  /* eslint-disable react-hooks/set-state-in-effect */
+   
   useEffect(() => {
     const shared = parseVisualizerPermalink(window.location.search)
     setInput(shared.input ?? cipher.defaultInput)
@@ -118,7 +118,7 @@ export function useSandboxState({ cipher }: UseSandboxStateProps): UseSandboxSta
     if (shared.options.autoCompute !== undefined) setAutoCompute(shared.options.autoCompute)
     pendingSharedStepRef.current = shared.step ?? null
   }, [cipher.id, cipher.defaultInput, cipher.defaultKey])
-  /* eslint-enable react-hooks/set-state-in-effect */
+   
 
   // Sync playground state into the URL (debounced) so refresh/share preserves the session.
   useEffect(() => {
@@ -136,7 +136,7 @@ export function useSandboxState({ cipher }: UseSandboxStateProps): UseSandboxSta
   }, [input, key, action, hexInput, rounds, demoMode, bobSecret, aesMode, padding, autoCompute, currentStep, cipher.id, router])
 
   // Reset inputs when cipher changes
-  /* eslint-disable react-hooks/set-state-in-effect */
+   
   useEffect(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -176,7 +176,7 @@ export function useSandboxState({ cipher }: UseSandboxStateProps): UseSandboxSta
       }
     };
   }, [cipher]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+   
 
   const workspaceOptions: Record<string, unknown> = {
     hexInput,

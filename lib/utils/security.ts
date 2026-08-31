@@ -124,7 +124,7 @@ export function sanitizeHtml(dirty: string): string {
 
   try {
     // Dynamically require DOMPurify to keep the server bundle clean
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const DOMPurifyModule = require('dompurify')
     const createDOMPurify = DOMPurifyModule.default ?? DOMPurifyModule
     const DOMPurify = typeof createDOMPurify.sanitize === 'function'

@@ -283,6 +283,22 @@ export function decrypt(
   return { output, outputEncoding: 'utf8', steps: [], metadata: METADATA, durationMs: performance.now() - t0 }
 }
 
+/**
+ * Polybius Implementation Notes cipher-engine utility export.
+ *
+ * Provides diagnostic and architectural notes regarding Polybius Square cipher operations.
+ * @returns Array of implementation detail notes.
+ */
+export function polybiusImplementationNotes(): string[] {
+  return [
+    'Polybius square uses a 5x5 grid with 25 cells.',
+    'Letter J is merged into letter I cell for 26-letter Latin alphabet coverage.',
+    'Keywords generate a 5x5 matrix starting with unique key characters followed by unused alphabet letters.',
+    'Each character is encoded into 2-digit row and column coordinates (1-indexed).',
+    'Known-answer test vectors verify both unkeyed and keyed 5x5 Polybius grid coordinates.',
+  ]
+}
+
 // ─── Test Vectors ─────────────────────────────────────────────────────────────
 
 /**
@@ -315,7 +331,7 @@ export const TEST_VECTORS = [
   {
     input: 'HELLO',
     key: 'POLYBIUS',
-    expected: '41 12 24 24 15',
+    expected: '35 32 13 13 12',
     description: 'Keyed Polybius Square with key POLYBIUS',
   },
 ] as const

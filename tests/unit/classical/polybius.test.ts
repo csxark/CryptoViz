@@ -5,11 +5,36 @@ import { CipherError } from '../../../lib/utils/errors'
 
 describe('Polybius Square — known-answer vectors', () => {
   for (const { input, key, expected, description } of TEST_VECTORS) {
-    it(description, () => {
+    it(`encrypt KAT: ${description}`, () => {
       const result = encrypt(input, key)
       expect(result.output).toBe(expected)
     })
+
+    it(`decrypt KAT: ${description}`, () => {
+      const result = decrypt(expected, key)
+      expect(result.output).toBe(input.replace(/J/g, 'I'))
+    })
   }
+
+  it('verifies HELLOWORLD KAT vector with key POLYBIUS', () => {
+    const key = 'POLYBIUS'
+    const input = 'HELLOWORLD'
+    const expected = '35 32 13 13 12 51 12 45 13 31'
+
+    const encResult = encrypt(input, key)
+    expect(encResult.output).toBe(expected)
+
+    const decResult = decrypt(expected, key)
+    expect(decResult.output).toBe('HELLOWORLD')
+  })
+
+  it('verifies additional keyed test vectors', () => {
+    const key = 'KEYWORD'
+    const input = 'CRYPTOGRAPHY'
+    const enc = encrypt(input, key)
+    const dec = decrypt(enc.output, key)
+    expect(dec.output).toBe('CRYPTOGRAPHY')
+  })
 })
 
 describe('Polybius Square — round-trip', () => {
@@ -28,6 +53,14 @@ describe('Polybius Square — round-trip', () => {
     const dec = decrypt(enc.output, key)
     expect(dec.output).toBe(input)
   })
+
+  it('round-trip with mixed case and whitespace', () => {
+    const input = 'Hello World'
+    const key = 'POLYBIUS'
+    const enc = encrypt(input, key)
+    const dec = decrypt(enc.output, key)
+    expect(dec.output).toBe('HELLOWORLD')
+  })
 })
 
 describe('Polybius Square — J/I handling', () => {
@@ -36,12 +69,25 @@ describe('Polybius Square — J/I handling', () => {
     const i = encrypt('I', '')
     expect(j.output).toBe(i.output)
   })
+
+  it('J is restored as I on decrypt', () => {
+    const enc = encrypt('JUSTICE', '')
+    const dec = decrypt(enc.output, '')
+    expect(dec.output).toBe('IUSTICE')
+  })
 })
 
 describe('Polybius Square — validation', () => {
   it('throws INPUT_REQUIRED for empty string', () => {
     expect(() => encrypt('', '')).toThrow(CipherError)
     try { encrypt('', '') } catch (e) {
+      expect((e as CipherError).code).toBe('INPUT_REQUIRED')
+    }
+  })
+
+  it('throws INPUT_REQUIRED for whitespace-only string', () => {
+    expect(() => encrypt('   ', '')).toThrow(CipherError)
+    try { encrypt('   ', '') } catch (e) {
       expect((e as CipherError).code).toBe('INPUT_REQUIRED')
     }
   })
@@ -67,6 +113,12 @@ describe('Polybius Square — instrumented path', () => {
     expect(result.steps[0].matrix).toBeDefined()
   })
 
+  it('produces decrypt instrumented steps when instrument=true', () => {
+    const result = decrypt('23 15', '', { instrument: true })
+    expect(result.steps.length).toBeGreaterThan(0)
+    expect(result.steps[0].label).toContain('reconstruction')
+  })
+
   it('empty steps when instrument=false', () => {
     const result = encrypt('HI', '', { instrument: false })
     expect(result.steps).toHaveLength(0)
@@ -87,3 +139,4 @@ describe('Polybius Square — property-based', () => {
     )
   })
 })
+

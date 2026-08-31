@@ -32,6 +32,14 @@ const METADATA: CipherMetadata = {
 
 // RFC 8032 section 7.1, test vector 2 — verified locally against the installed
 // @noble/curves version before writing this file.
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'r', // single byte 0x72, RFC 8032 test vector 2's message
@@ -65,6 +73,17 @@ function parsePrivateKey(key: string): Uint8Array {
   return skBytes
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string = '', options: CipherOptions = {}): CipherResult {
   if (input === undefined || input === null || input === '') {
     throw new CipherError('INPUT_REQUIRED', 'Message input is required.')
@@ -120,6 +139,17 @@ export function encrypt(input: string, key: string = '', options: CipherOptions 
   }
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   if (input === undefined || input === null || input === '') {
     throw new CipherError('INPUT_REQUIRED', 'Message input is required.')

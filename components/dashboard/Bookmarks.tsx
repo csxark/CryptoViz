@@ -25,7 +25,7 @@ export default function Bookmarks({ bookmarks, onRemove }: BookmarksProps) {
               <Bookmark size={14} className="shrink-0 text-teal-500" />
               <Link href={bm.href} className="flex-1 min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-teal-500 truncate transition-colors">{bm.title}</Link>
               <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Link href={bm.href} className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-teal-500 transition-colors"><ExternalLink size={12} /></Link>
+                <Link href={bm.href} className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-teal-500 transition-colors" aria-label={`Open ${bm.title} resource`}><ExternalLink size={12} aria-hidden="true" /></Link>
                 <button onClick={() => onRemove(bm.id)} className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-rose-500 transition-colors" aria-label={`Remove ${bm.title}`}><BookmarkX size={12} /></button>
               </div>
             </li>

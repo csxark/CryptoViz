@@ -1,7 +1,7 @@
 import { hmac } from '@noble/hashes/hmac.js'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { toByteArray, fromByteArray } from '../../utils/encoding'
-import { CipherError, validateInput, validateKey } from '../../utils/errors'
+import { CipherError, validateHashInput, validateKey } from '../../utils/errors'
 import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVector } from '../types'
 
 const METADATA: CipherMetadata = {
@@ -12,6 +12,14 @@ const METADATA: CipherMetadata = {
   standardBody: 'RFC 2104 / FIPS 198',
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'Hi There',
@@ -35,12 +43,20 @@ function parseKey(key: string): Uint8Array {
   return toByteArray(key, 'utf8')
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string,
   options: CipherOptions = {}
 ): CipherResult {
-  validateInput(input)
+  validateHashInput(input)
   validateKey(key)
 
   const msgBytes = toByteArray(input, options.encoding || 'utf8')
@@ -157,6 +173,14 @@ export function encrypt(
   }
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   key: string,

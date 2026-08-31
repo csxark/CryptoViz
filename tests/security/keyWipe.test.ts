@@ -24,4 +24,31 @@ describe('Memory Wiping & Key Lifecycle', () => {
     const afterDelete = SecureKeyStore.get('test-key');
     expect(afterDelete).toBeNull();
   });
+
+  it('automatically zeroizes and evicts expired keys via background TTL timer (#1716)', async () => {
+    const keyData = new Uint8Array([55, 66, 77, 88]);
+    SecureKeyStore.set('ephemeral-key', keyData, 50); // 50ms TTL
+
+    // Key is present initially
+    expect(SecureKeyStore.get('ephemeral-key')).not.toBeNull();
+
+    // Wait for TTL timer to fire automatically without calling get()
+    await new Promise((resolve) => setTimeout(resolve, 90));
+
+    // Entry must be evicted automatically
+    expect(SecureKeyStore.get('ephemeral-key')).toBeNull();
+  });
+
+  it('sweeps expired keys manually via sweepExpiredKeys() (#1716)', () => {
+    SecureKeyStore.clear();
+    const keyData = new Uint8Array([1, 2, 3, 4]);
+    // Set with negative TTL so it is expired immediately without waiting for timer
+    SecureKeyStore.set('immediate-expire-key', keyData, -10);
+
+    const sweptCount = SecureKeyStore.sweepExpiredKeys();
+    expect(sweptCount).toBe(1);
+    expect(SecureKeyStore.get('immediate-expire-key')).toBeNull();
+
+    SecureKeyStore.clear();
+  });
 });

@@ -82,7 +82,7 @@ export class PerformanceCI {
 
     // Generate report if output file specified
     if (opts.outputFile) {
-      const report = PerformanceReporter.generateReport(profiles, comparisons)
+      const report = await PerformanceReporter.generateReport(profiles, comparisons)
       const format: 'text' | 'json' | 'markdown' = (opts.outputFormat as 'text' | 'json' | 'markdown') || 'text'
       PerformanceReporter.exportReportToFile(report, opts.outputFile, format)
     }

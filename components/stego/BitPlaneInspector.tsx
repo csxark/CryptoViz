@@ -186,7 +186,7 @@ export default function BitPlaneInspector({ coverImageData, stegoImageData }: Bi
               <canvas 
                 ref={coverCanvasRef} 
                 className="max-w-full rounded-lg shadow-sm"
-                alt={`Cover image bit plane ${selectedPlane} ${selectedChannel} channel`}
+                aria-label={`Cover image bit plane ${selectedPlane} ${selectedChannel} channel`}
               />
             ) : (
               <div className="text-xs text-zinc-400 italic">
@@ -209,7 +209,7 @@ export default function BitPlaneInspector({ coverImageData, stegoImageData }: Bi
               <canvas 
                 ref={stegoCanvasRef} 
                 className="max-w-full rounded-lg shadow-sm"
-                alt={`Stego image bit plane ${selectedPlane} ${selectedChannel} channel`}
+                aria-label={`Stego image bit plane ${selectedPlane} ${selectedChannel} channel`}
               />
             ) : (
               <div className="text-xs text-zinc-400 italic">

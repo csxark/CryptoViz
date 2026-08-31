@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { NodeModel, SocketType } from '@/lib/pipeline/dagEngine';
+import React, { useState } from 'react'
+import { NodeModel, SocketType } from '@/lib/pipeline/dagEngine'
 
 const socketColors: Record<SocketType, string> = {
   KEY: 'bg-red-500',
@@ -9,54 +9,69 @@ const socketColors: Record<SocketType, string> = {
   DATA: 'bg-blue-500',
   HASH: 'bg-purple-500',
   SIGNATURE: 'bg-emerald-500',
-};
+}
 
 export const PipelineNode = ({ node }: { node: NodeModel }) => {
-  const [inspectingSocket, setInspectingSocket] = useState<string | null>(null);
+  const [inspectingSocket, setInspectingSocket] = useState<string | null>(null)
 
   return (
-    <div 
-      className="absolute bg-slate-900 border border-slate-700 rounded-2xl shadow-xl w-72 text-slate-100 select-none backdrop-blur-md"
+    <div
+      role="group"
+      aria-label={`${node.label} ${node.type} pipeline node`}
+      className="absolute w-72 select-none rounded-2xl border border-slate-700 bg-slate-900 text-slate-100 shadow-xl backdrop-blur-md"
       style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }}
     >
-      <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
         <h4 className="text-xs font-bold uppercase tracking-wider text-teal-400">{node.label}</h4>
-        <span className="text-[10px] text-slate-500 font-mono">{node.type}</span>
+        <span className="font-mono text-[10px] text-slate-500">{node.type}</span>
       </div>
 
-      <div className="p-4 space-y-4 text-xs">
-        {/* Inputs Sockets */}
-        <div className="space-y-2">
+      <div className="space-y-4 p-4 text-xs">
+        <div role="group" aria-label={`${node.label} inputs`} className="space-y-2">
           {node.inputs.map((socket) => (
             <div key={socket.id} className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${socketColors[socket.type]} border border-slate-950`} />
+              <span
+                aria-hidden="true"
+                className={`h-3 w-3 rounded-full border border-slate-950 ${socketColors[socket.type]}`}
+              />
               <span className="text-slate-300">{socket.name}</span>
+              <span className="sr-only">{socket.type} input</span>
             </div>
           ))}
         </div>
 
-        {/* Outputs Sockets with Inspector Trigger */}
-        <div className="space-y-2 pt-2 border-t border-slate-800">
-          {node.outputs.map((socket) => (
-            <div 
-              key={socket.id} 
-              className="flex items-center justify-between cursor-pointer hover:bg-slate-800/60 p-1 rounded transition-colors"
-              onClick={() => setInspectingSocket(inspectingSocket === socket.id ? null : socket.id)}
-            >
-              <span className="text-slate-300">{socket.name}</span>
-              <div className={`w-3 h-3 rounded-full ${socketColors[socket.type]} border border-slate-950`} />
-            </div>
-          ))}
+        <div role="group" aria-label={`${node.label} outputs`} className="space-y-2 border-t border-slate-800 pt-2">
+          {node.outputs.map((socket) => {
+            const expanded = inspectingSocket === socket.id
+            return (
+              <button
+                key={socket.id}
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={`${node.id}-${socket.id}-inspector`}
+                aria-label={`${socket.name} ${socket.type} output${expanded ? ', inspector expanded' : ''}`}
+                className="flex w-full items-center justify-between rounded p-1 text-left transition-colors hover:bg-slate-800/60 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                onClick={() => setInspectingSocket(expanded ? null : socket.id)}
+              >
+                <span className="text-slate-300">{socket.name}</span>
+                <span aria-hidden="true" className={`h-3 w-3 rounded-full border border-slate-950 ${socketColors[socket.type]}`} />
+              </button>
+            )
+          })}
         </div>
 
-        {/* In-Node Data Inspector */}
         {inspectingSocket && (
-          <div className="mt-2 p-2.5 bg-slate-950 rounded-xl border border-slate-800 font-mono text-[10px] text-teal-300 space-y-1">
-            <p className="font-bold text-slate-400 uppercase">Buffer State (Hex/ASCII):</p>
+          <div
+            id={`${node.id}-${inspectingSocket}-inspector`}
+            role="status"
+            aria-live="polite"
+            className="mt-2 space-y-1 rounded-xl border border-slate-800 bg-slate-950 p-2.5 font-mono text-[10px] text-teal-300"
+          >
+            <p className="font-bold uppercase text-slate-400">Buffer State (Hex/ASCII):</p>
             <p className="break-all">48656c6c6f20576f726c64...</p>
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}

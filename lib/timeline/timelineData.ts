@@ -249,11 +249,11 @@ export const timelineEntries: TimelineEntry[] = [
     summary:
       "NIST published the SHA‑2 family (SHA‑224/256/384/512), designed by the NSA, which remains the gold standard for cryptographic hashing.",
     description:
-      "SHA‑2 is built on the Merkle–Damgård construction with 64‑80 rounds of compression functions using bitwise rotations, modular additions, and logical functions (Ch, Maj, Σ). SHA‑256 and SHA‑512 are the most widely used variants, forming the backbone of blockchain (Bitcoin uses double‑SHA‑256), digital signatures, certificate transparency, and file integrity verification. Despite successful collision attacks on SHA‑1 (2017, Google/INRIA), SHA‑2 remains fully secure, though NIST is promoting SHA‑3 as a backup.",
+      "SHA‑2 is built on the Merkle–Damgård construction with 64‑80 rounds of compression functions using bitwise rotations, modular additions, and logical functions (Ch, Maj, Σ). SHA‑256 and SHA‑512 are the most widely used variants, forming the backbone of digital signatures, certificate transparency, secure communication protocols, and file integrity verification. Despite successful collision attacks on SHA‑1 (2017, Google/INRIA), SHA‑2 remains fully secure, though NIST is promoting SHA‑3 as a backup.",
     category: "modern",
     colour: CAT_COLOURS.modern,
     relatedCiphers: ["sha256"],
-    tags: ["hash", "merkle-damgård", "nsa", "fips", "blockchain"],
+    tags: ["hash", "merkle-damgård", "nsa", "fips", "integrity"],
   },
   {
     id: slugify("ECC"),
@@ -263,7 +263,7 @@ export const timelineEntries: TimelineEntry[] = [
     summary:
       "Neal Koblitz and Victor Miller independently proposed using elliptic curves over finite fields to build public‑key systems with smaller keys than RSA.",
     description:
-      "ECC provides equivalent security to RSA with dramatically smaller key sizes (e.g., 256‑bit ECC ≈ 3072‑bit RSA). Key algorithms include ECDH (key agreement), ECDSA (signatures), and the more recent EdDSA (Ed25519, Ed448). ECC is now the dominant public‑key technology in modern protocols: TLS 1.3 mandates ECDHE, Bitcoin and Ethereum use ECDSA (secp256k1), and Apple's iMessage uses ECC. Its security relies on the hardness of the elliptic‑curve discrete‑logarithm problem (ECDLP).",
+      "ECC provides equivalent security to RSA with dramatically smaller key sizes (e.g., 256‑bit ECC ≈ 3072‑bit RSA). Key algorithms include ECDH (key agreement), ECDSA (signatures), and the more recent EdDSA (Ed25519, Ed448). ECC is now the dominant public‑key technology in modern protocols: TLS 1.3 mandates ECDHE, secure messaging protocols mandate Ed25519, and Apple's iMessage uses ECC. Its security relies on the hardness of the elliptic‑curve discrete‑logarithm problem (ECDLP).",
     category: "modern",
     colour: CAT_COLOURS.modern,
     tags: ["ecc", "elliptic-curve", "ecdh", "eddsa", "key-agreement"],

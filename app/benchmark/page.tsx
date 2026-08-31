@@ -11,7 +11,7 @@ import type {
 } from "@/types/benchmark";
 import { BenchmarkEngine, isWebCryptoSupported, SCALING_PAYLOAD_SIZES, runScalingBenchmark, estimateComplexity } from "@/lib/utils/benchmark";
 import { getDeviceInfo } from "@/lib/utils/deviceInfo";
-import { useCipherWorker } from "@/lib/hooks/useCipherWorker";
+import { useCipherWorker } from "@/hooks/useCipherWorker";
 import {
   addBenchmarkSession,
   loadBenchmarkHistory,
@@ -303,7 +303,7 @@ function BenchmarkContent() {
             cipherId,
             payloadSizes,
             Math.max(10, Math.floor(iterations / 10)), // Use fewer iterations for scaling to save time
-            runCipher as any,
+            runCipher,
             getBenchmarkParams,
             (current, total, currentSize) => {
               const sizeFormatted = currentSize >= 1024 * 1024

@@ -16,7 +16,7 @@ const visualizerLinks: FooterLink[] = [
 
 const learningLinks: FooterLink[] = [
   { name: "Learning Paths", href: "/learning-paths" },
-  { name: "Challenge Mode", href: "/challenge" },
+  { name: "Practice Challenges", href: "/challenge" },
   { name: "Cryptography Timeline", href: "/timeline" },
   { name: "Interactive Glossary", href: "/glossary" },
   { name: "Myth Busters", href: "/myth-busters" },
@@ -32,7 +32,7 @@ const documentationLinks: FooterLink[] = [
 const communityLinks: FooterLink[] = [
   { name: "GitHub Repository", href: "https://github.com/csxark/CryptoViz" },
   { name: "Issues & Roadmap", href: "https://github.com/csxark/CryptoViz/issues" },
-  { name: "Contribute Guide", href: "https://github.com/csxark/CryptoViz/blob/main/CONTRIBUTING.md" },
+  { name: "Contributing Guide", href: "https://github.com/csxark/CryptoViz/blob/main/CONTRIBUTING.md" },
   { name: "Discussions", href: "https://github.com/csxark/CryptoViz/discussions" },
 ];
 

@@ -31,7 +31,7 @@ describe('citationRegistry', () => {
 
     test('uses fallback year from metadata if available and verified year is missing', () => {
       // Create a mock verified entry by hacking the map or just rely on a cipher with missing year if we had one.
-      // But our registry hardcodes years. Let's just mock the behaviour if needed, but since we can't easily change CITATION_REGISTRY here,
+      // But our registry hardcodes years. Let's just mock the behavior if needed, but since we can't easily change CITATION_REGISTRY here,
       // we just verify that it includes year from the registry.
       const metadata: CipherMetadata = {
         name: 'RSA',

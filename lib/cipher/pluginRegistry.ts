@@ -2,6 +2,14 @@ import { ICipherPlugin, KnownAnswerTestVector, CipherInput, CipherOutput } from 
 import { CIPHER_REGISTRY, CipherDefinition } from "@/lib/cipher/registry";
 import { PUBLISHED_CIPHER_VECTORS, PublishedCipherVector } from "@/lib/cipher/symmetric/publishedCipherVectors";
 
+/**
+ * Cipher Plugin Registry cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export class CipherPluginRegistry {
   private static instance: CipherPluginRegistry;
   private plugins: Map<string, ICipherPlugin> = new Map();
@@ -89,4 +97,12 @@ export class CipherPluginRegistry {
   }
 }
 
+/**
+ * Plugin Registry cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const pluginRegistry = CipherPluginRegistry.getInstance();

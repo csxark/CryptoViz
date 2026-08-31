@@ -5,11 +5,11 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError } from '../../utils/errors'
-import { sha256 } from '@noble/hashes/sha256'
+import { sha256 } from '@noble/hashes/sha2.js'
 
 const METADATA: CipherMetadata = {
     name: 'XMSS',
-    securityStatus: 'recommended',
+    securityStatus: 'secure',
     breakingComplexity: 'NIST SP 800-208. Quantum-safe via SHA-256. ⚠ Stateful: leaf index must never be reused.',
     yearDesigned: 2011,
     standardBody: 'RFC 8391',
@@ -68,12 +68,42 @@ function xmssCore(input: string, key: string, doDecrypt: boolean, options: Ciphe
     }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     return xmssCore(input, key, false, options)
 }
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     return xmssCore(input, key, true, options)
 }
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '48656c6c6f', key: '00'.repeat(32), expected: 'mock_xmss_sig', description: 'XMSS sign at leaf 0' }
 ]

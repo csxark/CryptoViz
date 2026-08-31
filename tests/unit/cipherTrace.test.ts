@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CipherResult } from "../../lib/cipher/types";
+import { encrypt as caesarEncrypt } from "../../lib/cipher/classical/caesar";
 import {
   TRACE_SCHEMA_VERSION,
   createCipherTrace,
@@ -7,7 +8,6 @@ import {
   traceToCipherResult,
   validateCipherTrace,
 } from "../../lib/utils/cipherTrace";
-
 const result: CipherResult = {
   output: "Khoor",
   outputEncoding: "utf8",
@@ -120,5 +120,119 @@ describe("cipher trace serialization", () => {
     });
 
     expect(traceToCipherResult(trace)).toEqual(result);
+  });
+
+  it("redacts the key and secret options by default", () => {
+    const trace = createCipherTrace({
+      cipherId: "caesar",
+      direction: "encrypt",
+      input: "Hello",
+      key: "3",
+      options: { bobSecret: "topsecret", hexInput: false },
+      result,
+    });
+
+    expect(trace.exportMode).toBe("redacted");
+    expect(trace.key).toBe("[redacted]");
+    expect(trace.options).toEqual({ hexInput: false });
+  });
+
+  it("includes the key and secret options only when exportMode is 'full'", () => {
+    const trace = createCipherTrace({
+      cipherId: "caesar",
+      direction: "encrypt",
+      input: "Hello",
+      key: "3",
+      options: { bobSecret: "topsecret", hexInput: false },
+      result,
+      exportMode: "full",
+    });
+
+    expect(trace.exportMode).toBe("full");
+    expect(trace.key).toBe("3");
+    expect(trace.options).toEqual({ bobSecret: "topsecret", hexInput: false });
+  });
+
+  it("rejects a trace whose content was tampered with after export", () => {
+    const trace = createCipherTrace({
+      cipherId: "caesar",
+      direction: "encrypt",
+      input: "Hello",
+      key: "3",
+      options: {},
+      result,
+      exportMode: "full",
+    });
+
+    const tampered = { ...trace, key: "9" };
+    const validated = validateCipherTrace(tampered);
+
+    expect(validated).toEqual({
+      success: false,
+      error:
+        "Trace integrity check failed — the trace may have been tampered with or corrupted.",
+    });
+  });
+
+  it("produces the same ordered visualization states on repeated replay", () => {
+    const trace = createCipherTrace({
+      cipherId: "caesar",
+      direction: "encrypt",
+      input: "Hello",
+      key: "3",
+      options: {},
+      result,
+    });
+
+    const json = JSON.stringify(trace);
+    const firstReplay = validateCipherTrace(JSON.parse(json));
+    const secondReplay = validateCipherTrace(JSON.parse(json));
+
+    expect(firstReplay.success).toBe(true);
+    expect(secondReplay.success).toBe(true);
+    if (firstReplay.success && secondReplay.success) {
+      const firstStates = traceToCipherResult(firstReplay.trace).steps;
+      const secondStates = traceToCipherResult(secondReplay.trace).steps;
+      expect(firstStates).toEqual(secondStates);
+      expect(firstStates).toEqual(result.steps);
+    }
+  });
+
+  it("assigns identical traceIds for identical inputs across repeated executions", () => {
+    const runOnce = () => {
+      const cipherResult = caesarEncrypt("Hello", "3", { instrument: true });
+      return createCipherTrace({
+        cipherId: "caesar",
+        direction: "encrypt",
+        input: "Hello",
+        key: "3",
+        options: { instrument: true },
+        result: cipherResult,
+      });
+    };
+
+    const first = runOnce();
+    const second = runOnce();
+
+    expect(first.traceId).toBe(second.traceId);
+    expect(first.steps).toEqual(second.steps);
+    expect(first.output).toBe(second.output);
+    // Timestamps are allowed to differ; only the deterministic content matters.
+  });
+
+  it("assigns a different traceId when the key changes", () => {
+    const build = (key: string) => {
+      const cipherResult = caesarEncrypt("Hello", key, { instrument: true });
+      return createCipherTrace({
+        cipherId: "caesar",
+        direction: "encrypt",
+        input: "Hello",
+        key,
+        options: { instrument: true },
+        result: cipherResult,
+      });
+    };
+
+    expect(build("3").traceId).not.toBe(build("5").traceId);
   });
 });

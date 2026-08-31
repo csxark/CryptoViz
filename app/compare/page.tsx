@@ -120,7 +120,7 @@ function CompareContent() {
   return (
     <WorkspaceLayout activeCipherId={leftCipherId}>
 <PracticePageTemplate
-    title="Compare two ciphers side by side"
+    title="Compare Ciphers Side by Side"
     description="Run the same input through two algorithms while keeping separate keys, directions, options, results, loading states, and errors."
     eyebrow="Comparison workspace"
     breadcrumbs={[

@@ -5,7 +5,7 @@ import { WorkerPool } from '../../../lib/workers/pool'
 class FakeWorker {
   onmessage: ((event: MessageEvent) => void) | null = null
   onerror: ((event: ErrorEvent) => void) | null = null
-  postMessage = vi.fn()
+  postMessage = vi.fn().mockImplementation((data) => { structuredClone(data); })
   terminate = vi.fn()
 }
 

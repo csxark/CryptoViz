@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
+import { useCipherWorker } from '@/hooks/useCipherWorker'
 import { generateChallengeData, type ChallengeData, type ChallengeDifficulty } from '../../lib/challenge/generator'
 import { getWrongAnswerExplanation } from '../../lib/challenge/explain'
 import { CIPHER_REGISTRY } from '../../lib/cipher/registry'
@@ -16,7 +16,7 @@ import {
   safeJsonParse,
 } from '../../lib/utils/storage'
 import ChallengeHistoryDrawer from './ChallengeHistoryDrawer'
-import { getChallengeHistory, clearChallengeHistory } from '@/lib/challenge/historyManager'
+import { getChallengeHistory, clearChallengeHistory, type ChallengeHistoryEntry } from '@/lib/challenge/historyManager'
 import { hashChallengeAnswer, type CustomChallengeSet } from '@/lib/challenge/customChallengeSerializer'
 
 type FeedbackState = 'idle' | 'correct' | 'incorrect'
@@ -53,22 +53,6 @@ type QuestionRun = {
   wrongAttempts: number
   lastExplanation: { title: string; details: string[] }
   earnedXp: number
-}
-
-type ChallengeHistoryEntry = {
-  id: string
-  createdAt: number
-  difficulty: ChallengeDifficulty
-  xpEarned: number
-  accuracy: number // 0..1
-  streakAfter: number
-  questions: Array<{
-    cipherId: QuestionRun['cipherId']
-    correct: boolean
-    hintRevealedCount: number
-    wrongAttempts: number
-    earnedXp: number
-  }>
 }
 
 function formatLocalDateKey(d: Date) {

@@ -105,7 +105,7 @@ export default function ShannonEntropyWorkbench() {
       {/* Tab 2: Unicity Distance */}
       {activeTab === "unicity" && (
         <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Unicity Distance ($U = \frac{H(K)}{D}$)</h2>
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Unicity Distance ($U = \frac&#123;H(K)&#125;&#123;D&#125;$)</h2>
           <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
             Minimum ciphertext length required to uniquely determine the secret key using language redundancy $D$.
           </p>

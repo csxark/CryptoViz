@@ -225,8 +225,8 @@ export default function SecretRecoveryVisualizer() {
           shares so that only a predefined threshold of shares is
           required to reconstruct it. Fewer than the threshold
           reveal no information about the original secret, making it
-          ideal for distributed key management, cryptocurrency
-          wallets, and secure backup systems.
+          ideal for distributed key management, master root key escrow,
+          and secure enterprise backup systems.
         </p>
 
       </div>

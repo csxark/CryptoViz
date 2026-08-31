@@ -66,11 +66,11 @@ export const USE_CASE_PRESETS: UseCasePreset[] = [
     title: 'Password Hashing & Key Derivation',
     icon: '🔑',
     category: 'Auth & Identity',
-    description: 'Safely storing user passwords in databases using memory-hard KDF functions & HMAC.',
-    recommendedCipherIds: ['hmac', 'sha256', 'sha512'],
+    description: 'Safely storing user passwords in databases using memory-hard KDF functions and password hashing algorithms.',
+    recommendedCipherIds: ['argon2', 'bcrypt', 'pbkdf2'],
     goal: 'password',
     environment: 'web_server',
-    highlights: ['Keyed Authentication', 'Salting & Stretching', 'Cryptographic Digest'],
+    highlights: ['Memory-Hard Hashing', 'Salting & Work Factor', 'Brute-Force Resistant'],
   },
   {
     id: 'iot_embedded',
@@ -180,6 +180,32 @@ private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 public_key = private_key.public_key()
 ciphertext = public_key.encrypt(b"Secret Token", padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))`,
   },
+  argon2: {
+    javascript: `import argon2 from 'argon2';
+const hash = await argon2.hash('UserPassword', {
+  type: argon2.argon2id,
+  memoryCost: 19456,
+  timeCost: 2
+});`,
+    python: `from argon2 import PasswordHasher
+ph = PasswordHasher()
+hash = ph.hash("UserPassword")`,
+  },
+  bcrypt: {
+    javascript: `import bcrypt from 'bcrypt';
+const saltRounds = 12;
+const hash = await bcrypt.hash('UserPassword', saltRounds);`,
+    python: `import bcrypt
+hashed = bcrypt.hashpw(b"UserPassword", bcrypt.gensalt(rounds=12))`,
+  },
+  pbkdf2: {
+    javascript: `import { pbkdf2 } from 'crypto';
+pbkdf2('UserPassword', 'salt', 600000, 32, 'sha256', (err, derivedKey) => {
+  console.log(derivedKey.toString('hex'));
+});`,
+    python: `import hashlib
+key = hashlib.pbkdf2_hmac('sha256', b'UserPassword', b'salt', 600000)`,
+  },
 }
 
 export function recommendCiphersByUseCase(
@@ -229,9 +255,22 @@ export function recommendCiphersByUseCase(
     // Goal matching adjustments
     if (goal === 'confidentiality' && (cipher.category === 'symmetric' || cipher.category === 'asymmetric')) {
       matchScore += 10
-    } else if (goal === 'password' && (cipher.id === 'hmac' || cipher.id === 'sha256' || cipher.id === 'sha512')) {
+    } else if (
+      goal === 'password' &&
+      (cipher.id === 'argon2' || cipher.id === 'bcrypt' || cipher.id === 'pbkdf2' || cipher.id === 'scrypt')
+    ) {
       matchScore += 25
-      badgeLabel = 'Keyed Auth / Hash'
+      badgeLabel = 'Password Hashing'
+    } else if (
+      goal === 'password' &&
+      (cipher.id === 'hmac' || cipher.id === 'sha256' || cipher.id === 'sha512')
+    ) {
+      matchScore -= 35
+      badgeLabel = 'Fast Hash Warning'
+      rationale =
+        'Fast general-purpose hashes (SHA-256, SHA-512) and HMAC are NOT suitable for password storage because they lack memory hardness and work factors, making them highly vulnerable to offline GPU brute-force attacks. Use dedicated password KDFs like Argon2id, Bcrypt, or PBKDF2.'
+      tradeOffs =
+        'Fast hash throughput allows attackers to test billions of candidate passwords per second. Slow, salted KDFs are required.'
     } else if (goal === 'post_quantum' && (cipher.id.includes('ml-') || cipher.id.includes('kyber') || cipher.id.includes('dilithium'))) {
       matchScore += 30
       badgeLabel = 'Quantum-Resistant'
@@ -254,7 +293,7 @@ export function recommendCiphersByUseCase(
       rationale = 'ChaCha20-Poly1305 is a high-speed AEAD stream cipher designed to run extremely fast in software without requiring specialized hardware instructions.'
       tradeOffs = 'Requires strict 96-bit nonce uniqueness per key to prevent security compromises.'
       bestFor = 'Mobile devices, IoT microcontrollers, WireGuard VPN, Android apps.'
-    } else if (cipher.id === 'hmac') {
+    } else if (cipher.id === 'hmac' && goal !== 'password') {
       rationale = 'HMAC-SHA256 provides keyed message authentication and integrity verification, ensuring data cannot be altered by an unauthorized party.'
       tradeOffs = 'Requires both parties to hold the pre-shared secret key securely.'
       bestFor = 'API authentication tokens, JWT signatures, session integrity, password MAC.'

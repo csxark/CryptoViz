@@ -65,8 +65,7 @@ export default function OfflineLearningPackPage() {
           <div className="max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-bold text-teal-600 dark:text-teal-400">
               <Sparkles className="h-3.5 w-3.5" />
-              OFFLINE LEARNING PACK ENGINE #512
-            </div>
+OFFLINE LEARNING PACK ENGINE            </div>
             <h1 id="offline-hero-title" className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-900 dark:text-white">
               Learn Cryptography <span className="text-teal-500">Anywhere, Offline</span>
             </h1>

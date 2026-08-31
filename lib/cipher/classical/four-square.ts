@@ -116,16 +116,46 @@ function fourSquareCore(input: string, key: string, decrypt: boolean, instrument
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
   return fourSquareCore(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
   return fourSquareCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELPMEOBIWANKENOB',

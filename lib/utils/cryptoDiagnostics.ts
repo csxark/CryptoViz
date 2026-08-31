@@ -15,8 +15,8 @@ export interface Diagnostic {
 export interface DiagnosticContext {
   cipherId?: string;
   fieldName?: string;
-  fieldValue?: any;
-  additionalData?: Record<string, any>;
+  fieldValue?: unknown;
+  additionalData?: Record<string, unknown>;
 }
 
 export type DiagnosticCode =
@@ -74,7 +74,7 @@ function getNearestPrime(n: number): number {
 }
 
 export function diagnoseError(
-  error: Error,
+  error: unknown,
   context?: DiagnosticContext,
 ): Diagnostic | null {
   if (!context || !(error instanceof CipherError) || !hasDiagnosticSupport(error.code)) {

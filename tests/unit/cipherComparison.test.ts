@@ -45,6 +45,7 @@ describe('cipher comparison utilities', () => {
       direction: 'encrypt',
       key: aes.defaultKey,
       options: {
+        mode: 'ECB',
         hexInput: true,
       },
     })

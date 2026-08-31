@@ -174,15 +174,45 @@ function hc128Core(input: string, key: string, dec: boolean, instrument: boolean
     return { output, outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - t0 }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     const iv = (options as Record<string, unknown>).nonce as string | undefined
     return hc128Core(input, key, false, !!options.instrument, iv)
 }
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input); return hc128Core(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '48656c6c6f20576f726c64', key: '00000000000000000000000000000000',

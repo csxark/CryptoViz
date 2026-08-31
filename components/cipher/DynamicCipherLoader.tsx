@@ -101,10 +101,10 @@ export default function DynamicCipherLoader() {
 
         <div className="flex flex-wrap gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900">
           {[
-            { id: "catalog", label: "Module Catalog", icon: Layers },
-            { id: "builder", label: "Custom Builder", icon: Sparkles },
-            { id: "playground", label: "Live Playground", icon: Cpu },
-            { id: "telemetry", label: "Load Telemetry", icon: Code },
+            { id: "catalog" as const, label: "Module Catalog", icon: Layers },
+            { id: "builder" as const, label: "Custom Builder", icon: Sparkles },
+            { id: "playground" as const, label: "Live Playground", icon: Cpu },
+            { id: "telemetry" as const, label: "Load Telemetry", icon: Code },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -112,7 +112,7 @@ export default function DynamicCipherLoader() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   isActive
                     ? "bg-white text-teal-700 shadow-sm dark:bg-zinc-800 dark:text-teal-300"

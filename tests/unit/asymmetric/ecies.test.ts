@@ -36,4 +36,17 @@ describe('ECIES (X25519)', () => {
     const tampered = ciphertext.slice(0, -2) + (ciphertext.slice(-2) === '00' ? '01' : '00')
     await expect(decrypt(tampered, recipientPrivHex)).rejects.toThrow(/ECIES decryption failed/)
   })
+
+  it('asserts decrypt(encrypt(m, pub), priv) === m for varied payload lengths and formats', async () => {
+    const payloads = [
+      'Short text',
+      'Medium length message payload testing ECIES hybrid encryption.',
+      '1234567890!@#$%^&*()_+-=[]{}|;:",.<>?',
+    ]
+    for (const msg of payloads) {
+      const ct = (await encrypt(msg, recipientPubHex)).output
+      const pt = (await decrypt(ct, recipientPrivHex)).output
+      expect(pt).toBe(msg)
+    }
+  })
 })

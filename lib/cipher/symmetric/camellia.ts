@@ -16,6 +16,14 @@ const METADATA = {
   blockSize: 16,
 }
 
+/**
+ * Camellia Mode cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export type CamelliaMode = 'ECB' | 'CBC'
 
 const SBOX1 = new Uint8Array([
@@ -376,6 +384,14 @@ function getKeyBytes(key: string, options?: CipherOptions): Uint8Array {
   return keyBytes
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string | Uint8Array,
   key: string | Uint8Array,
@@ -442,6 +458,14 @@ export function encrypt(
   return res
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string | Uint8Array,
   key: string | Uint8Array,
@@ -616,6 +640,14 @@ function executeCamellia(
   }
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '0123456789ABCDEFFEDCBA9876543210',

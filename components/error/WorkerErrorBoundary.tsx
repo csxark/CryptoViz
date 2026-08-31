@@ -35,11 +35,10 @@ export default class WorkerErrorBoundary extends Component<Props, State> {
           <svg className="mb-4 h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <h2 className="mb-2 text-lg font-bold text-red-700 dark:text-red-400">Worker Process Terminated</h2>
+          <h2 className="mb-2 text-lg font-bold text-red-700 dark:text-red-400">Computation Memory Limit Exceeded</h2>
           <p className="mb-6 max-w-md text-sm text-red-600 dark:text-red-300">
-            The cryptographic Web Worker crashed, likely due to an Out of Memory (OOM) exception from an extreme payload size. 
-          </p>
-          <div className="flex gap-3">
+            The requested cryptographic operation exceeded the available browser memory budget. Reduce your input payload size or key iterations and try again.
+          </p>          <div className="flex gap-3">
             <button 
               onClick={() => this.setState({ hasError: false, errorMsg: '' })}
               className="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-700 dark:hover:bg-zinc-600"

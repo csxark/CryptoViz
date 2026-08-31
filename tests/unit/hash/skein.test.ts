@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { encrypt, TEST_VECTORS } from '@/lib/cipher/hash/skein'
+import { encrypt, decrypt, TEST_VECTORS } from '@/lib/cipher/hash/skein'
 
 describe('Skein-256', () => {
     it('matches Skein v1.3 spec: empty message', () => {
@@ -27,7 +27,6 @@ describe('Skein-256', () => {
     })
 
     it('decrypt is identical to encrypt (hash has no inverse)', () => {
-        const { decrypt } = require('@/lib/cipher/hash/skein')
         const input = 'deadbeef'
         expect(encrypt(input, '').output).toBe(decrypt(input, '').output)
     })

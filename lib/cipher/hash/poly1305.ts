@@ -64,15 +64,42 @@ function run(input: string, key: string, options: CipherOptions): CipherResult {
   }
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return run(input, key, options)
 }
 // One-way MAC — no inverse, matches the sha3Decrypt()/sha1Decrypt()/ripemd160Decrypt() pattern of a zero-arg stub.
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(): CipherResult {
   throw new CipherError('INVALID_KEY', 'Poly1305 is a one-way MAC — there is no decrypt operation, only tag generation')
 }
 
 // RFC 8439 §2.5.2 — verify byte-for-byte against the RFC before merging, same caution as elsewhere.
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     key: '85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b',

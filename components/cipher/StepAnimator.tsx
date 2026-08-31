@@ -66,34 +66,46 @@ const StepAnimator = memo(function StepAnimator({
     Math.max(steps.length - 1, 0),
   );
 
-  const milestones = useMemo(
-    () => {
-      if (stepMetadata) {
-        return stepMetadata
-          .filter((step) => step.isMilestone)
-          .map((step) => ({ step, index: step.index }))
+  /** Phase descriptors are derived from lightweight metadata when available.*/
+  const phases = useMemo(() => {
+    if (stepMetadata) {
+      return stepMetadata
+        .filter((step) => step.isMilestone)
+        .map((step) => ({
+          step,
+          index: step.index,
+        }));
+    }
+
+    return steps
+      .map((step, index) => ({
+        step,
+        index,
+      }))
+      .filter(({ step }) => step.isMilestone);
+  }, [steps, stepMetadata]);
+
+  const currentPhaseIndex = useMemo(() => {
+    let found = -1;
+
+    phases.forEach(({ index }, phaseIndex) => {
+      if (index <= safeCurrentStep) {
+        found = phaseIndex;
       }
+    });
 
-      return steps
-        .map((step, index) => ({ step, index }))
-        .filter(({ step }) => step.isMilestone)
-    },
-    [steps, stepMetadata],
-  )
-
-  const currentMilestoneIndex = useMemo(() => {
-    let found = -1
-    milestones.forEach(({ index }, milestoneIndex) => {
-      if (index <= safeCurrentStep) found = milestoneIndex
-    })
-    return found
-  }, [milestones, safeCurrentStep])
+    return found;
+  }, [phases, safeCurrentStep]);
 
   const currentPhase = useMemo(() => {
-    if (currentMilestoneIndex < 0) return null
-    const milestone = milestones[currentMilestoneIndex]
-    return milestone?.step.label ?? null
-  }, [currentMilestoneIndex, milestones])
+    if (currentPhaseIndex < 0) {
+      return null;
+    }
+
+    const phase = phases[currentPhaseIndex];
+
+    return phase?.step.label ?? null;
+  }, [currentPhaseIndex, phases]);
 
   const setSpeed = useCallback(
     (nextSpeed: AnimationSpeed) => {
@@ -107,7 +119,9 @@ const StepAnimator = memo(function StepAnimator({
   );
 
   const copyStepLink = useCallback(async () => {
-    if (!onCopyStepLink) return;
+    if (!onCopyStepLink) {
+      return;
+    }
 
     try {
       await onCopyStepLink();
@@ -122,17 +136,22 @@ const StepAnimator = memo(function StepAnimator({
   }, [onCopyStepLink]);
 
   useEffect(() => {
-    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mql = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+
     setReducedMotion(mql.matches);
 
     const handleChange = (event: MediaQueryListEvent) => {
       setReducedMotion(event.matches);
+
       if (event.matches) {
         setIsPlaying(false);
       }
     };
 
     mql.addEventListener("change", handleChange);
+
     return () => {
       mql.removeEventListener("change", handleChange);
     };
@@ -141,10 +160,12 @@ const StepAnimator = memo(function StepAnimator({
   const goToStep = useCallback(
     (index: number) => {
       setIsPlaying(false);
+
       const nextIndex = Math.min(
         Math.max(index, 0),
         Math.max(steps.length - 1, 0),
       );
+
       onStepChange(nextIndex);
     },
     [onStepChange, steps.length],
@@ -155,41 +176,52 @@ const StepAnimator = memo(function StepAnimator({
     onStepChange(0);
   }, [onStepChange]);
 
-  const goToPreviousMilestone = useCallback(() => {
-    if (milestones.length === 0) return
+  const goToPreviousPhase = useCallback(() => {
+    if (phases.length === 0) {
+      return;
+    }
 
-    const previous = [...milestones]
+    const previous = [...phases]
       .reverse()
-      .find(({ index }) => index < safeCurrentStep)
+      .find(({ index }) => index < safeCurrentStep);
 
     if (previous) {
-      goToStep(previous.index)
+      goToStep(previous.index);
     } else {
-      goToStep(milestones[0].index)
+      goToStep(phases[0].index);
     }
-  }, [goToStep, milestones, safeCurrentStep])
+  }, [goToStep, phases, safeCurrentStep]);
 
-  const goToNextMilestone = useCallback(() => {
-    if (milestones.length === 0) return
+  const goToNextPhase = useCallback(() => {
+    if (phases.length === 0) {
+      return;
+    }
 
-    const next = milestones.find(({ index }) => index > safeCurrentStep)
+    const next = phases.find(
+      ({ index }) => index > safeCurrentStep,
+    );
 
     if (next) {
-      goToStep(next.index)
+      goToStep(next.index);
     } else {
-      goToStep(milestones[milestones.length - 1].index)
+      goToStep(phases[phases.length - 1].index);
     }
-  }, [goToStep, milestones, safeCurrentStep])
+  }, [goToStep, phases, safeCurrentStep]);
 
   const togglePlay = useCallback(() => {
-    if (!hasMultipleSteps) return;
+    if (!hasMultipleSteps) {
+      return;
+    }
 
     if (reducedMotion) {
       onStepChange(steps.length - 1);
       return;
     }
 
-    if (!isPlaying && safeCurrentStep === steps.length - 1) {
+    if (
+      !isPlaying &&
+      safeCurrentStep === steps.length - 1
+    ) {
       onStepChange(0);
     }
 
@@ -204,7 +236,9 @@ const StepAnimator = memo(function StepAnimator({
   ]);
 
   useEffect(() => {
-    if (!isPlaying || reducedMotion) return;
+    if (!isPlaying || reducedMotion) {
+      return;
+    }
 
     const msPerStep = BASE_INTERVAL_MS / speed;
 
@@ -216,7 +250,9 @@ const StepAnimator = memo(function StepAnimator({
       }
     }, msPerStep);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearInterval(interval);
+    };
   }, [
     isPlaying,
     reducedMotion,
@@ -228,7 +264,9 @@ const StepAnimator = memo(function StepAnimator({
 
   // Keyboard shortcuts.
   useEffect(() => {
-    if (steps.length === 0) return;
+    if (steps.length === 0) {
+      return;
+    }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -243,16 +281,23 @@ const StepAnimator = memo(function StepAnimator({
         return;
       }
 
-      if (event.key === '[' || (event.key === 'ArrowLeft' && event.shiftKey)) {
-        event.preventDefault()
-        goToPreviousMilestone()
-        return
+      // Phase navigation.
+      if (
+        event.key === "[" ||
+        (event.key === "ArrowLeft" && event.shiftKey)
+      ) {
+        event.preventDefault();
+        goToPreviousPhase();
+        return;
       }
 
-      if (event.key === ']' || (event.key === 'ArrowRight' && event.shiftKey)) {
-        event.preventDefault()
-        goToNextMilestone()
-        return
+      if (
+        event.key === "]" ||
+        (event.key === "ArrowRight" && event.shiftKey)
+      ) {
+        event.preventDefault();
+        goToNextPhase();
+        return;
       }
 
       switch (event.key) {
@@ -290,23 +335,36 @@ const StepAnimator = memo(function StepAnimator({
     };
 
     window.addEventListener("keydown", handleKeyDown);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [steps.length, safeCurrentStep, togglePlay, goToStep, restart]);
+  }, [
+    steps.length,
+    safeCurrentStep,
+    togglePlay,
+    goToStep,
+    restart,
+    goToPreviousPhase,
+    goToNextPhase,
+  ]);
 
-  if (steps.length === 0) return null;
+  if (steps.length === 0) {
+    return null;
+  }
 
   const step = steps[safeCurrentStep];
+
   const progressPercent = hasMultipleSteps
     ? (safeCurrentStep / (steps.length - 1)) * 100
     : 100;
+
   const announcement = `Step ${safeCurrentStep + 1} of ${steps.length}: ${step.label}`;
 
-  const mobileMilestoneValue =
-    currentMilestoneIndex >= 0
-      ? String(milestones[currentMilestoneIndex].index)
-      : ''
+  const mobilePhaseValue =
+    currentPhaseIndex >= 0
+      ? String(phases[currentPhaseIndex].index)
+      : "";
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 [content-visibility:auto]">
@@ -324,17 +382,19 @@ const StepAnimator = memo(function StepAnimator({
         className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3 dark:border-zinc-800"
         aria-label={`Current step: ${step.label}`}
       >
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2" aria-live="polite" aria-atomic="true">
           <span
             className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-bold text-teal-700 dark:bg-teal-950/50 dark:text-teal-400"
             aria-hidden="true"
           >
             {safeCurrentStep + 1}
           </span>
+
           <div className="min-w-0">
             <h4 className="truncate font-semibold text-zinc-900 dark:text-white">
               {step.label}
             </h4>
+
             {currentPhase && (
               <p className="truncate text-2xs text-zinc-500 dark:text-zinc-400">
                 Phase: {currentPhase}
@@ -353,9 +413,10 @@ const StepAnimator = memo(function StepAnimator({
               Phase: {currentPhase}
             </span>
           )}
+
           {step.isMilestone && (
             <span className="rounded-full bg-teal-50 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
-              Milestone
+              Phase
             </span>
           )}
         </div>
@@ -375,21 +436,28 @@ const StepAnimator = memo(function StepAnimator({
                 <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                   Input State
                 </span>
+
                 <div className="mt-1 break-all font-mono text-xs text-zinc-700 dark:text-zinc-300">
                   {step.inputState || (
-                    <span className="italic text-zinc-400">None</span>
+                    <span className="italic text-zinc-400">
+                      None
+                    </span>
                   )}
                 </div>
               </div>
             )}
+
             {step.outputState !== undefined && (
               <div className="rounded-lg bg-zinc-50 p-2.5 dark:bg-zinc-950/40">
                 <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                   Output State
                 </span>
+
                 <div className="mt-1 break-all font-mono text-xs text-zinc-700 dark:text-zinc-300">
                   {step.outputState || (
-                    <span className="italic text-zinc-400">None</span>
+                    <span className="italic text-zinc-400">
+                      None
+                    </span>
                   )}
                 </div>
               </div>
@@ -402,14 +470,22 @@ const StepAnimator = memo(function StepAnimator({
             <table className="w-full text-left font-mono text-xs">
               <thead className="bg-zinc-50 text-zinc-500 dark:bg-zinc-950/40 dark:text-zinc-500">
                 <tr>
-                  <th scope="col" className="px-3 py-1.5 font-semibold">
+                  <th
+                    scope="col"
+                    className="px-3 py-1.5 font-semibold"
+                  >
                     Parameter
                   </th>
-                  <th scope="col" className="px-3 py-1.5 font-semibold">
+
+                  <th
+                    scope="col"
+                    className="px-3 py-1.5 font-semibold"
+                  >
                     Value
                   </th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {step.table.map((row) => (
                   <StepTableRow
@@ -427,8 +503,13 @@ const StepAnimator = memo(function StepAnimator({
       <div className="mb-3">
         <div className="mb-1 flex items-center justify-between gap-2 text-2xs text-zinc-400 dark:text-zinc-500">
           <span>Timeline</span>
+
           <span>
-            Step {safeCurrentStep + 1} / {steps.length} ({Math.round(progressPercent)}%)
+            <span>
+              Step {safeCurrentStep + 1} / {steps.length}
+            </span>
+
+            <span> ({Math.round(progressPercent)}%)</span>
           </span>
         </div>
 
@@ -462,56 +543,72 @@ const StepAnimator = memo(function StepAnimator({
           />
         </div>
 
-        {hasMultipleSteps && milestones.length > 0 && (
+        {hasMultipleSteps && phases.length > 0 && (
           <>
             <div className="mt-3 hidden gap-2 overflow-x-auto pb-1 md:flex">
-              {milestones.map(({ step: milestone, index }) => (
+              {phases.map(({ step: phase, index }) => (
                 <button
-                  key={`${index}-${milestone.label}-chip`}
+                  key={`${index}-${phase.label}-chip`}
                   type="button"
                   onClick={() => goToStep(index)}
-                  aria-label={`Jump to milestone: ${milestone.label}`}
-                  aria-current={safeCurrentStep === index ? 'step' : undefined}
-                  className={cn(
-                    'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+                  aria-label={`Jump to phase: ${phase.label}`}
+                  aria-current={
                     safeCurrentStep === index
-                      ? 'border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300'
-                      : 'border-zinc-200 text-zinc-600 hover:border-teal-400 hover:text-teal-700 dark:border-zinc-700 dark:text-zinc-300',
+                      ? "step"
+                      : undefined
+                  }
+                  className={cn(
+                    "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    safeCurrentStep === index
+                      ? "border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300"
+                      : "border-zinc-200 text-zinc-600 hover:border-teal-400 hover:text-teal-700 dark:border-zinc-700 dark:text-zinc-300",
                   )}
                 >
-                  {milestone.label}
+                  {phase.label}
                 </button>
               ))}
             </div>
 
             <div className="mt-3 md:hidden">
               <label
-                htmlFor="milestone-select"
+                htmlFor="phase-select"
                 className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-zinc-400"
               >
                 Jump to phase
               </label>
+
               <select
-                id="milestone-select"
-                aria-label="Jump to milestone"
-                value={mobileMilestoneValue}
-                onChange={(event) => goToStep(Number(event.target.value))}
+                id="phase-select"
+                aria-label="Jump to phase"
+                value={mobilePhaseValue}
+                onChange={(event) =>
+                  goToStep(Number(event.target.value))
+                }
                 className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
               >
-                {milestones.map(({ step: milestone, index }) => (
-                  <option key={`${index}-${milestone.label}-option`} value={index}>
-                    {milestone.label}
+                {phases.map(({ step: phase, index }, phaseIndex) => (
+                  <option
+                    key={`${index}-${phase.label}-option`}
+                    value={index}
+                  >
+                    Phase {phaseIndex + 1}: {phase.label}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="mt-2 flex flex-wrap gap-2 text-2xs text-zinc-400 dark:text-zinc-500">
-              <span>Milestones: {milestones.length}</span>
+              <span>Phases: {phases.length}</span>
+
               <span aria-hidden="true">•</span>
+
               <span>[ / ] jump phases</span>
+
               <span aria-hidden="true">•</span>
-              <span>Shift + ← / → also works</span>
+
+              <span>
+                Shift + ← / → also works
+              </span>
             </div>
           </>
         )}
@@ -522,7 +619,9 @@ const StepAnimator = memo(function StepAnimator({
           <button
             type="button"
             onClick={restart}
-            disabled={safeCurrentStep === 0 && !isPlaying}
+            disabled={
+              safeCurrentStep === 0 && !isPlaying
+            }
             aria-label="Restart"
             className="rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-300 dark:hover:bg-zinc-800"
             title="Restart (Home / R)"
@@ -532,7 +631,9 @@ const StepAnimator = memo(function StepAnimator({
 
           <button
             type="button"
-            onClick={() => goToStep(safeCurrentStep - 1)}
+            onClick={() =>
+              goToStep(safeCurrentStep - 1)
+            }
             disabled={safeCurrentStep === 0}
             aria-label="Previous step"
             className="rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-300 dark:hover:bg-zinc-800"
@@ -545,7 +646,11 @@ const StepAnimator = memo(function StepAnimator({
             type="button"
             onClick={togglePlay}
             disabled={!hasMultipleSteps}
-            aria-label={isPlaying ? "Pause animation" : "Play animation"}
+            aria-label={
+              isPlaying
+                ? "Pause animation"
+                : "Play animation"
+            }
             className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-teal-500 dark:hover:bg-teal-400"
           >
             {isPlaying ? "Pause" : "Play"}
@@ -553,8 +658,12 @@ const StepAnimator = memo(function StepAnimator({
 
           <button
             type="button"
-            onClick={() => goToStep(safeCurrentStep + 1)}
-            disabled={safeCurrentStep >= steps.length - 1}
+            onClick={() =>
+              goToStep(safeCurrentStep + 1)
+            }
+            disabled={
+              safeCurrentStep >= steps.length - 1
+            }
             aria-label="Next step"
             className="rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-300 dark:hover:bg-zinc-800"
             title="Next Step (→)"
@@ -564,8 +673,12 @@ const StepAnimator = memo(function StepAnimator({
 
           <button
             type="button"
-            onClick={() => goToStep(steps.length - 1)}
-            disabled={safeCurrentStep >= steps.length - 1}
+            onClick={() =>
+              goToStep(steps.length - 1)
+            }
+            disabled={
+              safeCurrentStep >= steps.length - 1
+            }
             aria-label="Go to last step"
             className="rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-300 dark:hover:bg-zinc-800"
             title="Last Step (End)"
@@ -573,24 +686,25 @@ const StepAnimator = memo(function StepAnimator({
             End
           </button>
 
-          {milestones.length > 0 && (
+          {phases.length > 0 && (
             <>
               <button
                 type="button"
-                onClick={goToPreviousMilestone}
+                onClick={goToPreviousPhase}
                 disabled={!hasMultipleSteps}
-                aria-label="Previous milestone"
-                title="Previous Milestone ([ / Shift + ←)"
+                aria-label="Previous phase"
+                title="Previous phase ([ / Shift + ←)"
                 className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-600 transition-colors hover:border-teal-400 hover:text-teal-700 disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-300"
               >
                 Prev phase
               </button>
+
               <button
                 type="button"
-                onClick={goToNextMilestone}
+                onClick={goToNextPhase}
                 disabled={!hasMultipleSteps}
-                aria-label="Next milestone"
-                title="Next Milestone (] / Shift + →)"
+                aria-label="Next phase"
+                title="Next phase (] / Shift + →)"
                 className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-600 transition-colors hover:border-teal-400 hover:text-teal-700 disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-300"
               >
                 Next phase
@@ -606,11 +720,16 @@ const StepAnimator = memo(function StepAnimator({
           >
             Speed
           </label>
+
           <select
             id="animation-speed"
             value={speed}
             onChange={(event) =>
-              setSpeed(Number(event.target.value) as AnimationSpeed)
+              setSpeed(
+                Number(
+                  event.target.value,
+                ) as AnimationSpeed,
+              )
             }
             className="rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-xs font-medium text-zinc-700 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
             aria-label="Animation speed"
@@ -629,7 +748,9 @@ const StepAnimator = memo(function StepAnimator({
             onClick={copyStepLink}
             className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
-            {linkCopied ? "Copied!" : "Copy Step Link"}
+            {linkCopied
+              ? "Copied!"
+              : "Copy Step Link"}
           </button>
         )}
       </div>

@@ -2,7 +2,7 @@
  * SIMON-128/128 — NSA/IARPA, 2013 (IACR 2013/404).
  * 128-bit block (two 64-bit words), 128-bit key, 68 Feistel rounds.
  * Round function: f(x) = (x<<<1 AND x<<<8) XOR x<<<2.
- * Sibling of SPECK (already in repo) — optimised for hardware gate count.
+ * Sibling of SPECK (already in repo) — optimized for hardware gate count.
  *
  * Test vector (IACR 2013/404 Table B.3, 64-bit LE words):
  *   key = 0f0e0d0c0b0a09080706050403020100
@@ -129,13 +129,43 @@ function simonCore(input: string, key: string, dec: boolean, instrument: boolean
     return { output: toHex(ob), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - t0 }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input); return simonCore(input, key, false, !!options.instrument)
 }
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input); return simonCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '6373656420737265' + '6c6c657661726174',

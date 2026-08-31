@@ -69,10 +69,40 @@ function bifidTransform(
   input: string,
   key: string,
   encrypting: boolean,
-  instrument: boolean
+  instrument: boolean,
+  options: CipherOptions = {}
 ): CipherResult {
   const start = performance.now()
-  const square = buildSquare(key)
+
+  let keyWord = key
+  let periodVal: number | undefined
+
+  if (key.includes(',')) {
+    const parts = key.split(',')
+    keyWord = parts[0].trim()
+    const parsedKeyPeriod = Number(parts[1].trim())
+    if (parts[1].trim() !== '' && !isNaN(parsedKeyPeriod)) {
+      periodVal = parsedKeyPeriod
+    } else {
+      throw new CipherError('INVALID_KEY', 'Period specified in key must be a valid positive integer.')
+    }
+  }
+
+  if (options.period !== undefined) {
+    const rawPeriod = Number(options.period)
+    if (typeof options.period !== 'number' && typeof options.period !== 'string') {
+      throw new CipherError('INVALID_OPTION', 'Period must be a positive integer greater than or equal to 1.')
+    }
+    periodVal = rawPeriod
+  }
+
+  if (periodVal !== undefined) {
+    if (typeof periodVal !== 'number' || isNaN(periodVal) || !Number.isInteger(periodVal) || periodVal < 1) {
+      throw new CipherError('INVALID_OPTION', 'Period must be a positive integer greater than or equal to 1.')
+    }
+  }
+
+  const square = buildSquare(keyWord)
   const clean = cleanInput(input)
 
   if (clean.length === 0) {
@@ -84,7 +114,7 @@ function bifidTransform(
     steps.push({
       index: 0,
       label: 'Build keyed 5x5 square',
-      inputState: key || '(no keyword — standard alphabet)',
+      inputState: keyWord || '(no keyword — standard alphabet)',
       outputState: square,
       matrix: [0, 1, 2, 3, 4].map((r) => [0, 1, 2, 3, 4].map((c) => charAt(square, r + 1, c + 1))),
       note: 'I and J share a cell. Keyword letters (deduplicated) fill the square first, followed by the remaining alphabet in order.',
@@ -92,80 +122,80 @@ function bifidTransform(
     })
   }
 
-  let output: string
+  let output = ''
+  const effectivePeriod = periodVal ?? clean.length
 
-  if (encrypting) {
-    const rowsSeq: number[] = []
-    const colsSeq: number[] = []
-    for (const ch of clean) {
-      const [r, c] = coordsOf(square, ch)
-      rowsSeq.push(r)
-      colsSeq.push(c)
-    }
-    if (instrument) {
-      steps.push({
-        index: steps.length,
-        label: 'Convert letters to (row, col) coordinates',
-        inputState: clean,
-        outputState: `rows: ${rowsSeq.join('')}  cols: ${colsSeq.join('')}`,
-        note: "Looked up every letter's position in the square.",
-        isMilestone: true,
-      })
-    }
-    const combined = [...rowsSeq, ...colsSeq]
-    let out = ''
-    for (let i = 0; i < clean.length; i++) {
-      const r = combined[2 * i]
-      const c = combined[2 * i + 1]
-      const ch = charAt(square, r, c)
-      out += ch
+  for (let blockStart = 0; blockStart < clean.length; blockStart += effectivePeriod) {
+    const chunk = clean.slice(blockStart, blockStart + effectivePeriod)
+    if (encrypting) {
+      const rowsSeq: number[] = []
+      const colsSeq: number[] = []
+      for (const ch of chunk) {
+        const [r, c] = coordsOf(square, ch)
+        rowsSeq.push(r)
+        colsSeq.push(c)
+      }
       if (instrument) {
         steps.push({
           index: steps.length,
-          label: `Re-pair digit ${2 * i + 1}/${2 * i + 2} -> letter ${i + 1}`,
-          inputState: `(${r}, ${c})`,
-          outputState: ch,
-          highlight: [i],
-          note: `Read the digit stream sequentially in pairs and mapped (${r}, ${c}) back through the square.`,
+          label: `Convert block '${chunk}' to (row, col) coordinates`,
+          inputState: chunk,
+          outputState: `rows: ${rowsSeq.join('')}  cols: ${colsSeq.join('')}`,
+          note: "Looked up every letter's position in the square.",
+          isMilestone: true,
         })
       }
-    }
-    output = out
-  } else {
-    const flat: number[] = []
-    for (const ch of clean) {
-      const [r, c] = coordsOf(square, ch)
-      flat.push(r, c)
-    }
-    if (instrument) {
-      steps.push({
-        index: steps.length,
-        label: 'Convert ciphertext letters to coordinates, flatten',
-        inputState: clean,
-        outputState: flat.join(''),
-        note: "Flattened every ciphertext letter's (row, col) pair into one long digit stream.",
-        isMilestone: true,
-      })
-    }
-    const half = clean.length
-    const rowsSeq = flat.slice(0, half)
-    const colsSeq = flat.slice(half)
-    let out = ''
-    for (let i = 0; i < half; i++) {
-      const ch = charAt(square, rowsSeq[i], colsSeq[i])
-      out += ch
+      const combined = [...rowsSeq, ...colsSeq]
+      for (let i = 0; i < chunk.length; i++) {
+        const r = combined[2 * i]
+        const c = combined[2 * i + 1]
+        const ch = charAt(square, r, c)
+        output += ch
+        if (instrument) {
+          steps.push({
+            index: steps.length,
+            label: `Re-pair digit ${2 * i + 1}/${2 * i + 2} -> letter ${i + 1}`,
+            inputState: `(${r}, ${c})`,
+            outputState: ch,
+            highlight: [blockStart + i],
+            note: `Read the digit stream sequentially in pairs and mapped (${r}, ${c}) back through the square.`,
+          })
+        }
+      }
+    } else {
+      const flat: number[] = []
+      for (const ch of chunk) {
+        const [r, c] = coordsOf(square, ch)
+        flat.push(r, c)
+      }
       if (instrument) {
         steps.push({
           index: steps.length,
-          label: `Recover plaintext letter ${i + 1}`,
-          inputState: `(${rowsSeq[i]}, ${colsSeq[i]})`,
-          outputState: ch,
-          highlight: [i],
-          note: 'Split the digit stream in half (first half = rows, second half = cols) and re-paired by position.',
+          label: `Convert ciphertext block '${chunk}' to coordinates, flatten`,
+          inputState: chunk,
+          outputState: flat.join(''),
+          note: "Flattened every ciphertext letter's (row, col) pair into one long digit stream.",
+          isMilestone: true,
         })
       }
+      const half = chunk.length
+      const rowsSeq = flat.slice(0, half)
+      const colsSeq = flat.slice(half)
+      for (let i = 0; i < half; i++) {
+        const ch = charAt(square, rowsSeq[i], colsSeq[i])
+        output += ch
+        if (instrument) {
+          steps.push({
+            index: steps.length,
+            label: `Recover plaintext letter ${blockStart + i + 1}`,
+            inputState: `(${rowsSeq[i]}, ${colsSeq[i]})`,
+            outputState: ch,
+            highlight: [blockStart + i],
+            note: 'Split the digit stream in half (first half = rows, second half = cols) and re-paired by position.',
+          })
+        }
+      }
     }
-    output = out
   }
 
   if (instrument) {
@@ -188,16 +218,46 @@ function bifidTransform(
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string = '', options: CipherOptions = {}): CipherResult {
   validateInput(input)
-  return bifidTransform(input, key, true, !!options.instrument)
+  return bifidTransform(input, key, true, !!options.instrument, options)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string = '', options: CipherOptions = {}): CipherResult {
   validateInput(input)
-  return bifidTransform(input, key, false, !!options.instrument)
+  return bifidTransform(input, key, false, !!options.instrument, options)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELP',

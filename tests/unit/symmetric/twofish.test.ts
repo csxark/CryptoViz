@@ -17,13 +17,28 @@ describe('Twofish', () => {
         )
     })
 
-    it('throws error on decrypt', () => {
-        expect(() =>
-            decrypt(
-                '9f589f5cf6122c32b6bfec2f2ae8c35a',
-                '00000000000000000000000000000000'
-            )
-        ).toThrow(/not implemented/i)
+    it('decrypts official zero-key vector', () => {
+        const result = decrypt(
+            '9f589f5cf6122c32b6bfec2f2ae8c35a',
+            '00000000000000000000000000000000'
+        )
+
+        expect(result.output).toBe('00000000000000000000000000000000')
+    })
+
+    it('round-trips encrypt and decrypt for 128, 192, and 256-bit keys', () => {
+        const plaintext = '0123456789abcdef0123456789abcdef'
+        const keys = [
+            '000102030405060708090a0b0c0d0e0f', // 128-bit
+            '000102030405060708090a0b0c0d0e0f1011121314151617', // 192-bit
+            '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f', // 256-bit
+        ]
+
+        for (const key of keys) {
+            const encrypted = encrypt(plaintext, key)
+            const decrypted = decrypt(encrypted.output, key)
+            expect(decrypted.output).toBe(plaintext)
+        }
     })
 
     it('supports instrumentation', () => {

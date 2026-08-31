@@ -293,7 +293,7 @@ export async function runScalingBenchmark(
   cipherId: string,
   payloadSizes: number[],
   iterations: number,
-  runCipher: (direction: "encrypt" | "decrypt", cipherId: string, input: string, key: string, options?: Record<string, unknown>) => Promise<any>,
+  runCipher: (direction: "encrypt" | "decrypt", cipherId: string, input: string, key: string, options?: Record<string, unknown>) => Promise<CipherResult | null>,
   getBenchmarkParams: (cipherId: string, category: string, inputSize: number, defaultKey: string) => { input: string; key: string; options: Record<string, unknown> },
   onProgress?: (current: number, total: number, currentSize: number) => void
 ): Promise<Array<{ payloadSize: number; averageTime: number; throughput: number; operationsPerSecond: number }>> {
@@ -335,7 +335,7 @@ export async function runScalingBenchmark(
           ...options,
           bypassCache: true,
         })
-        cipherMeasurements.push(BenchmarkEngine.measureCipherTime(result))
+        if (result) cipherMeasurements.push(BenchmarkEngine.measureCipherTime(result))
       } catch (iterationError) {
         console.error(
           `Iteration ${iteration + 1} failed for ${cipherId} at ${payloadSize} bytes:`,

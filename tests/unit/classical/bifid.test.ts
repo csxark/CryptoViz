@@ -52,4 +52,31 @@ describe('Bifid Cipher', () => {
     const result = encrypt('HELLO', 'BIFID', { instrument: true })
     expect(result.steps.length).toBeGreaterThan(0)
   })
+
+  it('throws INVALID_OPTION for period <= 0 or non-integer period (#1725)', () => {
+    const invalidPeriods = [0, -1, -5, 0.5, NaN]
+    for (const p of invalidPeriods) {
+      expect(() => encrypt('HELLOWORLD', 'BIFID', { period: p })).toThrowError(CipherError)
+      expect(() => decrypt('HELLOWORLD', 'BIFID', { period: p })).toThrowError(CipherError)
+    }
+  })
+
+  it('supports periodic Bifid encryption and decryption', () => {
+    const text = 'DEFENDTHEEASTWALL'
+    const key = 'BIFID'
+    const options = { period: 5 }
+
+    const enc = encrypt(text, key, options)
+    const dec = decrypt(enc.output, key, options)
+    expect(dec.output).toBe(text)
+  })
+
+  it('supports periodic Bifid key string notation ("KEY,PERIOD")', () => {
+    const text = 'ATTACKATDAWN'
+    const keyWithPeriod = 'BIFID,4'
+
+    const enc = encrypt(text, keyWithPeriod)
+    const dec = decrypt(enc.output, keyWithPeriod)
+    expect(dec.output).toBe(text)
+  })
 })

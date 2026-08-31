@@ -412,12 +412,11 @@ export const RSA_ATTACK_PRESETS = {
     p: 10007n,
     q: 10009n,
   },
-  wiener: {
-    n: 17993n,
-    e: 11501n,
-    d: 5n,
-  },
-  commonModulus: {
+wiener: {
+  n: 6497n,
+  e: 5069n,
+  d: 5n,
+},  commonModulus: {
     n: 3233n,
     e1: 7n,
     e2: 11n,
@@ -436,8 +435,7 @@ export const RSA_ATTACK_PRESETS = {
 export function parseBigIntInput(value: string, label: string): bigint {
   const cleaned = value.trim();
   if (!cleaned) throw new RsaAttackError("INVALID_INPUT", `${label} is required.`);
-  if (!/^-?\\d+$/.test(cleaned)) throw new RsaAttackError("INVALID_INPUT", `${label} must be a decimal integer.`);
-  return BigInt(cleaned);
+if (!/^-?\d+$/.test(cleaned)) throw new RsaAttackError("INVALID_INPUT", `${label} must be a decimal integer.`);  return BigInt(cleaned);
 }
 
 export function attackStepsToRows(steps: AttackStep[]) {

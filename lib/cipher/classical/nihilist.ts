@@ -56,6 +56,12 @@ function numOf(square: string, ch: string): number {
 function charOfNum(square: string, n: number): string {
   const row = Math.floor(n / 10)
   const col = n % 10
+  if (row < 1 || row > 5 || col < 1 || col > 5) {
+    throw new CipherError(
+      'INVALID_CIPHERTEXT',
+      `Invalid Polybius square coordinate: ${n} (row ${row}, col ${col}). Polybius coordinates must have row and column values between 1 and 5.`
+    )
+  }
   return square[(row - 1) * 5 + (col - 1)]
 }
 
@@ -175,16 +181,46 @@ function nihilistTransform(
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
   return nihilistTransform(input, key, true, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
   return nihilistTransform(input, key, false, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELP',

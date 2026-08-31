@@ -1,5 +1,5 @@
 import DOMPurify from "dompurify";
-// @ts-ignore
+// @ts-expect-error
 import { JSDOM } from "jsdom";
 
 const domWindow =

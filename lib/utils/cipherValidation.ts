@@ -227,6 +227,15 @@ export function validateCipherPayload(
       return { valid: true, sanitizedInput: input, sanitizedKey: `${a},${b}`, options }
     }
 
+    case 'bacon': {
+      const isExtended = key.toLowerCase().includes('extended') || key.toLowerCase().includes('26')
+      const cleanedInput = input.toUpperCase().replace(/[^A-Z]/g, '')
+      if (cleanedInput.length === 0) {
+        throw new CipherError('INVALID_INPUT', 'Bacon\'s cipher requires at least one letter.')
+      }
+      return { valid: true, sanitizedInput: cleanedInput, sanitizedKey: isExtended ? 'extended' : 'standard', options }
+    }
+
     case 'aes':
     case 'aes-128':
     case 'aes-192':

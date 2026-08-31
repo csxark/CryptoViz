@@ -34,7 +34,7 @@ export class PerformanceProfiler {
 
     if (isNode) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const os = await import('node:os')
         return {
           nodeVersion: process.version,

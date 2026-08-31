@@ -38,14 +38,14 @@ const createMockMasterGain = () => ({
   connect: vi.fn(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 let mockCtx: any;
 
 /**
  * AudioContext MUST be a regular function (not arrow) to support `new`.
  * Wrapped in vi.fn() so we can spy on constructor calls.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const AudioContextMock = vi.fn(function (this: any) {
   this.currentTime = 0;
   this.destination = {};
@@ -55,7 +55,7 @@ const AudioContextMock = vi.fn(function (this: any) {
     .mockReturnValueOnce(createMockMasterGain())   // 1st call → master gain
     .mockImplementation(() => createMockGainNode()); // subsequent → tone gains
   this.close = mockContextClose;
-  // eslint-disable-next-line @typescript-eslint/no-this-alias
+   
   mockCtx = this; // expose reference for assertions
 });
 

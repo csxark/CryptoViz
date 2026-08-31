@@ -68,6 +68,7 @@ CryptoViz supports step-by-step state animations, dynamic parameters, and off-th
 | **MD5** | Hash | broken | RFC 1321 (Educational only) |
 | **HMAC-SHA256** | Hash | secure | RFC 2104 standard |
 | **Bcrypt** | Hash | secure | Blowfish-based KDF |
+| **Bacon\'s** | Classical | broken | Steganographic 5-bit substitution |
 
 ### 2. Docs Module
 - **Interactive Markdown (MDX)**: Custom MDX rendering with LaTeX mathematical equations.

@@ -112,22 +112,31 @@ const DOMPURIFY_CONFIG = {
  * <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(formula) }} />
  */
 export function sanitizeHtml(dirty: string): string {
+  const fallbackSanitize = (str: string) => {
+    const noScripts = str.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    return noScripts.replace(/<(?!\/?(sup|sub|span|strong|em|b|i|code|br)\b)[^>]*>/gi, '')
+  }
+
   if (typeof window === 'undefined') {
-    // SSR / Node environment: strip all tags as a conservative fallback
-    return dirty.replace(/<[^>]*>/g, '')
+    // SSR / Node environment: strip non-allowed tags as a conservative fallback
+    return fallbackSanitize(dirty)
   }
 
   try {
     // Dynamically require DOMPurify to keep the server bundle clean
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const DOMPurify = require('dompurify') as typeof import('dompurify')
-    const purify = typeof DOMPurify === 'function' ? DOMPurify : DOMPurify.default ?? DOMPurify
-    return typeof purify.sanitize === 'function'
-      ? (purify.sanitize(dirty, DOMPURIFY_CONFIG) as string)
-      : dirty.replace(/<[^>]*>/g, '')
+    const DOMPurifyModule = require('dompurify')
+    const createDOMPurify = DOMPurifyModule.default ?? DOMPurifyModule
+    const DOMPurify = typeof createDOMPurify.sanitize === 'function'
+      ? createDOMPurify
+      : (typeof createDOMPurify === 'function' ? createDOMPurify(window) : null)
+
+    return typeof DOMPurify?.sanitize === 'function'
+      ? (DOMPurify.sanitize(dirty, DOMPURIFY_CONFIG) as string)
+      : fallbackSanitize(dirty)
   } catch {
     // Graceful degradation: strip tags if DOMPurify fails to load
-    return dirty.replace(/<[^>]*>/g, '')
+    return fallbackSanitize(dirty)
   }
 }
 

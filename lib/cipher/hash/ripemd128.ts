@@ -6,7 +6,9 @@
  * NOTE: Uses distinct tables from RIPEMD-160. Not a truncated configuration.
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
-import { CipherError, validateInput } from '../../utils'
+import { CipherError } from '../../utils'
+import { toByteArray } from '../../utils/encoding'
+import { validateHashInput } from './sha256'
 
 const METADATA: CipherMetadata = {
     name: 'RIPEMD-128',
@@ -25,6 +27,9 @@ function f1(x: number, y: number, z: number): number { return u32(x ^ y ^ z) }
 function f2(x: number, y: number, z: number): number { return u32((x & y) | (~x & z)) }
 function f3(x: number, y: number, z: number): number { return u32((x | ~y) ^ z) }
 function f4(x: number, y: number, z: number): number { return u32((x & z) | (y & ~z)) }
+
+const KL = [0x00000000, 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc]
+const KR = [0x50a28be6, 0x5c4dd124, 0x6d703ef3, 0x00000000]
 
 // Message word selection (Left line)
 const RL = [
@@ -68,9 +73,9 @@ function toHex(b: number[]): string {
     return b.map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
-function ripemd128Core(input: string, instrument: boolean): CipherResult {
+function ripemd128Core(input: string, instrument: boolean, encoding: 'utf8' | 'hex' = 'hex'): CipherResult {
     const start = performance.now()
-    const inBytes = parseHex(input)
+    const inBytes = toByteArray(input, encoding)
 
     // Initial state
     let h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476
@@ -85,7 +90,7 @@ function ripemd128Core(input: string, instrument: boolean): CipherResult {
     const padLen = (inBytes.length % 64 < 56) ? (56 - inBytes.length % 64) : (120 - inBytes.length % 64)
     const padded = [...inBytes, 0x80, ...new Array(padLen - 1).fill(0)]
     // Append length (64-bit little-endian)
-    for (let i = 0; i < 8; i++) padded.push((bitLen >>> (i * 8)) & 0xff)
+    for (let i = 0; i < 8; i++) padded.push(Number((BigInt(bitLen) >> BigInt(i * 8)) & 0xffn))
 
     const blockCount = padded.length / 64
     for (let b = 0; b < blockCount; b++) {
@@ -106,22 +111,20 @@ function ripemd128Core(input: string, instrument: boolean): CipherResult {
             const rnd = Math.floor(i / 16)
 
             // Left line
-            let t = u32(al + funcs[rnd](bl, cl, dl) + W[RL[i]])
-            al = dl; dl = cl; cl = bl
-            bl = rotl(t, SL[i])
+            const tl = rotl(u32(al + funcs[rnd](bl, cl, dl) + W[RL[i]] + KL[rnd]), SL[i])
+            al = dl; dl = cl; cl = bl; bl = tl
 
             // Right line
-            t = u32(ar + funcsR[rnd](br, cr, dr) + W[RR[i]])
-            ar = dr; dr = cr; cr = br
-            br = rotl(t, SR[i])
+            const tr = rotl(u32(ar + funcsR[rnd](br, cr, dr) + W[RR[i]] + KR[rnd]), SR[i])
+            ar = dr; dr = cr; cr = br; br = tr
         }
 
-        // Final combination (RIPEMD-128 specific)
-        const t = u32(h1 + cl + dr)
-        h1 = u32(h2 + dl + ar)
-        h2 = u32(h3 + al + br)
-        h3 = u32(h0 + bl + cr)
-        h0 = t
+        // Final combination (RIPEMD-128 specific recombination)
+        const t0 = u32(h1 + cl + dr)
+        const t1 = u32(h2 + dl + ar)
+        const t2 = u32(h3 + al + br)
+        const t3 = u32(h0 + bl + cr)
+        h0 = t0; h1 = t1; h2 = t2; h3 = t3
 
         if (instrument) {
             steps.push({ index: steps.length, label: `Block ${b + 1}`, inputState: toHex(padded.slice(b * 64, b * 64 + 64)), outputState: 'State updated', note: 'Left and right lines diverge via distinct functions/orders.', isMilestone: true })
@@ -137,15 +140,46 @@ function ripemd128Core(input: string, instrument: boolean): CipherResult {
     return { output: toHex(outBytes), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
-export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
-    validateInput(input)
-    return ripemd128Core(input, !!options.instrument)
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export function encrypt(input: string, key: string = '', options: CipherOptions = {}): CipherResult {
+    validateHashInput(input)
+    const encoding = (options.encoding as 'utf8' | 'hex') || 'hex'
+    return ripemd128Core(input, !!options.instrument, encoding)
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     throw new CipherError('ALGORITHM_UNSUPPORTED', 'RIPEMD-128 is a hash function and cannot be decrypted.')
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '', key: '', expected: 'cdf26213a150dc3ecb610f18f6b38b46', description: 'RIPEMD-128("")' },
     { input: '616263', key: '', expected: 'c14a12199c66e4ba84636b0f69144c77', description: 'RIPEMD-128("abc")' }

@@ -144,7 +144,7 @@ export default React.memo(function ThroughputScalingChart({
 
     // Transform data for chart: each series is a cipher
     return allPayloadSizes.map((payloadSize) => {
-      const dataPoint: any = {
+      const dataPoint: Record<string, unknown> = {
         payloadSize,
         payloadSizeFormatted: formatPayloadSize(payloadSize),
       }
@@ -209,9 +209,9 @@ export default React.memo(function ThroughputScalingChart({
             <Tooltip content={<CustomTooltip />} />
             <Legend
               wrapperStyle={{ paddingTop: '20px' }}
-              formatter={(value, entry: any) => (
+              formatter={(value, entry) => (
                 <span style={{ color: textColor, fontSize: 12 }}>
-                  {entry.payload[`${value}_name`] || value}
+                  {String((entry?.payload as Record<string, unknown> | undefined)?.[`${value}_name`] || value)}
                 </span>
               )}
             />

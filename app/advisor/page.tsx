@@ -6,8 +6,8 @@ import PracticePageTemplate from "@/components/layout/PracticePageTemplate";
 import CipherRecommendationAssistant from '../../components/advisor/CipherRecommendationAssistant'
 
 export const metadata: Metadata = {
-  title: 'Cipher Recommendation Assistant | CryptoViz',
-  description: 'An interactive recommendation assistant to help you choose the right cryptographic algorithm based on real-world use cases, environment constraints, and security requirements.',
+  title: 'Algorithm Advisor | CryptoViz',
+  description: 'An interactive algorithm advisor to help you choose the right cryptographic algorithm based on real-world use cases, environment constraints, and security requirements.',
 }
 
 export default function AdvisorPage() {
@@ -16,21 +16,21 @@ export default function AdvisorPage() {
       <Navbar />
 
        <PracticePageTemplate
-        title="Cipher Recommendation Assistant"
+        title="Algorithm Advisor"
         description="Select a real-world use case scenario or answer a step-by-step decision tree to discover recommended algorithms, security trade-offs, and implementation code snippets."
-        eyebrow="Interactive Recommendation Guide"
+        eyebrow="Decision Support System"
         breadcrumbs={[
           {
             label: "Practice",
             href: "/visualizer/caesar/",
           },
           {
-            label: "Cipher Recommendation Assistant",
+            label: "Algorithm Advisor",
           },
         ]}
       >
 
-        <section aria-label="Cipher Recommendation Assistant">
+        <section aria-label="Algorithm Advisor">
           <CipherRecommendationAssistant />
         </section>
       </PracticePageTemplate>

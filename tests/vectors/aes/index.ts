@@ -1,0 +1,45 @@
+import { KnownAnswerTestVector } from "../types";
+
+export const aesTestVectors: KnownAnswerTestVector[] = [
+  {
+    id: "aes-128-ecb-nist",
+    algorithm: "AES-128-ECB",
+    standard: "NIST SP 800-38A Section F.1.1",
+    description: "Standard NIST AES-128 ECB vector",
+    plaintextHex: "6bc1bee22e409f96e93d7e117393172a",
+    keyHex: "2b7e151628aed2a6abf7158809cf4f3c",
+    ciphertextHex: "3ad77bb40d7a3660a89ecaf32466ef97",
+    edgeCase: "NONE",
+  },
+  {
+    id: "aes-128-ecb-empty",
+    algorithm: "AES-128-ECB",
+    standard: "NIST SP 800-38A / Edge Case",
+    description: "Empty input string boundary check",
+    plaintextHex: "",
+    keyHex: "2b7e151628aed2a6abf7158809cf4f3c",
+    ciphertextHex: "",
+    edgeCase: "EMPTY_INPUT",
+  },
+  {
+    id: "aes-128-cbc-multiblock",
+    algorithm: "AES-128-CBC",
+    standard: "NIST SP 800-38A Section F.2.1",
+    description: "AES-128 CBC 4-block test vector",
+    plaintextHex: "6bc1bee22e409f96e93d7e117393172ae5468e40421b6d1911d73a9d271771c5f3ca04359d0913917d316497f8d0c58247ab9427d0036811c2977d29be503f4d",
+    keyHex: "2b7e151628aed2a6abf7158809cf4f3c",
+    ivHex: "000102030405060708090a0b0c0d0e0f",
+    ciphertextHex: "7649ab1e1e2a08006071494091706d12393b04806822286053f1edb78615b7c6a632000063f571492002211229805622d901c1642c3d05d051058f7951535f5d",
+    edgeCase: "MULTI_BLOCK",
+  },
+  {
+    id: "aes-256-ecb-boundary-key",
+    algorithm: "AES-256-ECB",
+    standard: "FIPS 197 / Boundary Key",
+    description: "AES 256-bit maximum key size boundary test",
+    plaintextHex: "00112233445566778899aabbccddeeff",
+    keyHex: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    ciphertextHex: "8ea2b7ca516745bfeafc49904b496089",
+    edgeCase: "BOUNDARY_KEY",
+  },
+];

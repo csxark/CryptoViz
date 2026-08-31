@@ -16,7 +16,7 @@ export function NTTVisualizer() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Negacyclic NTT Laboratory ($q = {Q}$)</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Visualize Cooley-Tukey butterfly operations for ring $R_q = \mathbb{Z}_q[X]/(X^n + 1)$</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Visualize Cooley-Tukey butterfly operations for ring $R_q = \mathbb&#123;Z&#125;_q[X]/(X^n + 1)$</p>
         </div>
         <div className="flex gap-2">
           <button

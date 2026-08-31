@@ -14,8 +14,7 @@ describe('Offline Learning Pack Page & Components', () => {
   it('renders hero title and status badge correctly', () => {
     render(<OfflineLearningPackPage />);
     expect(screen.getByText(/Learn Cryptography/i)).toBeInTheDocument();
-    expect(screen.getByText(/OFFLINE LEARNING PACK ENGINE #512/i)).toBeInTheDocument();
-  });
+expect(screen.getByText(/OFFLINE LEARNING PACK ENGINE/i)).toBeInTheDocument();  });
 
   it('filters learning packs based on search input', () => {
     render(<OfflineLearningPackPage />);

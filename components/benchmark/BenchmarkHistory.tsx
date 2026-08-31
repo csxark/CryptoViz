@@ -3,7 +3,7 @@
 import type { BenchmarkSession } from "@/types/benchmark";
 import { formatBytes } from "@/lib/utils/benchmarkHistory";
 import SessionComparisonVisualizer from "./SessionComparisonVisualizer";
-import { DEFAULT_SESSION_PRESETS } from "@/lib/utils/sessionComparison";
+import { DEFAULT_SESSION_PRESETS } from "@/lib/utils/comparison";
 
 interface BenchmarkHistoryProps {
   sessions: BenchmarkSession[];

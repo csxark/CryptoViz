@@ -27,7 +27,7 @@ interface SandboxToolbarProps {
   loading: boolean
   onRun: () => void
   error: string | null
-  workerError: { code: CipherErrorCode; message?: string } | null
+  workerError: string | null
 }
 
 export default function SandboxToolbar({
@@ -179,7 +179,7 @@ export default function SandboxToolbar({
                 Execution Error
               </h4>
               <p className="text-xs text-red-700 dark:text-red-400">
-                {error || workerError?.message || workerError?.code || 'Unknown error'}
+                {error || workerError || 'Unknown error'}
               </p>
             </div>
           </div>

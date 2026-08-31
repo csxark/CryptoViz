@@ -29,14 +29,14 @@ const METADATA: CipherMetadata = {
 }
 
 // Toy parameters: small field extension GF(p^h)
-const P = 5       // Prime
+const P = 7       // Prime dimension
 const H = 3       // Extension degree
-const FIELD_SIZE = Math.pow(P, H)  // p^h = 125
-const MSG_LEN = 10  // Length of binary message vector
-const FIXED_WEIGHT = 3  // Required Hamming weight
+const FIELD_SIZE = Math.pow(P, H)  // p^h = 343
+const MSG_LEN = P  // Length of binary message vector (7)
+const FIXED_WEIGHT = H  // Required Hamming weight (3)
 
 // Irreducible polynomial of degree h over GF(p)
-// For GF(5^3): x^3 + x + 1 (represented as [1, 1, 0, 1] in ascending order)
+// For GF(7^3): x^3 + x + 1 (represented as [1, 1, 0, 1] in ascending order)
 const IRREDUCIBLE_POLY = [1, 1, 0, 1]
 
 /**
@@ -65,7 +65,6 @@ function gfSub(a: GFElement, b: GFElement): GFElement {
  * This is genuine GF(p^h) arithmetic, not simple integer modular arithmetic.
  */
 function gfMul(a: GFElement, b: GFElement): GFElement {
-    // Polynomial multiplication (up to degree 2h-2)
     const product = new Array(2 * H - 1).fill(0)
     for (let i = 0; i < H; i++) {
         for (let j = 0; j < H; j++) {
@@ -73,14 +72,14 @@ function gfMul(a: GFElement, b: GFElement): GFElement {
         }
     }
 
-    // Reduce modulo irreducible polynomial
-    for (let i = 2 * H - 2; i >= H; i--) {
-        if (product[i] !== 0) {
-            for (let j = 0; j <= H; j++) {
-                product[i - H + j] = (product[i - H + j] - product[i] * IRREDUCIBLE_POLY[j] % P + P) % P
-            }
-        }
-    }
+    // Reduce x^4 and x^3 using x^3 = -x - 1 = 6x + 6 mod 7
+    product[2] = (product[2] + 6 * product[4]) % P
+    product[1] = (product[1] + 6 * product[4]) % P
+    product[4] = 0
+
+    product[1] = (product[1] + 6 * product[3]) % P
+    product[0] = (product[0] + 6 * product[3]) % P
+    product[3] = 0
 
     return product.slice(0, H)
 }
@@ -106,39 +105,36 @@ function gfPow(g: GFElement, k: number): GFElement {
  */
 function findGenerator(): GFElement {
     const targetOrder = FIELD_SIZE - 1
-    // Try elements starting from x (the polynomial variable)
-    const x: GFElement = new Array(H).fill(0)
-    x[1] = 1  // x = [0, 1, 0]
-
     for (let i = 1; i < FIELD_SIZE; i++) {
-        const candidate: GFElement = new Array(H).fill(0)
-        let tmp = i
-        for (let j = 0; j < H; j++) {
-            candidate[j] = tmp % P
-            tmp = Math.floor(tmp / P)
-        }
-        // Check if candidate has order p^h - 1
+        const candidate: GFElement = [i % P, Math.floor(i / P) % P, Math.floor(i / (P * P)) % P]
+        if (candidate.every(c => c === 0)) continue
         const powered = gfPow(candidate, targetOrder)
         const isOne = powered.every((c, idx) => idx === 0 ? c === 1 : c === 0)
         if (isOne) {
-            // Verify it's a primitive root (no smaller order)
-            let isPrimitive = true
-            for (const divisor of [P - 1, (FIELD_SIZE - 1) / P]) {
-                if (divisor >= 1 && Number.isInteger(divisor)) {
-                    const test = gfPow(candidate, divisor)
-                    const testIsOne = test.every((c, idx) => idx === 0 ? c === 1 : c === 0)
-                    if (testIsOne) { isPrimitive = false; break }
+            let order = targetOrder
+            const primeFactors: number[] = []
+
+            for (let factor = 2; factor * factor <= order; factor++) {
+                if (order % factor === 0) {
+                    primeFactors.push(factor)
+                    while (order % factor === 0) order = Math.floor(order / factor)
                 }
             }
+            if (order > 1) primeFactors.push(order)
+
+            const isPrimitive = primeFactors.every((factor) => {
+                const test = gfPow(candidate, Math.floor(targetOrder / factor))
+                return !test.every((c, idx) => idx === 0 ? c === 1 : c === 0)
+            })
+
             if (isPrimitive) return candidate
         }
     }
-    return x  // Fallback
+    return [5, 1, 0]  // Fallback
 }
 
 /**
  * Compute discrete logarithm in GF(p^h): find k such that g^k = target.
- * Toy: brute-force search (small field).
  */
 function discreteLog(g: GFElement, target: GFElement): number {
     let current = gfOne()
@@ -150,54 +146,66 @@ function discreteLog(g: GFElement, target: GFElement): number {
         if (match) return k
         current = gfMul(current, g)
     }
-    throw new CipherError('INTERNAL_ERROR', 'Discrete log not found')
+    throw new CipherError('INVALID_INPUT', 'Discrete log not found')
 }
 
-interface ChorRivestKeys {
+export interface ChorRivestKeys {
     publicWeights: number[]  // Knapsack weights (public)
     privatePermutation: number[]  // Permutation disguising the structure
     privateD: number  // Modular transformation factor
     generator: GFElement
 }
 
-/**
- * Key generation: compute discrete logarithms in GF(p^h) for a specific
- * set of field elements, then disguise them via permutation and modular
- * transformation.
- */
-function keygen(): ChorRivestKeys {
-    const g = findGenerator()
-
-    // Compute discrete logs of "linear" elements (basis of GF(p^h) over GF(p))
-    // These form the structured knapsack weights
+const DEFAULT_KEYS: ChorRivestKeys = (() => {
+    const g: GFElement = [5, 1, 0]
     const structuredWeights: number[] = []
-    for (let i = 0; i < MSG_LEN; i++) {
-        const element: GFElement = new Array(H).fill(0);
-        element[i % H] = (Math.floor(i / H) + 1) % P;
-        if (element.every(c => c === 0)) element[0] = 1;
-        const log = discreteLog(g, element);
-        structuredWeights.push(log);
+    for (let i = 0; i < P; i++) {
+        const element: GFElement = [i, 1, 0]
+        const log = discreteLog(g, element)
+        structuredWeights.push(log)
     }
-
-    // Disguise via random permutation
-    const perm: number[] = Array.from({ length: MSG_LEN }, (_, i) => i)
-    for (let i = MSG_LEN - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [perm[i], perm[j]] = [perm[j], perm[i]]
+    const perm = [2, 0, 4, 1, 5, 3, 6]
+    const d = 17
+    const publicWeights: number[] = new Array(P).fill(0)
+    for (let i = 0; i < P; i++) {
+        publicWeights[i] = (structuredWeights[perm[i]] + d) % (FIELD_SIZE - 1)
     }
-
-    // Disguise via modular transformation
-    const d = Math.floor(Math.random() * (FIELD_SIZE - 2)) + 1
-    const publicWeights: number[] = new Array(MSG_LEN).fill(0)
-    for (let i = 0; i < MSG_LEN; i++) {
-        publicWeights[perm[i]] = (structuredWeights[i] * d) % (FIELD_SIZE - 1)
-    }
-
     return {
         publicWeights,
         privatePermutation: perm,
         privateD: d,
         generator: g
+    }
+})()
+
+function parsePrivateKey(key: string): ChorRivestKeys {
+    if (!key || key === 'mock') return DEFAULT_KEYS
+    try {
+        const parsed = JSON.parse(key) as ChorRivestKeys
+
+        if (
+            !Array.isArray(parsed.publicWeights) ||
+            !Array.isArray(parsed.privatePermutation) ||
+            typeof parsed.privateD !== 'number' ||
+            !Array.isArray(parsed.generator)
+        ) {
+            throw new Error()
+        }
+
+        if (
+            parsed.publicWeights.length !== MSG_LEN ||
+            parsed.privatePermutation.length !== MSG_LEN ||
+            parsed.generator.length !== H
+        ) {
+            throw new Error()
+        }
+
+        return parsed
+    } catch {
+        throw new CipherError(
+            'INVALID_INPUT',
+            'Invalid Chor-Rivest private key.'
+        )
     }
 }
 
@@ -206,7 +214,6 @@ function keygen(): ChorRivestKeys {
  * REQUIRES: message has exactly FIXED_WEIGHT 1-bits.
  */
 function encryptMessage(message: number[], keys: ChorRivestKeys): number {
-    // Enforce fixed Hamming weight constraint
     const weight = message.reduce((sum, bit) => sum + bit, 0)
     if (weight !== FIXED_WEIGHT) {
         throw new CipherError('INVALID_INPUT', `Chor-Rivest requires messages with exactly ${FIXED_WEIGHT} 1-bits. Got ${weight}.`)
@@ -223,60 +230,43 @@ function encryptMessage(message: number[], keys: ChorRivestKeys): number {
 
 /**
  * Decrypt: transform ciphertext back into GF(p^h) domain where the
- * fixed-weight structure makes recovering the subset selection tractable.
+ * polynomial root-finding unmasks the subset selection.
  */
 function decryptMessage(ciphertext: number, keys: ChorRivestKeys): number[] {
-    // Undo modular transformation: multiply by d^(-1)
-    const dInv = modInverse(keys.privateD, FIELD_SIZE - 1)
-    const transformed = (ciphertext * dInv) % (FIELD_SIZE - 1)
+    const targetOrder = FIELD_SIZE - 1
+    const S_prime = ((ciphertext - FIXED_WEIGHT * keys.privateD) % targetOrder + targetOrder) % targetOrder
 
-    // Undo permutation to get structured weights
-    const structuredWeights: number[] = new Array(MSG_LEN).fill(0)
-    for (let i = 0; i < MSG_LEN; i++) {
-        structuredWeights[i] = keys.publicWeights[keys.privatePermutation[i]]
-        structuredWeights[i] = (structuredWeights[i] * dInv) % (FIELD_SIZE - 1)
-    }
+    const E = gfPow(keys.generator, S_prime)
+    const Poly = [(E[0] + 1) % P, (E[1] + 1) % P, E[2], 1]
 
-    // Recover the subset of size FIXED_WEIGHT that sums to `transformed`
-    // Toy: brute-force search over all subsets of size FIXED_WEIGHT
-    const message: number[] = new Array(MSG_LEN).fill(0)
-    const indices = Array.from({ length: MSG_LEN }, (_, i) => i)
-
-    function findSubset(remaining: number[], currentSum: number, chosen: number[]): boolean {
-        if (chosen.length === FIXED_WEIGHT) {
-            return currentSum % (FIELD_SIZE - 1) === transformed
+    function evalPoly(poly: number[], x: number): number {
+        let val = 0
+        let xpow = 1
+        for (const co of poly) {
+            val = (val + co * xpow) % P
+            xpow = (xpow * x) % P
         }
-        if (remaining.length === 0) return false
-
-        const [first, ...rest] = remaining
-        // Try including first
-        chosen.push(first)
-        if (findSubset(rest, (currentSum + structuredWeights[first]) % (FIELD_SIZE - 1), chosen)) return true
-        chosen.pop()
-        // Try excluding first
-        if (findSubset(rest, currentSum, chosen)) return true
-        return false
+        return val
     }
 
-    const chosen: number[] = []
-    if (findSubset(indices, 0, chosen)) {
-        for (const idx of chosen) message[idx] = 1
+    const roots: number[] = []
+    for (let x = 0; x < P; x++) {
+        if (evalPoly(Poly, x) === 0) roots.push(x)
+    }
+
+    const recovered_s = roots.map(r => (P - r) % P)
+    const pi_inv = new Array(P)
+    for (let i = 0; i < P; i++) pi_inv[keys.privatePermutation[i]] = i
+    const recovered_indices = recovered_s.map(sj => pi_inv[sj])
+
+    const message: number[] = new Array(MSG_LEN).fill(0)
+    for (const idx of recovered_indices) {
+        if (idx !== undefined && idx >= 0 && idx < MSG_LEN) {
+            message[idx] = 1
+        }
     }
 
     return message
-}
-
-function modInverse(a: number, m: number): number {
-    let t = 0, newt = 1
-    let r = m, newr = a % m
-    while (newr !== 0) {
-        const quotient = Math.floor(r / newr)
-        t = t - quotient * newt
-        r = r - quotient * newr;
-        [t, newt] = [newt, t];
-        [r, newr] = [newr, r];
-    }
-    return ((t % m) + m) % m
 }
 
 function parseHex(s: string): number[] {
@@ -303,7 +293,7 @@ function chorRivestCore(input: string, key: string, doDecrypt: boolean, instrume
             label: 'Chor-Rivest Setup',
             inputState: `GF(${P}^${H}), msg_len=${MSG_LEN}, weight=${FIXED_WEIGHT}`,
             outputState: 'Knapsack weights via GF(p^h) discrete logs',
-            note: 'Chor-Rivest disguises a knapsack via discrete logarithms in the FIELD EXTENSION GF(p^h) — genuinely more elaborate than the simple prime-field discrete logs used by most DL schemes. FIXED HAMMING WEIGHT CONSTRAINT: messages must have exactly the required number of 1-bits. Broken by Vaudenay (1998) via an attack targeting this specific GF(p^h) construction.',
+            note: 'Chor-Rivest disguises a knapsack via discrete logarithms in the FIELD EXTENSION GF(p^h). FIXED HAMMING WEIGHT CONSTRAINT: messages must have exactly the required number of 1-bits. Broken by Vaudenay (1998) via an attack targeting this specific GF(p^h) construction.',
             isMilestone: true
         })
     }
@@ -312,10 +302,8 @@ function chorRivestCore(input: string, key: string, doDecrypt: boolean, instrume
 
     if (!doDecrypt) {
         // ENCRYPT
-        const keys = keygen()
+        const keys = parsePrivateKey(key)
         const msgBytes = parseHex(input)
-
-        // Convert bytes to binary vector of length MSG_LEN
         const bits: number[] = []
         for (const byte of msgBytes) {
             for (let bit = 7; bit >= 0 && bits.length < MSG_LEN; bit--) {
@@ -339,18 +327,31 @@ function chorRivestCore(input: string, key: string, doDecrypt: boolean, instrume
         }
     } else {
         // DECRYPT
-        const keys = keygen()  // Toy: regenerate for simplicity
+        const keys = parsePrivateKey(key)
         const ciphertext = parseInt(input, 16)
+        if (isNaN(ciphertext)) {
+            throw new CipherError('INVALID_INPUT', 'Ciphertext must be a valid hex string.')
+        }
         const recovered = decryptMessage(ciphertext, keys)
-        outHex = toHex(recovered.map(b => b ? 0xFF : 0x00))
+        const numBytes = Math.floor(MSG_LEN / 8)
+        const recoveredBytes: number[] = []
+        for (let i = 0; i <= numBytes; i++) {
+            let b = 0
+            for (let bit = 0; bit < 8; bit++) {
+                const bitVal = recovered[i * 8 + bit] ?? 0
+                b |= (bitVal << (7 - bit))
+            }
+            if (i < numBytes || b !== 0) recoveredBytes.push(b)
+        }
+        outHex = toHex(recoveredBytes)
 
         if (instrument) {
             steps.push({
                 index: 1,
                 label: 'Chor-Rivest Decryption',
                 inputState: `c=${ciphertext}`,
-                outputState: `bits=${recovered.join('')}`,
-                note: 'Transform ciphertext back into GF(p^h) domain via private permutation/d. Fixed-weight structure makes subset recovery tractable.',
+                outputState: `bits=${recovered.join('')} -> hex=${outHex}`,
+                note: 'Transform ciphertext back into GF(p^h) domain via Bose-Chowla discrete logarithms & polynomial root finding.',
                 isMilestone: true
             })
         }
@@ -359,21 +360,30 @@ function chorRivestCore(input: string, key: string, doDecrypt: boolean, instrume
     return { output: outHex, outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return chorRivestCore(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return chorRivestCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: 'e0',  // 11100000 = 3 bits set (matches FIXED_WEIGHT=3)
         key: 'mock',
-        expected: 'mock_ct',
-        description: 'Chor-Rivest round-trip with valid fixed-weight message (GF(5^3), weight=3)'
+        expected: '00c6',
+        description: 'Chor-Rivest round-trip with valid fixed-weight message (GF(7^3), weight=3)'
     }
 ]

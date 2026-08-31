@@ -626,7 +626,6 @@ export default function Pbkdf2Visualizer() {
 
   async function handleDerive() {
     setError(null)
-    setTraceError(null)
     setLoading(true)
     setDerivedKeyHex(null)
     
@@ -835,16 +834,6 @@ export default function Pbkdf2Visualizer() {
               : 'Derive key'}
           </button>
 
-          <button
-            type="button"
-            onClick={regenerateMicroTrace}
-            disabled={traceLoading}
-            className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
-          >
-            {traceLoading
-              ? 'Tracing…'
-              : 'Generate 5-round trace'}
-          </button>
         </div>
 
         {error && (
@@ -864,7 +853,7 @@ export default function Pbkdf2Visualizer() {
         </h2>
 
         <ol className="space-y-3">
-          {stageSummary.map(
+          {stages.map(
             (step, index) => (
               <li
                 key={`stage-${index}-${step.label}`}
@@ -882,26 +871,6 @@ export default function Pbkdf2Visualizer() {
           )}
         </ol>
       </section>
-
-      {/* Actual mathematical trace */}
-      {microTrace && (
-        <MicroTrace
-          trace={microTrace}
-          activeStep={activeTraceStep}
-          setActiveStep={
-            setActiveTraceStep
-          }
-        />
-      )}
-
-      {traceError && (
-        <p
-          role="alert"
-          className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-600 dark:text-red-400"
-        >
-          {traceError}
-        </p>
-      )}
 
       {/* Iteration cost visualization */}
       <IterationComparison

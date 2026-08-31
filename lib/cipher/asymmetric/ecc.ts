@@ -17,6 +17,14 @@ const METADATA: CipherMetadata = {
 // Message: "hello"
 // Hash: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
 // DER Signature: 3045022100b055a37f415fec62e7f8d1d40a170058fbee049ccc85b2b2733abdff16728b4502207c4400f22db5f07a63b2005f627d9db50795818131d1d789823f14940d389770
+/**
+ * TEST VECTORS asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'hello',
@@ -45,6 +53,14 @@ function parseSignatureToCompact(sigHex: string): Uint8Array {
   }
 }
 
+/**
+ * Encrypt asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string = '',
@@ -149,6 +165,14 @@ export function encrypt(
   }
 }
 
+/**
+ * Decrypt asymmetric primitive export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   key: string,

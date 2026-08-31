@@ -110,8 +110,8 @@ function decryptFast(input: string, key: string): string {
   // fullCols == 0 means all columns have numRows cells
   const colHeights = ranks.map((_, colIdx) => {
     if (fullCols === 0) return numRows
-    // Columns with rank < fullCols get an extra row
-    return ranks[colIdx] < fullCols ? numRows : numRows - 1
+    // First fullCols physical columns get an extra row
+    return colIdx < fullCols ? numRows : numRows - 1
   })
 
   // Rebuild columns in read-order
@@ -234,7 +234,7 @@ function decryptInstrumented(input: string, key: string): CipherStep[] {
 
   const colHeights = ranks.map((_, colIdx) => {
     if (fullCols === 0) return numRows
-    return ranks[colIdx] < fullCols ? numRows : numRows - 1
+    return colIdx < fullCols ? numRows : numRows - 1
   })
 
   const readOrder = ranks
@@ -298,6 +298,14 @@ function decryptInstrumented(input: string, key: string): CipherStep[] {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(
   input: string,
   key: string,
@@ -316,6 +324,14 @@ export function encrypt(
   return { output, outputEncoding: 'utf8', steps: [], metadata: METADATA, durationMs: performance.now() - t0 }
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(
   input: string,
   key: string,

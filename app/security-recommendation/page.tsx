@@ -4,6 +4,9 @@ import React, { useState } from 'react'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import Navbar from '../../components/layout/Navbar'
 
+type UseCase = 'data-at-rest' | 'data-in-transit' | 'hashing' | 'signatures'
+type SecurityLevel = 'standard' | 'high' | 'long-term'
+
 interface Recommendation {
   category: string
   recommended: string
@@ -13,8 +16,8 @@ interface Recommendation {
 }
 
 export default function SecurityRecommendationPage() {
-  const [useCase, setUseCase] = useState<'data-at-rest' | 'data-in-transit' | 'hashing' | 'signatures'>('data-at-rest')
-  const [securityLevel, setSecurityLevel] = useState<'standard' | 'high' | 'long-term'>('standard')
+  const [useCase, setUseCase] = useState<UseCase>('data-at-rest')
+  const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('standard')
 
   const getRecommendation = (): Recommendation => {
     switch (useCase) {
@@ -60,14 +63,14 @@ export default function SecurityRecommendationPage() {
       <Navbar />
 
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
-        <Breadcrumbs items={[{ label: "Sandbox" }, { label: "Security Recommendation Engine" }]} />
+        <Breadcrumbs items={[{ label: "Sandbox" }, { label: "Security Advisor" }]} />
 
         <header className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-600 dark:text-teal-400">
-            Guidance & Compliance
+            Cryptographic Migration Advisor
           </p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            Security Recommendation Engine
+            Security Architecture Advisor
           </h1>
           <p className="mt-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
             Get expert cryptographic algorithm recommendations aligned with your application use case, security requirements, and official compliance standards.
@@ -83,7 +86,7 @@ export default function SecurityRecommendationPage() {
             <select
               id="useCase"
               value={useCase}
-              onChange={(e) => setUseCase(e.target.value as any)}
+              onChange={(e) => setUseCase(e.target.value as UseCase)}
               className="mt-2 w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-zinc-700"
             >
               <option value="data-at-rest" className="bg-white dark:bg-zinc-900">Data at Rest (Files / Databases)</option>
@@ -100,7 +103,7 @@ export default function SecurityRecommendationPage() {
             <select
               id="securityLevel"
               value={securityLevel}
-              onChange={(e) => setSecurityLevel(e.target.value as any)}
+              onChange={(e) => setSecurityLevel(e.target.value as SecurityLevel)}
               className="mt-2 w-full rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-zinc-700"
             >
               <option value="standard" className="bg-white dark:bg-zinc-900">Standard Business Security</option>

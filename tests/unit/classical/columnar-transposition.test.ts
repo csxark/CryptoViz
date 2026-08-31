@@ -30,6 +30,28 @@ describe('Columnar Transposition — round-trip', () => {
       expect(dec.output).toBe(input)
     }
   })
+
+  it('correctly calculates column heights for irregular grids (Issue #1698 regression)', () => {
+    // Key "ZEBRA" (5 cols), ciphertext length 12 (12 % 5 = 2 remainder columns)
+    // Ranks: Z=4, E=2, B=1, R=3, A=0
+    // Physical cols 0 and 1 take height 3, physical cols 2, 3, 4 take height 2.
+    const ciphertext = 'EJCHBGLDIAFK'
+    const key = 'ZEBRA'
+    const resultFast = decrypt(ciphertext, key, { instrument: false })
+    const resultInstrumented = decrypt(ciphertext, key, { instrument: true })
+
+    expect(resultFast.output).toBe('ABCDEFGHIJKL')
+    expect(resultInstrumented.output).toBe('ABCDEFGHIJKL')
+  })
+
+  it('handles multi-word and irregular length round-trips correctly', () => {
+    const key = 'ZEBRA'
+    const input = 'ATTACK AT DAWN'
+    const cleanInput = 'ATTACKATDAWN' // length 12
+    const enc = encrypt(input, key)
+    const dec = decrypt(enc.output, key)
+    expect(dec.output).toBe(cleanInput)
+  })
 })
 
 describe('Columnar Transposition — key validation', () => {

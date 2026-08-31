@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import fc from 'fast-check'
-import { encrypt, TEST_VECTORS } from '../../../lib/cipher/hash/sha1'
+import { encrypt, decrypt, TEST_VECTORS } from '../../../lib/cipher/hash/sha1'
 import { CipherError } from '../../../lib/utils/errors'
 
 // ─── Known-Answer Test Vectors ────────────────────────────────────────────────

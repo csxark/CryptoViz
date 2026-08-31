@@ -304,7 +304,9 @@ export default function CipherSandbox() {
                     onChange={(e) => {
                       if (e.target.value) {
                         const [cat, sub] = e.target.value.split(':')
-                        handleAddStage(cat as any, sub)
+                        if (cat === 'substitution' || cat === 'permutation') {
+                          handleAddStage(cat, sub)
+                        }
                         e.target.value = ''
                       }
                     }}

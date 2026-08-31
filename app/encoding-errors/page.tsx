@@ -16,8 +16,7 @@ export default function EncodingErrorPage() {
         <LearnPageTemplate
         title="Encoding Error & Mojibake Playground"
         description="Explore how decoders handle invalid sequences, byte-level truncation, Base64 padding corruption, and Mojibake character set mismatches."
-        eyebrow="ENCODING ERROR PLAYGROUND #506"
-        breadcrumbs={[
+eyebrow="ENCODING & DECODING PLAYGROUND"        breadcrumbs={[
           { label: 'Learn' },
           { label: 'Encoding Errors' },
         ]}

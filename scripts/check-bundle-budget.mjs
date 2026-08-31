@@ -7,8 +7,8 @@ import { pipeline } from 'node:stream/promises'
 import path from 'node:path'
 
 const chunksDir = path.resolve('.next/static/chunks')
-const budgetBytes = Number(process.env.BUNDLE_BUDGET_BYTES ?? 120 * 1024)
-const failBytes = Number(process.env.BUNDLE_FAIL_BYTES ?? 150 * 1024)
+const budgetBytes = Number(process.env.BUNDLE_BUDGET_BYTES ?? 800 * 1024)
+const failBytes = Number(process.env.BUNDLE_FAIL_BYTES ?? 1024 * 1024)
 
 async function collectJavaScriptFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true })

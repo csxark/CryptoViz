@@ -12,6 +12,7 @@ All contributors are expected to adhere to our [Code of Conduct](./CODE_OF_CONDU
 ## 🔍 Before You Start
 
 ### Prerequisites
+
 To contribute code, you should have a solid foundation in the following:
 - **Node.js**: Version 22.x LTS (pinned target)
 - **Package Manager**: npm (version 9.x+)
@@ -20,6 +21,7 @@ To contribute code, you should have a solid foundation in the following:
 - Familiarity with basic cryptographic principles is highly recommended. Please review the [CIPHER_ENGINE.md](./CIPHER_ENGINE.md) document to study the mathematical equations and parameters of each algorithm.
 
 ### Read-First Checklist
+
 Before writing any code, please complete the following steps:
 
 1. Read [README.md](./README.md) for project clearity and ide on what you are building and what we plan to build in the future.
@@ -34,68 +36,184 @@ Before writing any code, please complete the following steps:
 
 ## 💻 Local Development Setup
 
-Follow these steps to set up your local development environment:
+Follow these steps to set up CryptoViz locally.
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/csxark/CryptoViz.git
-   cd cryptoviz
-   ```
+### Prerequisites
 
-2. **Install node dependencies**:
-   ```bash
-   npm install
-   ```
+Before you begin, make sure you have the following installed:
 
 3. **Verify your local installation**:
+
    Run the unit tests to ensure your starting environment is correct:
+
    ```bash
    npm test
    ```
+
    Verify that the static export build succeeds:
    ```bash
    npm build
    ```
+* **Node.js**: 22.x LTS
+* **npm**: 9.x or later
+* **Git**: Latest stable version
 
-4. **Start the development server**:
-   ```bash
-   npm dev
-   ```
+You can verify your installed versions with:
 
-Open `http://localhost:3000` in your browser. You are ready to start coding.
+```bash
+node --version
+npm --version
+git --version
+```
+
+### Step 1: Fork the Repository
+
+Fork the [CryptoViz repository](https://github.com/csxark/CryptoViz) to your own GitHub account.
+
+### Step 2: Clone Your Fork
+
+Clone your fork and move into the project directory:
+
+```bash
+git clone https://github.com/<your-username>/CryptoViz.git
+cd CryptoViz
+```
+
+### Step 3: Add the Upstream Repository
+
+Add the original CryptoViz repository as an upstream remote:
+
+```bash
+git remote add upstream https://github.com/csxark/CryptoViz.git
+```
+
+Verify your remotes:
+
+```bash
+git remote -v
+```
+
+### Step 4: Install Dependencies
+
+Install the project dependencies using npm:
+
+```bash
+npm install
+```
+
+### Step 5: Create a Development Branch
+
+Create a new branch from `main` before making changes:
+
+```bash
+git checkout main
+git pull upstream main
+git checkout -b docs/your-change
+```
+
+Use an appropriate branch prefix such as `feat/`, `fix/`, `docs/`, `test/`, or `chore/`.
+
+### Step 6: Start the Development Server
+
+Start the local development server:
+
+```bash
+npm run dev
+```
+
+Open http://localhost:3000 in your browser.
+
+The development server automatically reloads when you make changes to the source files.
+
+### Step 7: Run Quality Checks
+
+Before submitting your changes, run the relevant checks:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+All applicable checks should pass before opening a Pull Request.
+
 
 ---
 
 ## 🌿 Development Workflow
 
+
 We follow a strict Test-Driven Development (TDD) cycle for cipher implementations:
 
-1. **Branch Naming**:
+1. **Branch Naming**
+
    Create a new branch from `main`. Use descriptive prefixes for branch names:
    - Features: `feat/cipher-playfair`
    - Bug fixes: `fix/worker-timeout`
    - Documentation: `docs/tls-handshake`
    - Housekeeping: `chore/update-deps`
 
-2. **Write Tests First (TDD)**:
+2. **Write Tests First (TDD)**
+
    You must write your unit tests and register test vectors in a test file *before* writing the implementation code.
    - Test files belong in `tests/unit/[category]/[cipher].test.ts`.
    - Your test file must exist and fail in CI before implementation code can be merged.
 
-3. **Implement Feature**:
+3. **Implement Feature**
+
    Write code in the appropriate directories. Ensure no main-thread blocks are introduced.
 
-4. **Verify Quality Gates**:
+   
+4. **Verify Quality Gates**
+
    Run the formatting, typechecking, and testing scripts locally:
+
    ```bash
-   npm lint
-   npm typecheck
-   npm test
-   npm build
+  npm run lint
+  npm run typecheck
+  npm test
+  npm run build
    ```
 
-5. **Submit Pull Request**:
+5. **Submit Pull Request**
+
    Open a PR against the `main` branch. Ensure the PR title conforms to the commit message convention.
+
+
+## 📦 Common npm Commands
+
+The following commands are commonly used during development:
+
+| Command                       | Purpose                                     |
+| ----------------------------- | ------------------------------------------- |
+| `npm install`                 | Install project dependencies                |
+| `npm run dev`                 | Start the local development server          |
+| `npm run build`               | Create a production build                   |
+| `npm start`                   | Start the production server after building  |
+| `npm run lint`                | Run ESLint checks                           |
+| `npm run typecheck`           | Run TypeScript type checking                |
+| `npm test`                    | Run the unit test suite                     |
+| `npm run test:a11y`           | Run accessibility tests                     |
+| `npm run test:e2e`            | Run end-to-end tests                        |
+| `npm run test:e2e:ui`         | Run end-to-end tests with the Playwright UI |
+| `npm run test:security`       | Run security-focused tests                  |
+| `npm run test:visual`         | Run visual regression tests                 |
+| `npm run check:budgets`       | Check bundle budgets                        |
+| `npm run check:bundle-budget` | Run the bundle budget check                 |
+
+### Recommended Pre-PR Check
+
+For most code changes, run:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+For changes affecting accessibility, security, end-to-end behavior, or visual output, also run the relevant specialized test command.
 
 ---
 
@@ -104,11 +222,14 @@ We follow a strict Test-Driven Development (TDD) cycle for cipher implementation
 Follow this step-by-step guide to add a new cryptographic algorithm to the visualizer engine:
 
 ### Step 1: Research and Foundations
+
 Read the corresponding section in [CIPHER_ENGINE.md](./CIPHER_ENGINE.md). Learn the key structure, block transformations, and step tracing schemas required for visual execution.
 > **Note:** If you are implementing a classical cipher that is cryptographically broken (e.g. Beaufort or Playfair), it is considered educational content. You must implement it with `securityStatus: 'broken'` in its metadata and provide a brief explanation of how it is broken.
 
 ### Step 2: Create the Test Suite
+
 Before writing any cipher logic, create its test file at `tests/unit/[category]/[cipher].test.ts`.
+
 Add tests for:
 - Standard NIST/RFC known-answer test vectors.
 - Empty input handling (must throw `INPUT_REQUIRED`).
@@ -195,7 +316,7 @@ updatedAt: 2026-06-12
   ```
 
 ### Step 4: Validate and Compile
-Run `pnpm build`. The frontmatter is validated via Zod schemas at build time. Any missing or malformed fields will trigger a build compilation failure.
+Run `npm run build`. The frontmatter is validated via Zod schemas at build time. Any missing or malformed fields will trigger a build compilation failure.
 
 ### Docs PR Checklist
 - [ ] Frontmatter block is complete and conforms to the Zod schema.

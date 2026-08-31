@@ -1,6 +1,6 @@
 "use client";
 
-import { DEFAULT_SESSION_PRESETS, type SessionPreset } from "@/lib/utils/sessionComparison";
+import { DEFAULT_SESSION_PRESETS, type SessionPreset } from "@/lib/utils/comparison";
 import { Sparkles, ArrowRight } from "lucide-react";
 
 interface SessionPresetSelectorProps {

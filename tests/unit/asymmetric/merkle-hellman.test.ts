@@ -6,6 +6,7 @@ describe('Merkle-Hellman knapsack', () => {
     it('round-trips the textbook vector', () => {
         const v = TEST_VECTORS[0];
         const enc = encrypt(v.input, v.key);
+        expect(enc.output).toBe(v.expected);
         const dec = decrypt(enc.output, v.key);
         expect(dec.output).toBe(v.input);
     });

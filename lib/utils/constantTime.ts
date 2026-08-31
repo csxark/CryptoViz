@@ -72,12 +72,10 @@ export function constantTimeHexEqual(a: string, b: string): boolean {
  * @returns true if strings are equal, false otherwise
  */
 export function constantTimeStringEqual(a: string, b: string): boolean {
-  const len = Math.max(a.length, b.length);
-  let diff = a.length ^ b.length;
-  for (let i = 0; i < len; i++) {
-    diff |= (a.charCodeAt(i) ?? 0) ^ (b.charCodeAt(i) ?? 0);
-  }
-  return diff === 0;
+  const encoder = new TextEncoder();
+  const aBytes = encoder.encode(a);
+  const bBytes = encoder.encode(b);
+  return constantTimeEqual(aBytes, bBytes);
 }
 
 /**

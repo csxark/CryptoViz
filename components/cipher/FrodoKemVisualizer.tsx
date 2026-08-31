@@ -1,4 +1,3 @@
-'use me';
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -133,17 +132,17 @@ export default function FrodoKemVisualizer() {
       {/* Navigation Tabs */}
       <div className="flex border-b border-zinc-200 dark:border-zinc-800">
         {[
-          { id: 'keygen', label: '1. Matrix LWE KeyGen', icon: Key },
-          { id: 'encaps', label: '2. Encapsulation', icon: Cpu },
-          { id: 'decaps', label: '3. Decapsulation', icon: Zap },
-          { id: 'compare', label: '4. FrodoKEM vs ML-KEM', icon: BarChart2 },
+          { id: 'keygen' as const, label: '1. Matrix LWE KeyGen', icon: Key },
+          { id: 'encaps' as const, label: '2. Encapsulation', icon: Cpu },
+          { id: 'decaps' as const, label: '3. Decapsulation', icon: Zap },
+          { id: 'compare' as const, label: '4. FrodoKEM vs ML-KEM', icon: BarChart2 },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
                 isActive
                   ? 'border-teal-500 text-teal-600 dark:border-teal-400 dark:text-teal-400 font-semibold'

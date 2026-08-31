@@ -23,10 +23,26 @@ import {
 
 export { rotl32, rotr32 };
 
+/**
+ * Serpent Options cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface SerpentOptions {
   rounds?: number;
 }
 
+/**
+ * Serpent Round Trace cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface SerpentRoundTrace {
   round: number;
   input: string;
@@ -37,6 +53,14 @@ export interface SerpentRoundTrace {
   sbox: number;
 }
 
+/**
+ * Serpent Encryption Trace cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface SerpentEncryptionTrace {
   plaintextHex: string;
   keyHex: string;
@@ -46,6 +70,14 @@ export interface SerpentEncryptionTrace {
   ciphertextHex: string;
 }
 
+/**
+ * METADATA cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const METADATA: CipherMetadata = {
   name: 'Serpent',
   keySize: 128,
@@ -57,6 +89,14 @@ export const METADATA: CipherMetadata = {
   standardBody: 'NESSIE finalist / AES finalist',
 };
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '00000000000000000000000000000000',
@@ -78,6 +118,17 @@ function cleanHex(value: string): string {
   return value.trim().replace(/\s+/g, '').replace(/^0x/i, '').toUpperCase();
 }
 
+/**
+ * Assert Hex Length cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param value Input required by the Assert Hex Length operation.
+ * @param expectedLength Input required by the Assert Hex Length operation.
+ * @param label Input required by the Assert Hex Length operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function assertHexLength(value: string, expectedLength: number, label: string): string {
   const cleaned = cleanHex(value);
   if (!cleaned) {
@@ -129,6 +180,15 @@ function xorWords(left: number[], right: number[]): number[] {
   return left.map((word, index) => u32(word ^ right[index]));
 }
 
+/**
+ * Linear Transform cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param words Input required by the Linear Transform operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function linearTransform(words: number[]): number[] {
   let [x0, x1, x2, x3] = words.map(u32);
 
@@ -146,6 +206,15 @@ export function linearTransform(words: number[]): number[] {
   return [x0, x1, x2, x3];
 }
 
+/**
+ * Inverse Linear Transform cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param words Input required by the Inverse Linear Transform operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function inverseLinearTransform(words: number[]): number[] {
   let [x0, x1, x2, x3] = words.map(u32);
 
@@ -176,6 +245,15 @@ function padSerpentKey(keyHex: string): Uint8Array {
   return padded;
 }
 
+/**
+ * Generate Serpent Subkeys cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param keyHex Input required by the Generate Serpent Subkeys operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function generateSerpentSubkeys(keyHex: string): number[][] {
   const keyBytes = padSerpentKey(keyHex);
   const w = new Array<number>(140).fill(0);
@@ -206,6 +284,14 @@ export function generateSerpentSubkeys(keyHex: string): number[][] {
   return subkeys;
 }
 
+/**
+ * Encrypt Serpent Block cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encryptSerpentBlock(
   plaintextHex: string,
   keyHex: string,
@@ -229,6 +315,14 @@ export function encryptSerpentBlock(
   return wordsToHex(state);
 }
 
+/**
+ * Decrypt Serpent Block cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function decryptSerpentBlock(
   ciphertextHex: string,
   keyHex: string,
@@ -252,6 +346,14 @@ export function decryptSerpentBlock(
   return wordsToHex(state);
 }
 
+/**
+ * Trace Serpent Encryption cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function traceSerpentEncryption(
   plaintextHex: string,
   keyHex: string,
@@ -296,6 +398,16 @@ export function traceSerpentEncryption(
   };
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param plaintext Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encrypt(plaintext: string, key: string, options?: CipherOptions): CipherResult {
   validateInput(plaintext);
   validateKey(key);
@@ -346,6 +458,16 @@ export function encrypt(plaintext: string, key: string, options?: CipherOptions)
   };
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param ciphertext Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function decrypt(ciphertext: string, key: string, options?: CipherOptions): CipherResult {
   validateInput(ciphertext);
   validateKey(key);
@@ -367,6 +489,14 @@ export function decrypt(ciphertext: string, key: string, options?: CipherOptions
   };
 }
 
+/**
+ * Serpent Implementation Notes cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function serpentImplementationNotes(): string[] {
   return [
     'Supports Serpent block encryption with 128-bit blocks and 128/192/256-bit keys.',

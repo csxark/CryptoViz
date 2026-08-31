@@ -9,6 +9,7 @@ import type {
   ExecutionTimeMetrics,
   MemoryMetrics,
   ThroughputMetrics,
+  LatencyMetrics,
   EnvironmentInfo,
   ProfilingOptions,
 } from './types'

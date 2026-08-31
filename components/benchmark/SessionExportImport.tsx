@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { BenchmarkSession, BenchmarkResult } from "@/types/benchmark";
+import type { BenchmarkSession } from "@/types/benchmark";
 import {
   exportSessionComparisonJSON,
   exportSessionComparisonCSV,
 } from "@/lib/utils/sessionComparison";
+import { reviveBenchmarkSession } from "@/lib/utils/dateReviver";
 import { Download, Upload, FileCode, FileSpreadsheet, Check, AlertCircle } from "lucide-react";
 
 interface SessionExportImportProps {
@@ -83,11 +84,7 @@ export default function SessionExportImport({
           throw new Error("Invalid session format. Missing session ID or results array.");
         }
 
-        importedSession.timestamp = new Date(importedSession.timestamp);
-        importedSession.results = importedSession.results.map((r: BenchmarkResult) => ({
-          ...r,
-          timestamp: new Date(r.timestamp),
-        }));
+        importedSession = reviveBenchmarkSession(importedSession);
 
         if (onImportSession) {
           onImportSession(importedSession);

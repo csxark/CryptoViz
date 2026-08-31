@@ -212,12 +212,13 @@ export function gfExtendedEuclideanWithTrace(a: number, modulus: ModulusHex = 0x
 
   // The inverse is s0 modulo the irreducible polynomial if r0 == 1
   // If r0 != 1, then a is not coprime, but here it's an irreducible polynomial, so r0 will be 1.
-  
+  const finalS = gfDivide(s0, modulus).r
+
   return {
     inputHex: a.toString(16).padStart(2, '0').toUpperCase(),
     modulusHex: modulus.toString(16).toUpperCase(),
     steps,
-    inverseHex: s0.toString(16).padStart(2, '0').toUpperCase()
+    inverseHex: finalS.toString(16).padStart(2, '0').toUpperCase()
   }
 }
 

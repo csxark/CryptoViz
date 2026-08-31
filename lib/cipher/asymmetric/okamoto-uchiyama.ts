@@ -37,6 +37,30 @@ const N = P2 * Q    // n = p²q
 const G = 2n  // Toy generator; real scheme requires careful selection
 const H = modPow(G, N, N)  // h = g^n mod n
 
+/**
+ * Utility helper to sample a cryptographically secure random bigint 
+ * within the strict modular boundary: 1 < r < n
+ */
+function getRandomBigIntBytes(max: bigint): bigint {
+    const byteLength = Math.ceil(max.toString(2).length / 8)
+    const bytes = new Uint8Array(byteLength)
+    while (true) {
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+            crypto.getRandomValues(bytes)
+        } else {
+            for (let i = 0; i < bytes.length; i++) {
+                bytes[i] = Math.floor(Math.random() * 256)
+            }
+        }
+        let hex = ''
+        bytes.forEach(b => hex += b.toString(16).padStart(2, '0'))
+        const r = BigInt('0x' + hex)
+        if (r > 1n && r < max) {
+            return r
+        }
+    }
+}
+
 function mod(a: bigint, m: bigint): bigint {
     return ((a % m) + m) % m
 }
@@ -95,7 +119,7 @@ function modInverse(a: bigint, m: bigint): bigint {
         const quotient = r / newr
         t = t - quotient * newt
         r = r - quotient * newr;
-        [t, newt] = [newt, t]
+        [t, newt] = [newt, t];
         [r, newr] = [newr, r]
     }
     return mod(t, m)
@@ -109,11 +133,7 @@ function parseHex(s: string): number[] {
     return o
 }
 
-function toHex(b: number[]): string {
-    return b.map(x => x.toString(16).padStart(2, '0')).join('')
-}
-
-function ouCore(input: string, key: string, doDecrypt: boolean, instrument: boolean): CipherResult {
+function ouCore(input: string, key: string, doDecrypt: boolean, instrument: boolean, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const steps: CipherStep[] = []
 
@@ -135,8 +155,9 @@ function ouCore(input: string, key: string, doDecrypt: boolean, instrument: bool
         const msgBytes = parseHex(input)
         let m = 0n
         for (const b of msgBytes) m = (m * 256n + BigInt(b)) % P
-        // Random r (toy: fixed for reproducibility; real impl uses CSPRNG)
-        const r = 42n
+        
+        // Random r via WebCrypto CSPRNG (or deterministic option for regression suites)
+        const r = options.r !== undefined ? BigInt(options.r as number | string | bigint) : getRandomBigIntBytes(N)
         const c = encryptBit(m, r)
         outHex = c.toString(16).padStart(16, '0')
 
@@ -171,14 +192,20 @@ function ouCore(input: string, key: string, doDecrypt: boolean, instrument: bool
     return { output: outHex, outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
-    return ouCore(input, key, false, !!options.instrument)
+    return ouCore(input, key, false, !!options.instrument, options)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
-    return ouCore(input, key, true, !!options.instrument)
+    return ouCore(input, key, true, !!options.instrument, options)
 }
 
 /**
@@ -191,11 +218,16 @@ export function homomorphicAdd(c1: string, c2: string): string {
     return ((a * b) % N).toString(16).padStart(16, '0')
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '05',
         key: 'mock',
-        expected: 'mock_ct',
-        description: 'Okamoto-Uchiyama encrypt/decrypt round-trip (message < p)'
+        expected: '00000000000c9910',
+        expectedDecrypt: '05',
+        description: 'Okamoto-Uchiyama encrypt/decrypt round-trip (message < p)',
+        options: { r: 42 }
     }
 ]

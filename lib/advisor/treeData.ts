@@ -284,7 +284,7 @@ export const ADVISOR_TREE: Record<string, DecisionNode> = {
     cipherIds: ['schnorr'],
     title: 'Modern / Aggregatable Signatures',
     rationale: 'Schnorr signatures (like BIP340) offer cleaner mathematical properties than ECDSA and are provably secure under simpler assumptions. They natively support signature aggregation (e.g., MuSig).',
-    tradeOffs: 'Schnorr signatures are highly desirable in cryptocurrency protocols (like Bitcoin) where multi-signature transactions need to be indistinguishable from single signatures. They are not yet natively supported in legacy X.509/TLS ecosystems.',
+    tradeOffs: 'Schnorr signatures are highly desirable in multi-party and threshold signing protocols where aggregate multi-signatures need to be indistinguishable from single signatures. They are not yet natively supported in legacy X.509/TLS ecosystems.',
     commonMistakes: 'As with ECDSA, poor randomness during signing can compromise the private key. Standardized deterministic nonce generation (RFC 6979) should be used.',
   },
   rec_rsa_sig: {

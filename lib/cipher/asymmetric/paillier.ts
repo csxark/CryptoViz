@@ -25,6 +25,7 @@ import { CipherError } from '../../utils/errors'
 import { modInverse } from './rsa'
 import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVector } from '../types'
 import { parseAsymmetricInput } from './asymmetricInput'
+import { cryptoRandomBytes } from '../../random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
   name: 'Paillier',
@@ -54,6 +55,26 @@ function gcd(a: bigint, b: bigint): bigint {
 
 function lcm(a: bigint, b: bigint): bigint {
   return (a * b) / gcd(a, b)
+}
+
+function getRandomPaillierBlindingFactor(n: bigint): bigint {
+  const target = n - 1n
+  const bitLength = target.toString(2).length
+  const byteLength = Math.ceil(bitLength / 8)
+  const excessBits = byteLength * 8 - bitLength
+  const mask = excessBits > 0 ? (0xff >>> excessBits) : 0xff
+
+  let candidate: bigint
+  do {
+    const bytes = cryptoRandomBytes(byteLength)
+    bytes[0] &= mask
+    candidate = 0n
+    for (let i = 0; i < bytes.length; i++) {
+      candidate = (candidate << 8n) | BigInt(bytes[i])
+    }
+  } while (candidate < 1n || candidate >= n || gcd(candidate, n) !== 1n)
+
+  return candidate
 }
 
 function parsePublicKey(keyStr: string): PaillierPublicKey {
@@ -120,9 +141,7 @@ function paillierEncryptCore(
   // reproducible test vectors; real usage should always pick fresh randomness.
   let r = pub.r
   if (r === undefined) {
-    do {
-      r = BigInt(Math.floor(Math.random() * Number(pub.n - 1n)) + 1)
-    } while (gcd(r, pub.n) !== 1n)
+    r = getRandomPaillierBlindingFactor(pub.n)
   }
 
   const steps: CipherStep[] = []
@@ -195,10 +214,32 @@ function modPow(base: bigint, exp: bigint, mod: bigint): bigint {
   return result
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return paillierEncryptCore(input, key, !!options.instrument, options.inputEncoding as string | undefined)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return paillierDecryptCore(input, key, !!options.instrument)
 }
@@ -229,6 +270,14 @@ export function homomorphicScalarMul(c: string, k: string, publicKeyStr: string)
   return modPow(BigInt(c), scalar, n2).toString()
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '15',

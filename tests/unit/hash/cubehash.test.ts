@@ -11,6 +11,6 @@ describe('CubeHash', () => {
     })
 
     it('rejects invalid rounds', () => {
-        expect(() => encrypt('', '', { rounds: 0 })).toThrow('INVALID_INPUT')
+        expect(() => encrypt('', '', { rounds: 0 })).toThrow(/Rounds must be > 0/)
     })
 })

@@ -16,14 +16,26 @@ describe('useCaseRecommendationEngine Unit Tests', () => {
     expect(topIds).toContain('aes')
   })
 
-  it('recommends HMAC / SHA-256 for Password & Key Auth Hashing', () => {
+  it('recommends Argon2, Bcrypt, and PBKDF2 for password storage and warns against fast hashes', () => {
     const recs = recommendCiphersByUseCase({
       goal: 'password',
     })
 
     expect(recs.length).toBeGreaterThan(0)
-    expect(recs.some((r) => r.cipher.id === 'hmac')).toBe(true)
+    const topCipherIds = recs.slice(0, 3).map((r) => r.cipher.id)
+    expect(topCipherIds).toContain('argon2')
+    expect(topCipherIds).toContain('bcrypt')
+    expect(topCipherIds).toContain('pbkdf2')
+
+    // Top recommendations (Argon2, Bcrypt, PBKDF2) reach score >= 90
     expect(recs[0].matchScore).toBeGreaterThanOrEqual(90)
+
+    // Fast hashes / HMAC receive educational warning
+    const hmacRec = recs.find((r) => r.cipher.id === 'hmac')
+    const sha256Rec = recs.find((r) => r.cipher.id === 'sha256')
+    expect(hmacRec?.badgeLabel).toBe('Fast Hash Warning')
+    expect(hmacRec?.rationale).toContain('NOT suitable for password storage')
+    expect(sha256Rec?.badgeLabel).toBe('Fast Hash Warning')
   })
 
   it('recommends ChaCha20 for IoT & Embedded environments', () => {

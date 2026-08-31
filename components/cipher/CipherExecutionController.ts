@@ -7,15 +7,15 @@ import { useCipherWorker } from "../../hooks/useCipherWorker";
 import { clampStepIndex } from "../../lib/utils/visualizerPermalink";
 import { resolveProvenance } from "../../lib/provenance/resolve";
 import type { DataProvenanceMetadata } from "../../lib/provenance";
-import { saveConversionHistory, type ConversionHistoryEntry } from "../../lib/utils/conversionHistory";
-
+import { saveConversionHistory, type ConversionHistoryEntry } from "@/lib/utils/conversionHistory";
+import { createVirtualizedCipherResult } from "@/lib/cipher/stepVirtualization";
 interface Params {
   cipher: CipherDefinition;
   input: string;
   key: string;
   action: "encrypt" | "decrypt";
   autoCompute: boolean;
-  options: { hexInput: boolean; rounds: number; demoMode: boolean; bobSecret: string; aesMode: string; padding: boolean; autoCompute: boolean };
+  options: CipherOptions;
   demoMode: boolean;
   onResult: (result: CipherResult) => void;
   onStepRestore: (step: number) => void;
@@ -33,15 +33,26 @@ export function buildCipherWorkerOptions(
   demoMode: boolean,
 ): CipherOptions {
   const workerOptions: CipherOptions = {
-    instrument: true,
-    signal: undefined,
-    ...options,
-  };
-  if (["des", "3des", "aes", "camellia"].includes(cipherId)) workerOptions.hexInput = options.hexInput;
-  if (["aes", "camellia"].includes(cipherId)) workerOptions.mode = options.aesMode;
-  if (cipherId === "bcrypt") workerOptions.rounds = options.rounds;
+  instrument: true,
+  signal: undefined,
+  traceBufferSize: 32,
+  traceBatchSize: 32,
+  ...options,
+};
+  if (["des", "3des", "aes", "camellia"].includes(cipherId)) {
+    workerOptions.hexInput = typeof options.hexInput === "boolean" ? options.hexInput : true;
+  }
+  if (["aes", "camellia"].includes(cipherId)) {
+    workerOptions.mode = typeof options.aesMode === "string" ? options.aesMode : "ECB";
+  }
+  if (cipherId === "bcrypt") {
+    workerOptions.rounds = typeof options.rounds === "number" ? options.rounds : 4;
+  }
   if (cipherId === "rsa") workerOptions.mode = demoMode ? "demo" : "real";
-  if (cipherId === "dh") { workerOptions.mode = "demo"; workerOptions.bobSecret = options.bobSecret; }
+  if (cipherId === "dh") {
+    workerOptions.mode = "demo";
+    workerOptions.bobSecret = typeof options.bobSecret === "string" ? options.bobSecret : "15";
+  }
   if (cipherId === "camellia") workerOptions.padding = options.padding ? "PKCS7" : "None";
   return workerOptions;
 }
@@ -51,10 +62,10 @@ export function useCipherExecutionController({ cipher, input, key, action, autoC
   const abortRef = useRef<AbortController | null>(null);
 
   const run = useCallback(async () => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    onError(null);
+abortRef.current?.abort();
+
+const controller = new AbortController();
+abortRef.current = controller;    onError(null);
 
     try {
       const workerOptions = buildCipherWorkerOptions(cipher.id, options, demoMode);
@@ -67,10 +78,20 @@ export function useCipherExecutionController({ cipher, input, key, action, autoC
       const provenance = isSimulated(cipher.id, demoMode)
         ? resolveProvenance({ provenance: "simulated", source: "CryptoViz educational simulation" } as DataProvenanceMetadata)
         : resolveProvenance(result.metadata?.provenance);
-      const nextResult: CipherResult = { ...result, metadata: { ...result.metadata, provenance } };
-      onResult(nextResult);
-      onStepRestore(clampStepIndex(0, nextResult.steps?.length ?? 0));
+const nextResult: CipherResult = {
+  ...result,
+  metadata: {
+    ...result.metadata,
+    provenance,
+  },
+};
 
+const visualizedResult = createVirtualizedCipherResult(nextResult);
+
+onResult(visualizedResult);
+onStepRestore(
+  clampStepIndex(0, visualizedResult.steps?.length ?? 0),
+);
       if (nextResult.output !== undefined) {
         const entry: ConversionHistoryEntry = {
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

@@ -455,6 +455,14 @@ function resolveAad(options: CipherOptions): Uint8Array {
 // Public cipher contract
 // ---------------------------------------------------------------------------
 
+/**
+ * Encrypt symmetric cipher export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export async function encrypt(
   input: string,
   key: string,
@@ -486,6 +494,14 @@ export async function encrypt(
   }
 }
 
+/**
+ * Decrypt symmetric cipher export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export async function decrypt(
   input: string,
   key: string,
@@ -533,4 +549,12 @@ export async function decrypt(
 // NIST / McGrew-Viega GCM test vectors are asserted directly in
 // tests/unit/symmetric/aes-gcm.test.ts against gcmEncryptRaw(); this array
 // satisfies the shared cipher-module contract.
+/**
+ * TEST VECTORS symmetric cipher export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = []

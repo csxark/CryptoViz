@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useId } from 'react'
 import { VulnerableMac, forgeLengthExtension, type LengthExtensionStep } from '@/lib/attacks/lengthExtension'
 import AttackControlBar from './AttackControlBar'
 import OracleQueryLogViewer from './OracleQueryLogViewer'
@@ -11,6 +11,10 @@ const dec=(b:Uint8Array)=>new TextDecoder().decode(b)
 export default function LengthExtensionSimulator(){
  const [secret,setSecret]=useState('sup3r-s3cr3t-key'),[message,setMessage]=useState('amount=10&to=alice'),[appendData,setAppendData]=useState('&admin=true'),[secretLength,setSecretLength]=useState(17)
  const [steps,setSteps]=useState<LengthExtensionStep[]>([]),[cursor,setCursor]=useState(-1),[running,setRunning]=useState(false),[leaked,setLeaked]=useState<string|null>(null),[forged,setForged]=useState<string|null>(null),[mac,setMac]=useState<string|null>(null),[accepted,setAccepted]=useState<boolean|null>(null),[error,setError]=useState<string|null>(null)
+ const secretId = useId();
+ const messageId = useId();
+ const appendDataId = useId();
+ const secretLengthId = useId();
  const timer=useRef<ReturnType<typeof setInterval>|null>(null)
  useEffect(()=>()=>{if(timer.current)clearInterval(timer.current)},[])
  function run(){
@@ -27,9 +31,9 @@ export default function LengthExtensionSimulator(){
  const log=steps.slice(0,cursor+1).map((s,i)=>({index:i,label:s.label,detail:s.detail,status:'info' as const}))
  return <div className="space-y-5">
   <div className="grid gap-3 rounded-lg border p-5">
-   <label className="text-sm">Demo server secret (custom target)<input className="mt-1 w-full rounded border px-2 py-2" value={secret} onChange={e=>setSecret(e.target.value)}/></label>
-   <label className="text-sm">Original message<input className="mt-1 w-full rounded border px-2 py-2" value={message} onChange={e=>setMessage(e.target.value)}/></label>
-   <div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">Data to append<input className="mt-1 w-full rounded border px-2 py-2" value={appendData} onChange={e=>setAppendData(e.target.value)}/></label><label className="text-sm">Guessed secret length<input type="number" min={0} className="mt-1 w-full rounded border px-2 py-2" value={secretLength} onChange={e=>setSecretLength(+e.target.value)}/></label></div>
+   <div className="flex flex-col"><label htmlFor={secretId} className="text-sm">Demo server secret (custom target)</label><input id={secretId} className="mt-1 w-full rounded border px-2 py-2" value={secret} onChange={e=>setSecret(e.target.value)}/></div>
+   <div className="flex flex-col"><label htmlFor={messageId} className="text-sm">Original message</label><input id={messageId} className="mt-1 w-full rounded border px-2 py-2" value={message} onChange={e=>setMessage(e.target.value)}/></div>
+   <div className="grid gap-3 sm:grid-cols-2"><div className="flex flex-col"><label htmlFor={appendDataId} className="text-sm">Data to append</label><input id={appendDataId} className="mt-1 w-full rounded border px-2 py-2" value={appendData} onChange={e=>setAppendData(e.target.value)}/></div><div className="flex flex-col"><label htmlFor={secretLengthId} className="text-sm">Guessed secret length</label><input id={secretLengthId} type="number" min={0} className="mt-1 w-full rounded border px-2 py-2" value={secretLength} onChange={e=>setSecretLength(+e.target.value)}/></div></div>
    <button onClick={run} className="w-fit rounded bg-teal-600 px-4 py-2 text-sm font-medium text-white">Prepare interactive extension</button>{error&&<p className="text-sm text-red-600">{error}</p>}
    {leaked&&<p className="break-all text-xs text-zinc-500">Leaked MAC: <code>{leaked}</code></p>}
   </div>

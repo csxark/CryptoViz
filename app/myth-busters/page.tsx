@@ -37,8 +37,7 @@ export default function MythBustersPage() {
          <LearnPageTemplate
         title="Busting Cryptography Misconceptions"
         description="Correcting widespread crypto security myths with rigorous mathematical analysis, technical realities, and Kerckhoffs's principle benchmarks."
-        eyebrow="CRYPTOGRAPHY MYTH BUSTERS #495"
-        breadcrumbs={[
+eyebrow="CRYPTOGRAPHY MYTH BUSTERS"        breadcrumbs={[
           { label: "Learn" },
           { label: "Myth Busters" },
         ]}
@@ -49,8 +48,7 @@ export default function MythBustersPage() {
           <div className="max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3.5 py-1 text-xs font-bold text-red-600 dark:text-red-400">
               <Flame className="h-3.5 w-3.5 animate-pulse" />
-              CRYPTOGRAPHY MYTH BUSTERS #495
-            </div>
+CRYPTOGRAPHY MYTH BUSTERS            </div>
             <h1 id="myth-hero-title" className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-900 dark:text-white">
               Busting Cryptography <span className="text-red-500">Misconceptions</span>
             </h1>

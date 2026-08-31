@@ -48,7 +48,17 @@ function rotr64(x: bigint, n: bigint): bigint {
 }
 
 // ── ASCON permutation: apply numRounds rounds starting at round (12-numRounds)
-function asconPermute(s: BigInt64Array, numRounds: number): void {
+/**
+ * Ascon Permute cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param s Input required by the Ascon Permute operation.
+ * @param numRounds Input required by the Ascon Permute operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export function asconPermute(s: BigInt64Array, numRounds: number): void {
     const start = 12 - numRounds
     const S = [
         BigInt.asUintN(64, s[0]),
@@ -86,6 +96,18 @@ function asconPermute(s: BigInt64Array, numRounds: number): void {
     }
 
     for (let i = 0; i < 5; i++) s[i] = BigInt.asIntN(64, S[i])
+}
+
+/**
+ * 5x64-bit state permutation helper for sponge modes (e.g. Ascon-Hash)
+ */
+export function asconPermutation(state: bigint[], numRounds: number = 12): bigint[] {
+    const s = new BigInt64Array(5)
+    for (let i = 0; i < 5; i++) s[i] = BigInt.asIntN(64, state[i] ?? 0n)
+    asconPermute(s, numRounds)
+    const out: bigint[] = new Array(5)
+    for (let i = 0; i < 5; i++) out[i] = BigInt.asUintN(64, s[i])
+    return out
 }
 
 // ── Byte/hex helpers ──────────────────────────────────────────────────────────
@@ -407,6 +429,14 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
     }
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '00',

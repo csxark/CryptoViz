@@ -116,6 +116,15 @@ function whirlpoolTransform(state: Uint8Array, block: Uint8Array, onRound?: (rou
   }
 }
 
+/**
+ * Whirlpool Hash cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param inputBytes Input required by the Whirlpool Hash operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function whirlpoolHash(inputBytes: Uint8Array, trace?: boolean): { digestHex: string; steps: CipherStep[] } {
   const steps: CipherStep[] = []
   const lenBytes = inputBytes.length
@@ -194,6 +203,17 @@ export function whirlpoolHash(inputBytes: Uint8Array, trace?: boolean): { digest
   return { digestHex, steps }
 }
 
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param _key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, _key: string = '', options: CipherOptions = {}): CipherResult {
   if (input === null || input === undefined || typeof input !== 'string') {
     throw new CipherError('INPUT_REQUIRED', 'Input is required.')
@@ -216,10 +236,26 @@ export function encrypt(input: string, _key: string = '', options: CipherOptions
   }
 }
 
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(): CipherResult {
   throw new CipherError('ONE_WAY_HASH', 'Whirlpool is a one-way cryptographic hash function and cannot be decrypted.')
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '',

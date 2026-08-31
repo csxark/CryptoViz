@@ -28,7 +28,7 @@ export default function SecretRecoveryDocs() {
       </h2>
 
       <ul className="list-disc pl-6 space-y-2">
-        <li>Cryptocurrency wallets</li>
+        <li>Hardware security modules (HSMs)</li>
         <li>Secure key backup</li>
         <li>Distributed key management</li>
         <li>Threshold cryptography</li>

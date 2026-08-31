@@ -36,12 +36,12 @@ export default function InterviewHub() {
 
       <div className="flex gap-3 flex-wrap">
 
-        {["mcq", "flashcard", "scenario"].map((tab) => (
+        {(["mcq", "flashcard", "scenario"] as const).map((tab) => (
 
           <button
             key={tab}
             onClick={() => {
-              setType(tab as any);
+              setType(tab);
               setIndex(0);
               setShowAnswer(false);
             }}

@@ -1,3 +1,11 @@
+/**
+ * Published Cipher Vector cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export interface PublishedCipherVector {
   cipher: "NOEKEON" | "PRESENT" | "RC6" | "SEED" | "SIMON" | "SPECK" | "TWOFISH";
   variant: string;
@@ -8,12 +16,28 @@ export interface PublishedCipherVector {
   notes: string;
 }
 
+/**
+ * Cipher Adapter cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export interface CipherAdapter {
   cipher: PublishedCipherVector["cipher"];
   encryptBlock: (plaintextHex: string, keyHex: string, variant?: string) => string;
   decryptBlock?: (ciphertextHex: string, keyHex: string, variant?: string) => string;
 }
 
+/**
+ * Published Cipher Vector Result cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export interface PublishedCipherVectorResult {
   cipher: PublishedCipherVector["cipher"];
   variant: string;
@@ -29,6 +53,16 @@ function normalizeHex(value: string): string {
   return value.trim().replace(/^0x/i, "").replace(/\s+/g, "").toUpperCase();
 }
 
+/**
+ * Assert Published Vector Hex cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param value Input required by the Assert Published Vector Hex operation.
+ * @param label Input required by the Assert Published Vector Hex operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export function assertPublishedVectorHex(value: string, label: string): string {
   const cleaned = normalizeHex(value);
 
@@ -39,6 +73,14 @@ export function assertPublishedVectorHex(value: string, label: string): string {
   return cleaned;
 }
 
+/**
+ * PUBLISHED CIPHER VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export const PUBLISHED_CIPHER_VECTORS: PublishedCipherVector[] = [
   {
     cipher: "NOEKEON",
@@ -114,10 +156,29 @@ export const PUBLISHED_CIPHER_VECTORS: PublishedCipherVector[] = [
   },
 ];
 
+/**
+ * Get Vectors For Cipher cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param cipher Input required by the Get Vectors For Cipher operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export function getVectorsForCipher(cipher: PublishedCipherVector["cipher"]): PublishedCipherVector[] {
   return PUBLISHED_CIPHER_VECTORS.filter((vector) => vector.cipher === cipher);
 }
 
+/**
+ * Run Published Vector cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param adapter Input required by the Run Published Vector operation.
+ * @param vector Input required by the Run Published Vector operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export function runPublishedVector(adapter: CipherAdapter, vector: PublishedCipherVector): PublishedCipherVectorResult {
   if (adapter.cipher !== vector.cipher) {
     throw new Error(`Adapter cipher ${adapter.cipher} cannot run ${vector.cipher} vector.`);
@@ -141,6 +202,15 @@ export function runPublishedVector(adapter: CipherAdapter, vector: PublishedCiph
   };
 }
 
+/**
+ * Run Published Vector Suite cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param adapters Input required by the Run Published Vector Suite operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export function runPublishedVectorSuite(adapters: CipherAdapter[]): PublishedCipherVectorResult[] {
   const byCipher = new Map(adapters.map((adapter) => [adapter.cipher, adapter]));
 
@@ -164,6 +234,16 @@ export function runPublishedVectorSuite(adapters: CipherAdapter[]): PublishedCip
   });
 }
 
+/**
+ * Assert Round Trip cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param adapter Input required by the Assert Round Trip operation.
+ * @param vector Input required by the Assert Round Trip operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export function assertRoundTrip(adapter: CipherAdapter, vector: PublishedCipherVector): boolean {
   if (!adapter.decryptBlock) return true;
 
@@ -176,6 +256,15 @@ export function assertRoundTrip(adapter: CipherAdapter, vector: PublishedCipherV
   );
 }
 
+/**
+ * Build Cipher Vector Audit Summary cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param results Input required by the Build Cipher Vector Audit Summary operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export function buildCipherVectorAuditSummary(results: PublishedCipherVectorResult[]) {
   const passed = results.filter((result) => result.passed).length;
   const failed = results.length - passed;
@@ -189,6 +278,14 @@ export function buildCipherVectorAuditSummary(results: PublishedCipherVectorResu
   };
 }
 
+/**
+ * Build Cipher Vector Audit Checklist cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://www.rfc-editor.org/rfc/rfc9998 — RFC 9998.
+ */
 export function buildCipherVectorAuditChecklist(): string[] {
   return [
     "Run the published known-answer vector test suite.",

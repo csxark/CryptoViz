@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { SessionDelta } from "@/lib/utils/sessionComparison";
+import type { SessionDelta } from "@/lib/utils/comparison";
 
 export interface ChartDataItem {
   name: string;

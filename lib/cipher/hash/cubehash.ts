@@ -117,15 +117,42 @@ function cubehashCore(input: string, outputBits: number, r: number, instrument: 
     return { output: outBytes.map(b => b.toString(16).padStart(2, '0')).join(''), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
-export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
+/**
+ * Encrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
+export function encrypt(input: string, key: string = '', options: CipherOptions = {}): CipherResult {
     const bits = (options.outputBits as number) || 256
-    const r = (options.rounds as number) || 16
+    const r = options.rounds !== undefined ? (options.rounds as number) : 16
     if (r <= 0) throw new CipherError('INVALID_INPUT', 'Rounds must be > 0.')
     return cubehashCore(input, bits, r, !!options.instrument)
 }
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(): CipherResult {
     throw new CipherError('ONE_WAY_HASH', 'CubeHash is a one-way hash function.')
 }
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '', key: '', expected: 'mock_cubehash_256', description: 'CubeHash16/32-256 empty string' }
 ]

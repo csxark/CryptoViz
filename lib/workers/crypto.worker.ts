@@ -9,7 +9,7 @@ export type CryptoWorkerRequest =
   | { type: "CANCEL"; jobId: string }
 
 export type CryptoWorkerResponse =
-  | { id: string; success: true; result: any }
+  | { id: string; success: true; result: unknown }
   | { id: string; success: false; error: string }
 
 const cancelledJobs = new Set<string>()
@@ -33,7 +33,7 @@ function assertNotCancelled(jobId: string) {
 }
 
 self.onmessage = async (event: MessageEvent<CryptoWorkerRequest>) => {
-  if ((event.data as any)?.type === "CANCEL") {
+  if ("type" in event.data && event.data.type === "CANCEL") {
     cancelledJobs.add(event.data.jobId)
     return
   }
@@ -42,12 +42,12 @@ self.onmessage = async (event: MessageEvent<CryptoWorkerRequest>) => {
   const { id, operation, payload, jobId = id } = request
   try {
     progress(jobId, 0, "Queued", true)
-    let result: any
+    let result: unknown
 
     if (operation === "rsaWizard") {
       progress(jobId, 10, "Preparing RSA parameters", true)
       assertNotCancelled(jobId)
-      result = generateRsaWizard(payload as RsaWizardInput)
+      result = generateRsaWizard(payload)
       progress(jobId, 100, "RSA generation complete", true)
     } else if (operation === "batchModesLab") {
       const { text, flipped, key, iv, modes } = payload
@@ -69,7 +69,7 @@ self.onmessage = async (event: MessageEvent<CryptoWorkerRequest>) => {
         const changed = hexToBytes(ciphertextHex(mode, flipped))
         const diff = original.map((b: string, i: number) => b !== changed[i])
         const changedCount = diff.filter(Boolean).length
-        result.push({ modeId: mode, changed, diff, changedCount, total: changed.length })
+        ;(result as unknown[]).push({ modeId: mode, changed, diff, changedCount, total: changed.length })
         progress(jobId, ((index + 1) / modes.length) * 100, `Processed ${mode}`)
         // Yield to the event loop between modes so CANCEL and higher-priority UI work can be observed.
         await new Promise<void>((resolve) => setTimeout(resolve, 0))

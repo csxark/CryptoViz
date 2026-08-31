@@ -45,7 +45,7 @@ export default function IbePairingsPage() {
                 1. The Bilinear Map $e(P, Q)$
               </h3>
               <p>
-                A bilinear map connects two elliptic curve groups $G_1, G_2$ to a target multiplicative finite field $G_T$. Its defining property is bilinearity: $e(aP, bQ) = e(P, Q)^{ab}$ for all scalars $a, b$.
+                A bilinear map connects two elliptic curve groups $G_1, G_2$ to a target multiplicative finite field $G_T$. Its defining property is bilinearity: $e(aP, bQ) = e(P, Q)^{'{ab}'}$ for all scalars $a, b$.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">

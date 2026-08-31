@@ -8,6 +8,15 @@ export function pad16(length: number): Uint8Array {
   return remainder === 0 ? new Uint8Array(0) : new Uint8Array(16 - remainder);
 }
 
+/**
+ * Pack64LE cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param value Input required by the Pack64LE operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function pack64LE(value: number): Uint8Array {
   const out = new Uint8Array(8);
   let v = BigInt(value);
@@ -18,6 +27,15 @@ export function pack64LE(value: number): Uint8Array {
   return out;
 }
 
+/**
+ * Concat Bytes cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param arrays Input required by the Concat Bytes operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function concatBytes(...arrays: Uint8Array[]): Uint8Array {
   const totalLength = arrays.reduce((acc, curr) => acc + curr.length, 0);
   const out = new Uint8Array(totalLength);
@@ -29,6 +47,16 @@ export function concatBytes(...arrays: Uint8Array[]): Uint8Array {
   return out;
 }
 
+/**
+ * Format Aead Mac Input cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param aad Input required by the Format Aead Mac Input operation.
+ * @param ciphertext Input required by the Format Aead Mac Input operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function formatAeadMacInput(aad: Uint8Array, ciphertext: Uint8Array): Uint8Array {
   return concatBytes(
     aad,

@@ -6,7 +6,7 @@ import {
   exportSessionComparisonCSV,
   getMetricBg,
   getMetricTextColor,
-} from "@/lib/utils/sessionComparison";
+} from "@/lib/utils/comparison";
 import type { BenchmarkSession } from "@/types/benchmark";
 
 describe("sessionComparison utility", () => {

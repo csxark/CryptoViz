@@ -192,19 +192,20 @@ export function validateLessonPackage(value: unknown): LessonPackageValidationRe
   if (!isRecord(value.executionContext)) {
     return { success: false, error: 'Execution context is missing.' }
   }
+  const executionContext = value.executionContext
 
   if (
-    typeof value.executionContext.algorithmId !== 'string' ||
-    !CIPHER_REGISTRY.some((c) => c.id === value.executionContext.algorithmId)
+    typeof executionContext.algorithmId !== 'string' ||
+    !CIPHER_REGISTRY.some((c) => c.id === executionContext.algorithmId)
   ) {
     return { success: false, error: 'Execution context references an unsupported cipher.' }
   }
 
-  if (value.executionContext.direction !== 'encrypt' && value.executionContext.direction !== 'decrypt') {
+  if (executionContext.direction !== 'encrypt' && executionContext.direction !== 'decrypt') {
     return { success: false, error: 'Execution context direction is invalid.' }
   }
 
-  if (typeof value.executionContext.input !== 'string' || typeof value.executionContext.key !== 'string') {
+  if (typeof executionContext.input !== 'string' || typeof executionContext.key !== 'string') {
     return { success: false, error: 'Execution context input and key are required.' }
   }
 

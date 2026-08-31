@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker';
+import { useCipherWorker } from '@/hooks/useCipherWorker';
 import { generateDailyQuiz, getDailyQuizState, saveDailyQuizState, calculateNewStreak, type DailyQuizData, type DailyQuizState } from '../../lib/challenge/daily';
 import { getWrongAnswerExplanation } from '../../lib/challenge/explain';
 import { CIPHER_REGISTRY } from '../../lib/cipher/registry';

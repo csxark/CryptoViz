@@ -1,5 +1,13 @@
 import { CIPHER_REGISTRY } from './registry'
 
+/**
+ * Matrix Entry cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface MatrixEntry {
   id: string
   name: string
@@ -16,6 +24,14 @@ const _getCipherAttr = (id: string, key: keyof MatrixEntry) => {
   return cipher ? cipher[key as keyof typeof cipher] : ''
 }
 
+/**
+ * ALGORITHM MATRIX DATA cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const ALGORITHM_MATRIX_DATA: MatrixEntry[] = [
   // Symmetric
   {
@@ -97,7 +113,7 @@ export const ALGORITHM_MATRIX_DATA: MatrixEntry[] = [
     keySize: 'N/A',
     securityStatus: 'secure',
     speed: 'Fast',
-    applications: ['Digital Signatures', 'Certificates', 'Blockchain'],
+    applications: ['Digital Signatures', 'Certificates', 'Data Integrity'],
   },
   {
     id: 'sha512',

@@ -11,7 +11,7 @@ algorithm against the RC6-32/20/16 specification.
 - Input and output blocks are interpreted as four little-endian 32-bit words.
 - Key bytes are packed into the key schedule in little-endian order.
 - JavaScript multiplication must use `Math.imul` to preserve 32-bit modular
-  multiplication behaviour.
+  multiplication behavior.
 - Rotate counts must be masked to the low five bits for 32-bit rotations.
 - Decryption must exactly reverse final subkey additions, round rotations, and
   initial whitening.

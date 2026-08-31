@@ -1,8 +1,8 @@
 import { CIPHER_REGISTRY } from "../cipher/registry";
 import {
-  safeGetItemJson,
-  safeSetItemJson,
-  safeRemoveItem,
+  getItem,
+  setItem,
+  removeItem,
 } from "./storage";
 
 export const RECENT_CIPHERS_STORAGE_KEY = "cryptoviz-recent-ciphers";
@@ -36,13 +36,13 @@ export function normalizeRecentCipherIds(
 }
 
 export function loadRecentCipherIds(): string[] {
-  const parsed = safeGetItemJson<unknown>(RECENT_CIPHERS_STORAGE_KEY, null);
+  const parsed = getItem<unknown>(RECENT_CIPHERS_STORAGE_KEY, null);
   return parsed !== null ? normalizeRecentCipherIds(parsed) : [];
 }
 
 export function saveRecentCipherIds(ids: string[]): string[] {
   const normalized = normalizeRecentCipherIds(ids);
-  safeSetItemJson(RECENT_CIPHERS_STORAGE_KEY, normalized);
+  setItem(RECENT_CIPHERS_STORAGE_KEY, normalized);
   return normalized;
 }
 
@@ -62,5 +62,5 @@ export function recordRecentCipher(
 }
 
 export function clearRecentCipherIds(): void {
-  safeRemoveItem(RECENT_CIPHERS_STORAGE_KEY);
+  removeItem(RECENT_CIPHERS_STORAGE_KEY);
 }

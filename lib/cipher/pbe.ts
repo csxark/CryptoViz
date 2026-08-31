@@ -3,6 +3,14 @@ import { CipherError } from '../utils/errors'
 import type { WorkerRequest } from '../../types/worker'
 import { sharedCipherPool } from '../workers/sharedPool'
 
+/**
+ * Pbe Payload cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface PbePayload {
   algorithm: 'AES-256-CBC'
   kdf: 'PBKDF2'
@@ -13,6 +21,14 @@ export interface PbePayload {
   ciphertext: string
 }
 
+/**
+ * Pbe Encrypt Options cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface PbeEncryptOptions {
   iterations?: number
   hash?: 'SHA-256' | 'SHA-512'
@@ -56,6 +72,14 @@ async function deriveKeyViaWorker(
   return response.payload.result
 }
 
+/**
+ * Pbe Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export async function pbeEncrypt(
   plaintext: string,
   password: string,
@@ -90,6 +114,14 @@ export async function pbeEncrypt(
   return { payload, derivedKeyHex }
 }
 
+/**
+ * Pbe Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export async function pbeDecrypt(
   payload: PbePayload,
   password: string

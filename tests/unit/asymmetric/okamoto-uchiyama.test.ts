@@ -12,9 +12,6 @@ describe('Okamoto-Uchiyama', () => {
     })
 
     it('decryption uses ONLY p (never references q)', () => {
-        // Verified by code inspection: decryptWithPOnly function references
-        // only P and P2 (p²), never Q. This is the scheme's defining asymmetry.
-        // The successful round-trip confirms the p-only path works.
         const pt = '0a'
         const ct = encrypt(pt, 'mock')
         const recovered = decrypt(ct.output, 'p_only')
@@ -36,21 +33,33 @@ describe('Okamoto-Uchiyama', () => {
     })
 
     it('probabilistic encryption: same message, different randomness', () => {
-        // NOTE: With our toy fixed-r implementation, this tests the
-        // mathematical property would hold with varying r. A full implementation
-        // would randomize r per call.
         const pt = '05'
         const c1 = encrypt(pt, 'mock')
         const c2 = encrypt(pt, 'mock')
-        // With fixed r=42, outputs are identical (expected for toy)
-        // Real implementation: would differ with overwhelming probability
-        expect(c1.output).toBeDefined()
-        expect(c2.output).toBeDefined()
+        expect(c1.output).not.toBe(c2.output)
+        expect(decrypt(c1.output, 'p_only').output).toBe(pt)
+        expect(decrypt(c2.output, 'p_only').output).toBe(pt)
+    })
+
+    it('deterministic mode with explicit r option', () => {
+        const pt = '05'
+        const c = encrypt(pt, 'mock', { r: 42 })
+        expect(c.output).toBe('00000000000c9910')
+        expect(decrypt(c.output, 'p_only').output).toBe(pt)
     })
 
     it('metadata flags secure status', () => {
         const result = encrypt('05', 'mock')
         expect(result.metadata.securityStatus).toBe('secure')
         expect(result.metadata.name).toBe('Okamoto-Uchiyama')
+    })
+
+    it('asserts round-trip decrypt(encrypt(m)) === m across multiple message inputs', () => {
+        const messages = ['01', '05', '0a', '20', '50']
+        for (const msg of messages) {
+            const encrypted = encrypt(msg, 'mock')
+            const decrypted = decrypt(encrypted.output, 'p_only')
+            expect(decrypted.output).toBe(msg)
+        }
     })
 })

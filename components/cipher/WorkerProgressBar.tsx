@@ -1,6 +1,6 @@
 
 'use client'
-import type { CipherWorkerProgress } from '../../lib/hooks/useCipherWorker'
+import type { CipherWorkerProgress } from '@/hooks/useCipherWorker'
 
 interface WorkerProgressBarProps {
   progress: CipherWorkerProgress | null

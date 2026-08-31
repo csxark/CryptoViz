@@ -3,7 +3,7 @@ import type { TranslationSchema } from '../types'
 export const en: TranslationSchema = {
   common: {
     title: 'CryptoViz',
-    subtitle: 'Interact with Cryptography, Visualised in Real-Time.',
+    subtitle: 'Interact with Cryptography, Visualized in Real-Time.',
     loading: 'Loading…',
     error: 'An error occurred',
     success: 'Operation completed successfully',

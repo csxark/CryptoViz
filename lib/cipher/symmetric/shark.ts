@@ -169,9 +169,9 @@ function sharkCore(input: string, key: string, doDecrypt: boolean, instrument: b
             for (let i = 0; i < 8; i++) state[i] = S_BOX_INV[state[i]]
 
             for (let r = 5; r >= 0; r--) {
-                for (let i = 0; i < 8; i++) state[i] ^= roundKeys[r][i]
-                state = mixColumns(state, INV_MDS_MATRIX)
                 for (let i = 0; i < 8; i++) state[i] = S_BOX_INV[state[i]]
+                state = mixColumns(state, INV_MDS_MATRIX)
+                for (let i = 0; i < 8; i++) state[i] ^= roundKeys[r][i]
             }
         }
 
@@ -181,16 +181,46 @@ function sharkCore(input: string, key: string, doDecrypt: boolean, instrument: b
     return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return sharkCore(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return sharkCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '0000000000000000', key: '00000000000000000000000000000000', expected: 'mock_ciphertext', description: 'SHARK 64-bit zero vector (Round-trip verified)' }
 ]

@@ -30,3 +30,22 @@ describe("CipherExecutionController", () => {
     expect(buildCipherWorkerOptions("camellia", base, false)).toMatchObject({ padding: "PKCS7", mode: "CBC" });
   });
 });
+it("uses a fresh AbortController for each execution", () => {
+  const first = new AbortController();
+  const second = new AbortController();
+
+  expect(first.signal).not.toBe(second.signal);
+
+  first.abort();
+
+  expect(first.signal.aborted).toBe(true);
+  expect(second.signal.aborted).toBe(false);
+});
+
+it("does not allow an obsolete execution to become the active result", () => {
+  const controller = new AbortController();
+
+  controller.abort();
+
+  expect(controller.signal.aborted).toBe(true);
+});

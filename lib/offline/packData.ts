@@ -65,7 +65,7 @@ export const OFFLINE_PACKS: OfflinePack[] = [
     topics: ['SHA-256 State Compression', 'MD5 & SHA-1', 'SHA-3 (Keccak)', 'Merkle Tree Proofs', 'PBKDF2 & Scrypt'],
     docItems: [
       { slug: 'sha256-compression', title: 'SHA-256 Internal Structure', description: 'Message padding, 64-round compression loop, and digest generation.' },
-      { slug: 'merkle-trees', title: 'Merkle Tree Integrity Proofs', description: 'Binary tree hashing for tamper-proof verification in blockchains.' },
+      { slug: 'merkle-trees', title: 'Merkle Tree Integrity Proofs', description: 'Binary tree hashing for tamper-proof verification in distributed and file systems.' },
       { slug: 'key-derivation', title: 'Password-Based Key Derivation', description: 'Salting, iteration counting, and memory-hard hash construction.' }
     ],
     cipherItems: [

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import {
   PipelineStage,
@@ -10,6 +10,7 @@ import {
   importPipelineFromJson,
   StageCategory,
 } from "@/lib/pipeline/pipelineEngine";
+import type { PipelineExecutionResult } from "@/lib/pipeline/pipelineTypes";
 import {
   Plus,
   Trash2,
@@ -26,6 +27,8 @@ import {
   Code,
   ShieldCheck,
   Zap,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 
 const AVAILABLE_ALGORITHMS: Array<{
@@ -141,6 +144,11 @@ const CATEGORY_BADGES: Record<
     text: "text-purple-600 dark:text-purple-400",
     label: "HASH",
   },
+  kdf: {
+    bg: "bg-cyan-500/10 border-cyan-500/30",
+    text: "text-cyan-600 dark:text-cyan-400",
+    label: "KDF",
+  },
   sign: {
     bg: "bg-amber-500/10 border-amber-500/30",
     text: "text-amber-600 dark:text-amber-400",
@@ -161,23 +169,29 @@ export default function CipherPipelineBuilder() {
     {
       id: "stg-1",
       category: "encode",
-      algorithm: "base64-encode",
+      cipherId: "base64-encode",
       name: "Base64 Encode",
       params: {},
+      inputType: "utf8-text",
+      outputType: "base64-string",
     },
     {
       id: "stg-2",
       category: "encrypt",
-      algorithm: "caesar",
+      cipherId: "caesar",
       name: "Caesar Encrypt",
       params: { shift: "5" },
+      inputType: "utf8-text",
+      outputType: "utf8-text",
     },
     {
       id: "stg-3",
       category: "hash",
-      algorithm: "sha256",
+      cipherId: "sha256",
       name: "SHA-256 Digest",
       params: {},
+      inputType: "utf8-text",
+      outputType: "hex-string",
     },
   ]);
   const [copied, setCopied] = useState<boolean>(false);
@@ -193,18 +207,33 @@ export default function CipherPipelineBuilder() {
   });
   const [importError, setImportError] = useState<string | null>(null);
 
-  const result = useMemo(
-    () => executePipeline(inputText, stages),
-    [inputText, stages],
-  );
+  const [result, setResult] = useState<PipelineExecutionResult>({
+    initialInput: inputText,
+    finalOutput: "",
+    stageResults: [],
+    success: false,
+    totalDurationMs: 0,
+  });
+
+  useEffect(() => {
+    let active = true;
+    void executePipeline(inputText, stages).then((nextResult) => {
+      if (active) setResult(nextResult);
+    });
+    return () => {
+      active = false;
+    };
+  }, [inputText, stages]);
 
   const addStage = (algChoice: (typeof AVAILABLE_ALGORITHMS)[number]) => {
     const newStage: PipelineStage = {
       id: `stg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       category: algChoice.category,
-      algorithm: algChoice.algorithm,
+      cipherId: algChoice.algorithm,
       name: algChoice.name,
       params: { ...algChoice.defaultParams },
+      inputType: "utf8-text",
+      outputType: algChoice.category === "hash" ? "hex-string" : "utf8-text",
     };
     setStages((prev) => [...prev, newStage]);
   };
@@ -265,8 +294,8 @@ export default function CipherPipelineBuilder() {
       setStages(importedStages);
       setShowImportModal(false);
       setImportJsonInput("");
-    } catch (err: any) {
-      setImportError(err.message || "Invalid JSON format");
+    } catch (err: unknown) {
+      setImportError(err instanceof Error ? err.message : "Invalid JSON format");
     }
   };
 
@@ -390,7 +419,7 @@ export default function CipherPipelineBuilder() {
                   (r) => r.stageId === stage.id,
                 );
                 const algInfo = AVAILABLE_ALGORITHMS.find(
-                  (a) => a.algorithm === stage.algorithm,
+                  (a) => a.algorithm === stage.cipherId,
                 );
 
                 return (
@@ -617,18 +646,18 @@ export default function CipherPipelineBuilder() {
           </div>
         </div>
       )}
-    {result && (
-      <section className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-5">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase text-purple-600">
-          {result.success ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-          {result.cancelled ? 'Pipeline cancelled' : result.success ? 'Pipeline completed' : 'Pipeline failed'} · {result.totalDurationMs.toFixed(2)} ms
-        </div>
-        <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-xl bg-white p-3 font-mono text-xs dark:bg-zinc-950">
-          {result.finalOutput}
-        </pre>
-      </section>
-    )}
-  </div>
+      {result && (
+        <section className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-5">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase text-purple-600">
+            {result.success ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+            {result.cancelled ? 'Pipeline cancelled' : result.success ? 'Pipeline completed' : 'Pipeline failed'} · {result.totalDurationMs.toFixed(2)} ms
+          </div>
+          <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-xl bg-white p-3 font-mono text-xs dark:bg-zinc-950">
+            {result.finalOutput}
+          </pre>
+        </section>
+      )}
+    </div>
   )
 }
 

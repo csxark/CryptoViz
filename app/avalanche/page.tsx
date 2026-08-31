@@ -10,7 +10,7 @@ export default function AvalanchePage() {
       <Navbar />
 
       <ReferencePageTemplate
-        title="Avalanche-effect visualizer"
+        title="Avalanche Effect Visualizer"
         description="Type an input, flip a single bit, and watch the output cascade. A strong primitive turns that 1-bit change into roughly a 50% output change — the avalanche effect."
         eyebrow="Diffusion workspace"
         breadcrumbs={[

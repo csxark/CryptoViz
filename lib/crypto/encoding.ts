@@ -3,6 +3,10 @@
  * High-performance, zero-dependency byte manipulation layer with strict malformed input validation.
  */
 
+function isUint8Array(val: unknown): val is Uint8Array {
+  return val instanceof Uint8Array || Object.prototype.toString.call(val) === '[object Uint8Array]';
+}
+
 // Lookup tables for high-performance hex conversion
 const HEX_LOOKUP: string[] = new Array(256);
 const HEX_MAP: Record<string, number> = {};
@@ -34,7 +38,7 @@ export function utf8ToBytes(str: string): Uint8Array {
  * Throws an Error if the byte sequence contains invalid UTF-8 codepoints.
  */
 export function bytesToUtf8(bytes: Uint8Array): string {
-  if (!(bytes instanceof Uint8Array)) {
+  if (!isUint8Array(bytes)) {
     throw new TypeError("Input must be a Uint8Array");
   }
   try {
@@ -79,7 +83,7 @@ export function hexToBytes(hex: string): Uint8Array {
  * Converts a Uint8Array byte buffer into a hex string.
  */
 export function bytesToHex(bytes: Uint8Array): string {
-  if (!(bytes instanceof Uint8Array)) {
+  if (!isUint8Array(bytes)) {
     throw new TypeError("Input must be a Uint8Array");
   }
   let hex = "";
@@ -122,7 +126,7 @@ export function base64ToBytes(base64: string): Uint8Array {
  * Converts a Uint8Array byte buffer into a base64 string.
  */
 export function bytesToBase64(bytes: Uint8Array): string {
-  if (!(bytes instanceof Uint8Array)) {
+  if (!isUint8Array(bytes)) {
     throw new TypeError("Input must be a Uint8Array");
   }
   let binaryString = "";
@@ -141,7 +145,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
 export function arrayBufferToBytes(
   buffer: ArrayBufferLike | ArrayBufferView
 ): Uint8Array {
-  if (buffer instanceof Uint8Array) {
+  if (isUint8Array(buffer)) {
     return buffer;
   }
   if (ArrayBuffer.isView(buffer)) {
@@ -161,7 +165,7 @@ export function arrayBufferToBytes(
  * Extracts a standalone ArrayBuffer copy from a Uint8Array.
  */
 export function bytesToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  if (!(bytes instanceof Uint8Array)) {
+  if (!isUint8Array(bytes)) {
     throw new TypeError("Input must be a Uint8Array");
   }
   return bytes.buffer.slice(
@@ -195,7 +199,7 @@ export function numberArrayToBytes(numbers: number[]): Uint8Array {
  * Converts a Uint8Array into a plain JavaScript number array.
  */
 export function bytesToNumberArray(bytes: Uint8Array): number[] {
-  if (!(bytes instanceof Uint8Array)) {
+  if (!isUint8Array(bytes)) {
     throw new TypeError("Input must be a Uint8Array");
   }
   return Array.from(bytes);

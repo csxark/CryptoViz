@@ -48,8 +48,7 @@ export default function GlossaryPage() {
          <ReferencePageTemplate
         title="Glossary"
         description="Explore essential concepts, mathematical formulas, and definitions. All CryptoViz documentation articles automatically cross-link terminology to this explorer."
-        eyebrow="INTERACTIVE TERMINOLOGY & GLOSSARY #509"
-        breadcrumbs={[
+eyebrow="CRYPTOGRAPHIC TERMINOLOGY & GLOSSARY"        breadcrumbs={[
           { label: 'Reference' },
           { label: 'Glossary' },
         ]}

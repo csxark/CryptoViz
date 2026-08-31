@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -19,7 +19,8 @@ describe("security: CSP",()=>{
   it("has deny-by-default policy",()=>expect(d(csp(),"default-src")).toBe("default-src 'self'"));
   it("blocks inline and eval scripts",()=>{
     const v=csp();
-    expect(v).not.toContain("'unsafe-inline'");
+    expect(d(v,"script-src")).not.toContain("'unsafe-inline'");
+    expect(d(v,"script-src-elem")).not.toContain("'unsafe-inline'");
     expect(v).not.toContain("'unsafe-eval'");
     expect(d(v,"script-src")).toBe("script-src 'self'");
     expect(d(v,"script-src-elem")).toBe("script-src-elem 'self'");

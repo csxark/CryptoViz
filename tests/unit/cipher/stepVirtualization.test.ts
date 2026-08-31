@@ -47,3 +47,9 @@ describe('step virtualization', () => {
     expect(parsed[5].outputState).toBe('out-5')
   })
 })
+  it('supports iteration methods without crashing or dropping items', () => {
+    const result = createVirtualizedCipherResult(makeResult(20))
+    expect(() => [...result.steps]).not.toThrow()
+    expect(result.steps.map(s => s.label)).toHaveLength(20)
+    expect(result.steps.filter(() => true)).toHaveLength(20)
+  })

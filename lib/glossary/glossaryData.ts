@@ -115,7 +115,7 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     definition: 'A tree in which every leaf node is labelled with the cryptographic hash of a data block, and every non-leaf node is labelled with the cryptographic hash of its child nodes.',
     relatedCipherId: 'merkle',
     relatedDocSlug: 'merkle-trees',
-    tags: ['Binary Tree', 'Data Integrity', 'Blockchain']
+    tags: ['Binary Tree', 'Data Integrity', 'Hash Trees']
   },
   {
     id: 'brute-force',

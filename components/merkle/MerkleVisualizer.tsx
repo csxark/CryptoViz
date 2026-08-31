@@ -12,7 +12,7 @@ import {
   Info,
   CheckCircle,
   XCircle,
-  Coins,
+  Database,
   FileText,
   GitBranch,
   Copy,
@@ -31,14 +31,14 @@ import {
 
 const PRESETS = [
   {
-    name: 'Bitcoin Transactions',
-    icon: Coins,
-    description: 'Simplified financial transaction ledger.',
+    name: 'Audit Log Records',
+    icon: Database,
+    description: 'Cryptographic tamper-evident audit log ledger.',
     leaves: [
-      'Tx0: Alice -> Bob 0.25 BTC',
-      'Tx1: Charlie -> Dave 1.5 BTC',
-      'Tx2: Eve -> Frank 0.08 BTC',
-      'Tx3: Grace -> Heidi 2.0 BTC'
+      'Log0: User Login event',
+      'Log1: Config Change auth',
+      'Log2: Certificate Issued',
+      'Log3: Permission Granted'
     ]
   },
   {
@@ -282,7 +282,7 @@ export default function MerkleVisualizer() {
                 onChange={(e) => setOddStrategy(e.target.value as OddStrategy)}
                 className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
               >
-                <option value="duplicate">Duplicate last node (Bitcoin)</option>
+                <option value="duplicate">Duplicate last node (Standard RFC 6962)</option>
                 <option value="promote">Promote last node (IPFS / Git)</option>
               </select>
             </div>

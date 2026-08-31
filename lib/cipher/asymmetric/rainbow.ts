@@ -76,7 +76,7 @@ function invertAffine(map: AffineMap, y: number[]): number[] {
         }
         if (match) return x
     }
-    throw new CipherError('INTERNAL_ERROR', 'Affine map not invertible for given y')
+    throw new CipherError('INVALID_INPUT', 'Affine map not invertible for given y')
 }
 
 // Random affine map generation
@@ -246,7 +246,7 @@ function rainbowCore(input: string, key: string, doDecrypt: boolean, instrument:
         const evaluated = applyAffine(pub, sigVec.slice(0, M_EQS))
         const valid = evaluated.length === M_EQS
 
-        if (!valid) throw new CipherError('VERIFICATION_FAILED', 'Rainbow signature invalid')
+        if (!valid) throw new CipherError('INVALID_INPUT', 'Rainbow signature invalid')
 
         outHex = '01'
 
@@ -265,16 +265,46 @@ function rainbowCore(input: string, key: string, doDecrypt: boolean, instrument:
     return { output: outHex, outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return rainbowCore(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return rainbowCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '010203040506',

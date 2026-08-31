@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import SessionComparisonVisualizer from "@/components/benchmark/SessionComparisonVisualizer";
-import { DEFAULT_SESSION_PRESETS } from "@/lib/utils/sessionComparison";
+import { DEFAULT_SESSION_PRESETS } from "@/lib/utils/comparison";
 
 // Mock Recharts ResponsiveContainer to prevent width/height 0 in JSDOM
 vi.mock("recharts", async () => {

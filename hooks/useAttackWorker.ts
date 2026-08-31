@@ -91,7 +91,7 @@ export function useAttackWorker() {
         },
         transferList,
         (step) => {
-          if (onStep) onStep(step as AttackStep)
+          if (onStep) onStep(step as unknown as AttackStep)
         }
       ).then(result => {
         const { plaintext, queryCount } = result as { plaintext: ArrayBuffer; queryCount: number }
@@ -146,7 +146,7 @@ export function useAttackWorker() {
         },
         [],
         (step) => {
-          if (onStep) onStep(step as MitmStep)
+          if (onStep) onStep(step as unknown as MitmStep)
         }
       )
       setLoading(false)

@@ -8,6 +8,10 @@ import {
   safeSetItemJson,
   safeRemoveItem,
   safeClear,
+  getItem,
+  setItem,
+  removeItem,
+  clearStorage,
 } from "@/lib/utils/storage";
 
 describe("storage utility wrapper", () => {
@@ -93,6 +97,51 @@ describe("storage utility wrapper", () => {
       expect(safeGetItemJson("number-key", ["default"], isStringArray)).toEqual([
         "default",
       ]);
+    });
+  });
+
+  describe("getItem & setItem generic typed wrappers", () => {
+    it("stores and retrieves strongly typed data", () => {
+      interface UserSettings {
+        theme: string;
+        notifications: boolean;
+      }
+      const settings: UserSettings = { theme: "dark", notifications: true };
+
+      setItem<UserSettings>("user-settings", settings);
+      const retrieved = getItem<UserSettings>("user-settings", {
+        theme: "light",
+        notifications: false,
+      });
+
+      expect(retrieved).toEqual(settings);
+    });
+
+    it("returns defaultValue when key is missing in getItem", () => {
+      const defaultList = ["item1", "item2"];
+      const retrieved = getItem<string[]>("non-existent-key", defaultList);
+      expect(retrieved).toEqual(defaultList);
+    });
+
+    it("returns defaultValue when stored data is corrupted", () => {
+      localStorage.setItem("corrupt-typed-key", "{invalid:json}");
+      const fallbackObj = { count: 0 };
+      const retrieved = getItem("corrupt-typed-key", fallbackObj);
+      expect(retrieved).toEqual(fallbackObj);
+    });
+
+    it("removes item safely with removeItem", () => {
+      setItem("temp-key", "temp-val");
+      removeItem("temp-key");
+      expect(getItem("temp-key", "fallback")).toBe("fallback");
+    });
+
+    it("clears storage with clearStorage", () => {
+      setItem("k1", "v1");
+      setItem("k2", "v2");
+      clearStorage();
+      expect(getItem("k1", "fallback")).toBe("fallback");
+      expect(getItem("k2", "fallback")).toBe("fallback");
     });
   });
 

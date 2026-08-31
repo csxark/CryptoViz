@@ -47,4 +47,17 @@ describe('ElGamal Unit Tests', () => {
     expect(result.steps.length).toBe(2) // key setup + 1 block
     expect(result.steps[0].isMilestone).toBe(true)
   })
+
+  it('asserts strict round-trip decryption across multiple messages and keys', () => {
+    const testCases = [
+      { msg: '3', pub: '23,5,8', priv: '23,5,6' },
+      { msg: '12', pub: '23,5,8', priv: '23,5,6' },
+      { msg: '20', pub: '23,5,8', priv: '23,5,6' },
+    ]
+    for (const { msg, pub, priv } of testCases) {
+      const encrypted = encrypt(msg, pub)
+      const decrypted = decrypt(encrypted.output, priv)
+      expect(decrypted.output).toBe(msg)
+    }
+  })
 })

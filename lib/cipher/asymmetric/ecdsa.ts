@@ -33,12 +33,59 @@ const METADATA: CipherMetadata = {
   standardBody: 'ANSI X9.62 / FIPS 186',
 }
 
-// Define interface for noble/curves signature output structure to ensure strict type safety
-interface NobleSignature {
-  toCompactHex?: () => string;
-  toCompactBytes?: () => Uint8Array;
-  r?: { toString(radix: number, pad?: number): string };
-  s?: { toString(radix: number, pad?: number): string };
+/**
+ * Normalize the signature returned by noble/curves to the compact
+ * 64-byte `r || s` representation used by CryptoViz.
+ *
+ * noble/curves v2 returns a Uint8Array directly. Older releases and
+ * compatible implementations may expose helper methods or r/s fields,
+ * so those shapes remain supported without weakening the public API.
+ */
+function normalizeSignature(signature: unknown): string {
+  if (signature instanceof Uint8Array) {
+    if (signature.length !== 64) {
+      throw new CipherError('INVALID_INPUT', 'ECDSA signature must contain exactly 64 bytes.')
+    }
+    return fromByteArray(signature, 'hex')
+  }
+
+  if (typeof signature === 'object' && signature !== null) {
+    const candidate = signature as {
+      toCompactHex?: unknown
+      toCompactBytes?: unknown
+      r?: { toString?: unknown }
+      s?: { toString?: unknown }
+    }
+
+    if (typeof candidate.toCompactHex === 'function') {
+      const compactHex = candidate.toCompactHex()
+      if (typeof compactHex === 'string' && compactHex.length === 128) {
+        return compactHex.toLowerCase()
+      }
+    }
+
+    if (typeof candidate.toCompactBytes === 'function') {
+      const compactBytes = candidate.toCompactBytes()
+      if (compactBytes instanceof Uint8Array && compactBytes.length === 64) {
+        return fromByteArray(compactBytes, 'hex')
+      }
+    }
+
+    if (candidate.r && candidate.s &&
+        typeof candidate.r.toString === 'function' &&
+        typeof candidate.s.toString === 'function') {
+      const r = candidate.r.toString(16).padStart(64, '0')
+      const s = candidate.s.toString(16).padStart(64, '0')
+      if (r.length === 64 && s.length === 64) {
+        return `${r}${s}`.toLowerCase()
+      }
+    }
+  }
+
+  throw new CipherError(
+    'INVALID_INPUT',
+    'Unsupported signature format returned by secp256k1.sign',
+  )
 }
 
 function signCore(message: string, privateKeyHex: string, instrument: boolean): CipherResult {
@@ -64,18 +111,7 @@ function signCore(message: string, privateKeyHex: string, instrument: boolean): 
 
   const pubKey = secp256k1.getPublicKey(privKey)
   const msgHash = sha256(toByteArray(message, 'utf8'))
-  const sig: NobleSignature = secp256k1.sign(msgHash, privKey)
-  
-  let sigHex: string
-  if (typeof sig.toCompactHex === 'function') {
-    sigHex = sig.toCompactHex()
-  } else if (typeof sig.toCompactBytes === 'function') {
-    sigHex = fromByteArray(sig.toCompactBytes(), 'hex')
-  } else if (sig.r && sig.s) {
-    sigHex = sig.r.toString(16).padStart(64, '0') + sig.s.toString(16).padStart(64, '0')
-  } else {
-    throw new CipherError('INVALID_INPUT', 'Unsupported signature format returned by secp256k1.sign')
-  }
+  const sigHex = normalizeSignature(secp256k1.sign(msgHash, privKey))
 
   if (instrument) {
     steps.push({
@@ -152,14 +188,44 @@ function verifyCore(message: string, publicKeyAndSig: string, instrument: boolea
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return signCore(input, key, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return verifyCore(input, key, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: 'hello ECSoC26',

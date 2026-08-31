@@ -36,17 +36,29 @@ export const UniversalCipherDebugger = memo(function UniversalCipherDebugger({
     }
   }, [initialStep, steps.length]);
 
+  const handleStepChange = useCallback((nextStep: number) => {
+    const clampedStep = Math.min(Math.max(nextStep, 0), Math.max(steps.length - 1, 0));
+    setCurrentStep(clampedStep);
+    const targetTop = clampedStep * ITEM_HEIGHT;
+    setScrollTop(targetTop);
+    if (containerRef.current) {
+      containerRef.current.scrollTop = targetTop;
+    }
+  }, [steps.length]);
+
   // Keep current active step scrolled into view on step advancement
   useEffect(() => {
-    if (!containerRef.current) return;
-    const container = containerRef.current;
     const targetTop = currentStep * ITEM_HEIGHT;
-    const targetBottom = targetTop + ITEM_HEIGHT;
+    setScrollTop(targetTop);
+    if (containerRef.current) {
+      const container = containerRef.current;
+      const targetBottom = targetTop + ITEM_HEIGHT;
 
-    if (targetTop < container.scrollTop) {
-      container.scrollTop = targetTop;
-    } else if (targetBottom > container.scrollTop + container.clientHeight) {
-      container.scrollTop = targetBottom - container.clientHeight;
+      if (targetTop < container.scrollTop) {
+        container.scrollTop = targetTop;
+      } else if (targetBottom > container.scrollTop + container.clientHeight) {
+        container.scrollTop = targetBottom - container.clientHeight;
+      }
     }
   }, [currentStep]);
 
@@ -133,7 +145,7 @@ export const UniversalCipherDebugger = memo(function UniversalCipherDebugger({
           <StepAnimator
             steps={steps}
             currentStep={currentStep}
-            onStepChange={setCurrentStep}
+            onStepChange={handleStepChange}
             speed={speed}
             onSpeedChange={onSpeedChange}
             onCopyStepLink={onCopyStepLink}

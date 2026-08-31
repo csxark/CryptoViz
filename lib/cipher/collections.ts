@@ -1,3 +1,11 @@
+/**
+ * Cipher Collection cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CipherCollection {
   id: string;
   name: string;
@@ -6,6 +14,14 @@ export interface CipherCollection {
   features: string[];
 }
 
+/**
+ * CIPHER COLLECTIONS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const CIPHER_COLLECTIONS: CipherCollection[] = [
   {
     id: 'aes-family',

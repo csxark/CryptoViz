@@ -34,4 +34,26 @@ describe('Autokey Vigenère', () => {
   it('throws INPUT_REQUIRED on empty input', () => {
     expect(() => encrypt('', 'QUEENLY')).toThrow(CipherError)
   })
+
+  it('retains spaces, punctuation, and casing when preserveFormatting: true (#1723)', () => {
+    const key = 'QUEENLY'
+    const input = 'Attack At Dawn!'
+    const options = { preserveFormatting: true }
+
+    const enc = encrypt(input, key, options)
+    expect(enc.output).toBe('Qnxepv Yt Wtwp!')
+
+    const dec = decrypt(enc.output, key, options)
+    expect(dec.output).toBe('Attack At Dawn!')
+  })
+
+  it('round-trips complex formatted multi-word text with preserveFormatting: true', () => {
+    const key = 'SECRET'
+    const input = 'The quick brown fox jumps over 13 lazy dogs!'
+    const options = { preserveFormatting: true }
+
+    const enc = encrypt(input, key, options)
+    const dec = decrypt(enc.output, key, options)
+    expect(dec.output).toBe(input)
+  })
 })

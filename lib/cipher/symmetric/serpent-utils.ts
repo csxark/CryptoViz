@@ -6,20 +6,59 @@
 
 export const PHI = 0x9e3779b9;
 
+/**
+ * U32 cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param n Input required by the U32 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function u32(n: number): number {
   return n >>> 0;
 }
 
+/**
+ * Rotl32 cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param x Input required by the Rotl32 operation.
+ * @param n Input required by the Rotl32 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function rotl32(x: number, n: number): number {
   const shift = n & 31;
   return shift === 0 ? u32(x) : u32((x << shift) | (x >>> (32 - shift)));
 }
 
+/**
+ * Rotr32 cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param x Input required by the Rotr32 operation.
+ * @param n Input required by the Rotr32 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function rotr32(x: number, n: number): number {
   const shift = n & 31;
   return shift === 0 ? u32(x) : u32((x >>> shift) | (x << (32 - shift)));
 }
 
+/**
+ * Read Word LE cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param bytes Input required by the Read Word LE operation.
+ * @param offset Input required by the Read Word LE operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function readWordLE(bytes: Uint8Array, offset: number): number {
   return u32(
     bytes[offset] |
@@ -29,6 +68,17 @@ export function readWordLE(bytes: Uint8Array, offset: number): number {
   );
 }
 
+/**
+ * Write Word LE cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param value Input required by the Write Word LE operation.
+ * @param output Input required by the Write Word LE operation.
+ * @param offset Input required by the Write Word LE operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function writeWordLE(value: number, output: Uint8Array, offset: number): void {
   output[offset] = value & 0xff;
   output[offset + 1] = (value >>> 8) & 0xff;
@@ -36,6 +86,15 @@ export function writeWordLE(value: number, output: Uint8Array, offset: number): 
   output[offset + 3] = (value >>> 24) & 0xff;
 }
 
+/**
+ * Hex To Bytes cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param hex Input required by the Hex To Bytes operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function hexToBytes(hex: string): Uint8Array {
   const clean = hex.replace(/\s+/g, "").replace(/^0x/i, "");
   const bytes = new Uint8Array(clean.length / 2);
@@ -45,6 +104,15 @@ export function hexToBytes(hex: string): Uint8Array {
   return bytes;
 }
 
+/**
+ * Bytes To Hex cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param bytes Input required by the Bytes To Hex operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -66,6 +134,14 @@ export const SBOXES: readonly (readonly number[])[] = [
   [1, 13, 15, 0, 14, 8, 2, 11, 7, 4, 12, 10, 9, 3, 5, 6],
 ];
 
+/**
+ * INVERSE SBOXES cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const INVERSE_SBOXES: readonly (readonly number[])[] = SBOXES.map((box) => {
   const inv = new Array<number>(16);
   box.forEach((val, idx) => {
@@ -89,6 +165,16 @@ export function applySboxWords(words: number[], sboxIndex: number): number[] {
   });
 }
 
+/**
+ * Apply Inverse Sbox Words cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param words Input required by the Apply Inverse Sbox Words operation.
+ * @param sboxIndex Input required by the Apply Inverse Sbox Words operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function applyInverseSboxWords(words: number[], sboxIndex: number): number[] {
   const box = INVERSE_SBOXES[sboxIndex & 7];
   return words.map((w) => {

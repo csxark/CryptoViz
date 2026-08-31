@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SessionDelta } from "@/lib/utils/sessionComparison";
+import type { SessionDelta } from "@/lib/utils/comparison";
 import { Lightbulb, Cpu, Activity, ShieldCheck, Zap, ChevronDown, ChevronUp } from "lucide-react";
 
 interface EducationalSessionInsightsProps {}

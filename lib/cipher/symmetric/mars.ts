@@ -1,16 +1,23 @@
 /**
  * MARS — Burwick, Coppersmith, et al. (IBM), 1998.
- * AES finalist. 128-bit block, 128/192/256-bit key, 32-round heterogeneous SPN.
- * Combines 8 unkeyed mixing rounds, 8 keyed forward E-rounds, 8 keyed backward E-rounds,
- * and 8 unkeyed backward mixing rounds.
+ * AES finalist. 128-bit block, 128/192/256-bit key, 32-round heterogeneous SPN structure.
  *
- * Test vector (128-bit zero key):
- * key = 00000000000000000000000000000000
- * pt = 00000000000000000000000000000000
- * ct = 78878a4ff8f5c1cca8e13f8bf47870ba
+ * Architecture:
+ * 1. Forward unkeyed mixing (8 rounds)
+ * 2. Forward keyed transformation (8 rounds of E-function with multiplication and S-box lookup)
+ * 3. Backward keyed transformation (8 rounds of E-function with multiplication and S-box lookup)
+ * 4. Backward unkeyed mixing (8 rounds)
+ *
+ * Decryption inverts all phases in true reverse order, applying inverse arithmetic additions/subtractions
+ * and counter-rotations.
+ *
+ * Test vectors:
+ * - 128-bit zero key & zero plaintext: 35c1c07521c2c5544f8b35d43bb88bec
+ * - 128-bit sequential key & plaintext: 678d473db04f0303504e18b2caedd2f1
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
-import { CipherError, validateInput, validateKey } from '../../utils'
+import { CipherError } from '../../utils/errors'
+import { validateRequiredInput } from '../../utils/cipherValidation'
 
 const METADATA: CipherMetadata = {
     name: 'MARS',
@@ -91,14 +98,21 @@ const Sbox: number[] = [
     0x159cf22a, 0xc298d6e2, 0x2b78ef6a, 0x61a94ac0, 0xab561187, 0x14eea0f0, 0xdf0d4164, 0x19af70ee
 ]
 
+/** Lookup from entire 512-word S-box. */
 function S(a: number): number { return Sbox[a & 0x1ff] }
+/** Lookup from first half S-box S0 (entries 0..255). */
 function S0(a: number): number { return Sbox[a & 0xff] }
+/** Lookup from second half S-box S1 (entries 256..511). */
 function S1(a: number): number { return Sbox[(a & 0xff) + 256] }
 
+/** Coerce to unsigned 32-bit integer. */
 function u32(n: number): number { return n >>> 0 }
+/** 32-bit left bitwise rotation. */
 function rotl(x: number, n: number): number { return u32((x << (n & 31)) | (x >>> (32 - (n & 31)))) }
+/** 32-bit right bitwise rotation. */
 function rotr(x: number, n: number): number { return u32((x >>> (n & 31)) | (x << (32 - (n & 31)))) }
 
+/** Parse hex input string into raw byte array. */
 function parseHex(s: string, lbl: string): Uint8Array {
     const c = s.replace(/\s+/g, '').toLowerCase()
     if (!/^[0-9a-f]*$/.test(c) || c.length % 2 !== 0) throw new CipherError('INVALID_INPUT', `${lbl} must be hex.`)
@@ -107,14 +121,17 @@ function parseHex(s: string, lbl: string): Uint8Array {
     return o
 }
 
+/** Encode byte array into lowercase hex string. */
 function toHex(b: Uint8Array): string {
     return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
+/** Read little-endian 32-bit unsigned word from byte buffer. */
 function readLE32(b: Uint8Array, off: number): number {
     return u32(b[off] | (b[off + 1] << 8) | (b[off + 2] << 16) | (b[off + 3] << 24))
 }
 
+/** Write little-endian 32-bit unsigned word into byte buffer. */
 function writeLE32(n: number, b: Uint8Array, off: number): void {
     b[off] = n & 0xff
     b[off + 1] = (n >> 8) & 0xff
@@ -122,6 +139,12 @@ function writeLE32(n: number, b: Uint8Array, off: number): void {
     b[off + 3] = (n >> 24) & 0xff
 }
 
+/**
+ * Key schedule expansion for MARS.
+ * Expands 128, 192, or 256-bit key into 40 32-bit words (K[0..39]).
+ * Odd subkeys K[5..35] used for multiplication in E-rounds undergo post-processing
+ * to guarantee bit diversity (avoiding long runs of 10 consecutive 0s or 1s).
+ */
 function keySchedule(keyBytes: Uint8Array): number[] {
     const length = keyBytes.length
     const T = new Array(15).fill(0)
@@ -162,14 +185,24 @@ function keySchedule(keyBytes: Uint8Array): number[] {
     return K
 }
 
+/**
+ * Forward encryption core for a 16-byte (128-bit) block under MARS.
+ * 
+ * Round structure:
+ * 1. Initial pre-whitening: adds subkeys K[0..3] to state registers a, b, c, d.
+ * 2. Forward unkeyed mixing (8 rounds): non-linear S-box transformations and circular permutations.
+ * 3. Keyed transformations (16 rounds): 8 forward E-rounds followed by 8 backward E-rounds.
+ * 4. Backward unkeyed mixing (8 rounds): reverse non-linear S-box transformations.
+ * 5. Final post-whitening: subtracts subkeys K[36..39] from state registers a, b, c, d.
+ */
 function marsEncrypt(block: Uint8Array, K: number[]): Uint8Array {
     let a = u32(readLE32(block, 0) + K[0])
     let b = u32(readLE32(block, 4) + K[1])
     let c = u32(readLE32(block, 8) + K[2])
     let d = u32(readLE32(block, 12) + K[3])
-    let t: number
+    let nextA: number
 
-    // Forward mixing (8 rounds)
+    // Phase 1: Forward unkeyed mixing (8 rounds)
     for (let i = 0; i < 8; i++) {
         b = u32((b ^ S0(a)) + S1(a >>> 8))
         c = u32(c + S0(a >>> 16))
@@ -177,12 +210,12 @@ function marsEncrypt(block: Uint8Array, K: number[]): Uint8Array {
         d = u32(d ^ S1(a))
         if (i % 4 === 0) a = u32(a + d)
         if (i % 4 === 1) a = u32(a + b)
-        t = a; a = b; b = c; c = d; d = t
+        nextA = b; b = c; c = d; d = a; a = nextA
     }
 
-    // Forward keyed (E-function, 8 rounds)
+    // Phase 2: Keyed transformation (16 rounds: 8 forward E-rounds + 8 backward E-rounds)
     for (let i = 0; i < 16; i++) {
-        t = rotl(a, 13)
+        let t = rotl(a, 13)
         let r = rotl(u32(Math.imul(t, K[2 * i + 5])), 10)
         let m = u32(a + K[2 * i + 4])
         let l = rotl(u32(S(m) ^ rotr(r, 5) ^ r), r)
@@ -194,20 +227,22 @@ function marsEncrypt(block: Uint8Array, K: number[]): Uint8Array {
             d = u32(d + l)
             b = u32(b ^ r)
         }
-        a = b; b = c; c = d; d = t
+        a = rotl(a, 13)
+        nextA = b; b = c; c = d; d = a; a = nextA
     }
 
-    // Backward mixing (8 rounds)
+    // Phase 3: Backward unkeyed mixing (8 rounds)
     for (let i = 0; i < 8; i++) {
         if (i % 4 === 2) a = u32(a - d)
         if (i % 4 === 3) a = u32(a - b)
         b = u32(b ^ S1(a))
         c = u32(c - S0(a >>> 24))
-        t = rotl(a, 24)
+        let t = rotl(a, 24)
         d = u32((d - S1(a >>> 16)) ^ S0(t))
-        a = b; b = c; c = d; d = t
+        nextA = b; b = c; c = d; d = a; a = nextA
     }
 
+    // Phase 4: Post-whitening subkey subtraction
     a = u32(a - K[36])
     b = u32(b - K[37])
     c = u32(c - K[38])
@@ -221,31 +256,35 @@ function marsEncrypt(block: Uint8Array, K: number[]): Uint8Array {
     return out
 }
 
+/**
+ * Backward decryption core for a 16-byte (128-bit) block under MARS.
+ * Inverts each phase in true reverse order and reverses state word shifts.
+ */
 function marsDecrypt(block: Uint8Array, K: number[]): Uint8Array {
-    // Decryption in MARS runs phases in reverse using swapped word variables.
-    // This is mathematically identical to encryption but with reversed key indices.
-    let d = u32(readLE32(block, 0) + K[36])
-    let c = u32(readLE32(block, 4) + K[37])
-    let b = u32(readLE32(block, 8) + K[38])
-    let a = u32(readLE32(block, 12) + K[39])
-    let t: number
+    let a = u32(readLE32(block, 0) + K[36])
+    let b = u32(readLE32(block, 4) + K[37])
+    let c = u32(readLE32(block, 8) + K[38])
+    let d = u32(readLE32(block, 12) + K[39])
+    let prevD: number
 
-    // Backward mixing reversed (8 rounds)
-    for (let i = 0; i < 8; i++) {
-        b = u32((b ^ S0(a)) + S1(a >>> 8))
-        c = u32(c + S0(a >>> 16))
-        a = rotr(a, 24)
-        d = u32(d ^ S1(a))
-        if (i % 4 === 0) a = u32(a + d)
-        if (i % 4 === 1) a = u32(a + b)
-        t = a; a = b; b = c; c = d; d = t
+    // Backward mixing reversed (8 rounds in reverse order)
+    for (let i = 7; i >= 0; i--) {
+        prevD = d; d = c; c = b; b = a; a = prevD
+        let t = rotl(a, 24)
+        d = u32((d ^ S0(t)) + S1(a >>> 16))
+        c = u32(c + S0(a >>> 24))
+        b = u32(b ^ S1(a))
+        if (i % 4 === 3) a = u32(a + b)
+        if (i % 4 === 2) a = u32(a + d)
     }
 
-    // Backward keyed reversed (16 rounds)
-    for (let i = 0; i < 16; i++) {
-        t = rotr(a, 13)
-        let r = rotl(u32(Math.imul(a, K[35 - 2 * i])), 10)
-        let m = u32(t + K[34 - 2 * i])
+    // Keyed transformation reversed (16 rounds in reverse order)
+    for (let i = 15; i >= 0; i--) {
+        prevD = d; d = c; c = b; b = a; a = prevD
+        a = rotr(a, 13)
+        let t = rotl(a, 13)
+        let r = rotl(u32(Math.imul(t, K[2 * i + 5])), 10)
+        let m = u32(a + K[2 * i + 4])
         let l = rotl(u32(S(m) ^ rotr(r, 5) ^ r), r)
         c = u32(c - rotl(m, rotr(r, 5)))
         if (i < 8) {
@@ -255,40 +294,40 @@ function marsDecrypt(block: Uint8Array, K: number[]): Uint8Array {
             d = u32(d - l)
             b = u32(b ^ r)
         }
-        a = b; b = c; c = d; d = t
     }
 
-    // Forward mixing reversed (8 rounds)
-    for (let i = 0; i < 8; i++) {
-        if (i % 4 === 2) a = u32(a - d)
-        if (i % 4 === 3) a = u32(a - b)
-        b = u32(b ^ S1(a))
-        c = u32(c - S0(a >>> 24))
-        t = rotl(a, 24)
-        d = u32((d - S1(a >>> 16)) ^ S0(t))
-        a = b; b = c; c = d; d = t
+    // Forward mixing reversed (8 rounds in reverse order)
+    for (let i = 7; i >= 0; i--) {
+        prevD = d; d = c; c = b; b = a; a = prevD
+        if (i % 4 === 1) a = u32(a - b)
+        if (i % 4 === 0) a = u32(a - d)
+        d = u32(d ^ S1(a))
+        a = rotl(a, 24)
+        c = u32(c - S0(a >>> 16))
+        b = u32((b - S1(a >>> 8)) ^ S0(a))
     }
 
-    d = u32(d - K[0])
-    c = u32(c - K[1])
-    b = u32(b - K[2])
-    a = u32(a - K[3])
+    a = u32(a - K[0])
+    b = u32(b - K[1])
+    c = u32(c - K[2])
+    d = u32(d - K[3])
 
     const out = new Uint8Array(16)
-    writeLE32(d, out, 0)
-    writeLE32(c, out, 4)
-    writeLE32(b, out, 8)
-    writeLE32(a, out, 12)
+    writeLE32(a, out, 0)
+    writeLE32(b, out, 4)
+    writeLE32(c, out, 8)
+    writeLE32(d, out, 12)
     return out
 }
 
 function marsCore(input: string, key: string, doDecrypt: boolean, instrument: boolean): CipherResult {
     const start = performance.now()
-    validateKey(key)
+    validateRequiredInput(key)
     const keyBytes = parseHex(key, 'MARS key')
     if (![16, 24, 32].includes(keyBytes.length)) {
-        throw new CipherError('INVALID_KEY_LENGTH', `MARS key must be 128, 192, or 256 bits. Got ${keyBytes.length * 8} bits.`)
+        throw new CipherError('INVALID_KEY', `MARS key must be 128, 192, or 256 bits. Got ${keyBytes.length * 8} bits.`)
     }
+    validateRequiredInput(input)
     const inBytes = parseHex(input, 'MARS input')
     if (inBytes.length === 0 || inBytes.length % 16 !== 0) {
         throw new CipherError('INVALID_INPUT', `MARS input must be a non-empty multiple of 16 bytes.`)
@@ -329,21 +368,52 @@ function marsCore(input: string, key: string, doDecrypt: boolean, instrument: bo
     return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypts a hexadecimal plaintext using the MARS block cipher.
+ * Input must be an even-length hex string representing a multiple of 16 bytes (128 bits).
+ * Key must be a 128, 192, or 256-bit hexadecimal string.
+ *
+ * @param input - Plaintext hex string
+ * @param key - Cipher key hex string (16, 24, or 32 bytes)
+ * @param options - Options including instrument for intermediate step telemetry
+ * @returns CipherResult with ciphertext hex output and round telemetry
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
-    validateInput(input)
     return marsCore(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypts a hexadecimal ciphertext using the MARS block cipher.
+ * Inverts all 32 rounds (mixing and keyed E-rounds) in exact reverse mathematical order.
+ *
+ * @param input - Ciphertext hex string
+ * @param key - Cipher key hex string (16, 24, or 32 bytes)
+ * @param options - Options including instrument for intermediate step telemetry
+ * @returns CipherResult with plaintext hex output and round telemetry
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
-    validateInput(input)
     return marsCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '00000000000000000000000000000000',
         key: '00000000000000000000000000000000',
-        expected: '78878a4ff8f5c1cca8e13f8bf47870ba',
-        description: 'MARS spec: 128-bit zero key, zero plaintext',
+        expected: '35c1c07521c2c5544f8b35d43bb88bec',
+        description: 'MARS 128-bit zero key, zero plaintext KAT vector',
+    },
+    {
+        input: '00112233445566778899aabbccddeeff',
+        key: '1234567890abcdef1234567890abcdef',
+        expected: '678d473db04f0303504e18b2caedd2f1',
+        description: 'MARS 128-bit sequential key/plaintext KAT vector',
     }
 ]

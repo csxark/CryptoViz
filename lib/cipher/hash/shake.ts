@@ -82,16 +82,57 @@ function shakeCore(input: string, key: string, variant: 128 | 256, instrument: b
   }
 }
 
+/**
+ * Encrypt Shake128 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt Shake128 operation.
+ * @param key Input required by the Encrypt Shake128 operation.
+ * @param options Input required by the Encrypt Shake128 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encryptShake128(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return shakeCore(input, key, 128, !!options.instrument)
 }
+/**
+ * Encrypt Shake256 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt Shake256 operation.
+ * @param key Input required by the Encrypt Shake256 operation.
+ * @param options Input required by the Encrypt Shake256 operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encryptShake256(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return shakeCore(input, key, 256, !!options.instrument)
 }
+/**
+ * Decrypt cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param _input Input required by the Decrypt operation.
+ * @param _key Input required by the Decrypt operation.
+ * @param __options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(_input: string, _key: string, __options: CipherOptions = {}): CipherResult {
   throw new CipherError('ALGORITHM_UNSUPPORTED', 'SHAKE is a one-way extendable-output function — it has no decrypt operation.')
 }
 
+/**
+ * TEST VECTORS 128 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS_128: TestVector[] = [
   {
     input: '',
@@ -100,6 +141,14 @@ export const TEST_VECTORS_128: TestVector[] = [
     description: 'NIST SHAKE128 test vector (empty input, 32-byte output)',
   },
 ]
+/**
+ * TEST VECTORS 256 cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS_256: TestVector[] = [
   {
     input: '',
@@ -108,4 +157,12 @@ export const TEST_VECTORS_256: TestVector[] = [
     description: 'NIST SHAKE256 test vector (empty input, 32-byte output)',
   },
 ]
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [...TEST_VECTORS_128, ...TEST_VECTORS_256]

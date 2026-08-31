@@ -69,8 +69,8 @@ export const OfflineStorageManager: React.FC = () => {
       await importPackFromJson(json);
       setStatusMessage({ type: 'success', text: `Successfully imported learning pack: "${file.name}"` });
       fetchStorageEstimate();
-    } catch (err: any) {
-      setStatusMessage({ type: 'error', text: err.message || 'Failed to parse or validate pack JSON.' });
+    } catch (err: unknown) {
+      setStatusMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to parse or validate pack JSON.' });
     }
   };
 

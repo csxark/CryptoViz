@@ -1,7 +1,7 @@
 "use client";
 
-import type { SessionDelta } from "@/lib/utils/sessionComparison";
-import { getMetricBg, getMetricTextColor } from "@/lib/utils/sessionComparison";
+import type { SessionDelta } from "@/lib/utils/comparison";
+import { getMetricBg, getMetricTextColor } from "@/lib/utils/comparison";
 import { formatBytes } from "@/lib/utils/benchmarkHistory";
 import { SPEEDUP_THRESHOLD, SLOWDOWN_THRESHOLD } from "@/constants/benchmark";
 import { Zap, Clock, Cpu, HardDrive, TrendingUp, TrendingDown, Minus } from "lucide-react";

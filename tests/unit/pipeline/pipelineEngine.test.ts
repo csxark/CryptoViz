@@ -13,16 +13,20 @@ describe('Cipher Pipeline Engine', () => {
     const stageEncode: PipelineStage = {
       id: '1',
       category: 'encode',
-      algorithm: 'base64-encode',
+      cipherId: 'base64-encode',
       name: 'Base64',
       params: {},
+      inputType: 'utf8-text',
+      outputType: 'base64-string',
     };
     const stageDecode: PipelineStage = {
       id: '2',
       category: 'decode',
-      algorithm: 'base64-decode',
+      cipherId: 'base64-decode',
       name: 'Base64 Dec',
       params: {},
+      inputType: 'base64-string',
+      outputType: 'utf8-text',
     };
 
     const encoded = executeStage('Hello World', stageEncode);
@@ -36,21 +40,23 @@ describe('Cipher Pipeline Engine', () => {
     const stage: PipelineStage = {
       id: 'c1',
       category: 'encrypt',
-      algorithm: 'caesar',
+      cipherId: 'caesar',
       name: 'Caesar',
       params: { shift: '3' },
+      inputType: 'utf8-text',
+      outputType: 'utf8-text',
     };
     expect(executeStage('abc', stage)).toBe('def');
   });
 
-  it('chains multi-stage execution with executePipeline()', () => {
+  it('chains multi-stage execution with executePipeline()', async () => {
     const stages: PipelineStage[] = [
-      { id: 's1', category: 'encode', algorithm: 'base64-encode', name: 'Stage 1', params: {} },
-      { id: 's2', category: 'encrypt', algorithm: 'caesar', name: 'Stage 2', params: { shift: '1' } },
-      { id: 's3', category: 'hash', algorithm: 'sha256', name: 'Stage 3', params: {} },
+      { id: 's1', category: 'encode', cipherId: 'base64-encode', name: 'Stage 1', params: {}, inputType: 'utf8-text', outputType: 'base64-string' },
+      { id: 's2', category: 'encrypt', cipherId: 'caesar', name: 'Stage 2', params: { shift: '1' }, inputType: 'utf8-text', outputType: 'utf8-text' },
+      { id: 's3', category: 'hash', cipherId: 'sha256', name: 'Stage 3', params: {}, inputType: 'utf8-text', outputType: 'hex-string' },
     ];
 
-    const result = executePipeline('TestPayload', stages);
+    const result = await executePipeline('TestPayload', stages);
     expect(result.success).toBe(true);
     expect(result.stageResults.length).toBe(3);
     expect(result.finalOutput.length).toBe(64);
@@ -58,7 +64,7 @@ describe('Cipher Pipeline Engine', () => {
 
   it('exports and imports pipeline JSON correctly', () => {
     const originalStages: PipelineStage[] = [
-      { id: '1', category: 'encode', algorithm: 'hex-encode', name: 'Hex', params: {} },
+      { id: '1', category: 'encode', cipherId: 'hex-encode', name: 'Hex', params: {}, inputType: 'utf8-text', outputType: 'hex-string' },
     ];
 
     const jsonStr = exportPipelineToJson(originalStages);
@@ -66,7 +72,7 @@ describe('Cipher Pipeline Engine', () => {
 
     const imported = importPipelineFromJson(jsonStr);
     expect(imported.length).toBe(1);
-    expect(imported[0].algorithm).toBe('hex-encode');
+    expect(imported[0].cipherId).toBe('hex-encode');
   });
 
   it('has built-in pipeline presets', () => {

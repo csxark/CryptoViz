@@ -25,7 +25,6 @@ Examples include:
 - protocol walkthroughs;
 - attack demonstrations;
 - educational network simulations;
-- simplified blockchain demonstrations;
 - conceptual cryptographic visualizations.
 
 Simulation data must not be described as live operational state.

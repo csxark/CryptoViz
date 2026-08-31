@@ -60,13 +60,14 @@ describe("RSA attack playground utilities", () => {
     expect(convergents(terms).at(-1)).toEqual({ numerator: 415n, denominator: 93n });
   });
 
-  it("recovers a small private exponent with Wiener's attack", () => {
-    const result = wienerAttack(RSA_ATTACK_PRESETS.wiener.e, RSA_ATTACK_PRESETS.wiener.n);
+it("recovers a small private exponent with Wiener's attack", () => {
+  const preset = RSA_ATTACK_PRESETS.wiener;
+  const result = wienerAttack(preset.e, preset.n);
 
-    expect(result.d).toBe(RSA_ATTACK_PRESETS.wiener.d);
-    expect(result.convergents.some((row) => row.accepted)).toBe(true);
-  });
-
+  expect(preset.n).toBe(89n * 73n);
+  expect(result.d).toBe(preset.d);
+  expect(result.convergents.some((row) => row.accepted)).toBe(true);
+});
   it("returns null when Wiener does not apply", () => {
     const result = wienerAttack(65537n, 99991n);
 
@@ -119,13 +120,13 @@ describe("RSA attack playground utilities", () => {
     }
   });
 
-  it("parses decimal bigint input", () => {
-    expect(parseBigIntInput("42", "value")).toBe(42n);
+it("parses decimal bigint input", () => {
+  expect(parseBigIntInput("42", "value")).toBe(42n);
+  expect(parseBigIntInput("12345", "value")).toBe(12345n);
 
-    try {
-      parseBigIntInput("abc", "value");
-    } catch (error) {
-      expect((error as RsaAttackError).code).toBe("INVALID_INPUT");
-    }
-  });
-});
+  try {
+    parseBigIntInput("abc", "value");
+  } catch (error) {
+    expect((error as RsaAttackError).code).toBe("INVALID_INPUT");
+  }
+});});

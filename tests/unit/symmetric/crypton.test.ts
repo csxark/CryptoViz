@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { encrypt, decrypt, TEST_VECTORS } from '@/lib/cipher/symmetric/crypton'
 
 describe('Crypton', () => {
-    it('exports test vectors', () => expect(TEST_VECTORS.length).toBeGreaterThan(0))
+    it('exports test vectors and matches KAT vector', () => {
+        expect(TEST_VECTORS.length).toBeGreaterThan(0)
+        const v = TEST_VECTORS[0]
+        expect(encrypt(v.input, v.key).output).toBe(v.expected)
+    })
 
     it('round trips correctly (128-bit key)', () => {
         const key = '11223344556677889900aabbccddeeff'

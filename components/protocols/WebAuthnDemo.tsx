@@ -45,7 +45,7 @@ function bufferToBase64url(buffer: ArrayBuffer): string {
     .replace(/=/g, '')
 }
 
-function base64urlToBuffer(base64url: string): Uint8Array {
+function base64urlToBuffer(base64url: string): ArrayBuffer {
   const base64 = base64url
     .replace(/-/g, '+')
     .replace(/_/g, '/')
@@ -55,7 +55,7 @@ function base64urlToBuffer(base64url: string): Uint8Array {
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i)
   }
-  return bytes
+  return bytes.buffer as ArrayBuffer
 }
 
 // Helper to generate deterministic simulated keys based on username
@@ -115,7 +115,7 @@ export default function WebAuthnDemo() {
 
   // Step-by-step visual debugger state
   const [currentStep, setCurrentStep] = useState<number>(0)
-  const [logs, setLogs] = useState<Array<{ type: 'info' | 'success' | 'error'; text: string }>>([
+  const [logs, setLogs] = useState<Array<{ type: 'info' | 'success' | 'error' | 'warning'; text: string }>>([
     { type: 'info', text: 'Playground initialized. Select a workflow to begin.' }
   ])
   
@@ -142,7 +142,7 @@ export default function WebAuthnDemo() {
     }
   }, [credentials, selectedCredId])
 
-  const addLog = (type: 'info' | 'success' | 'error', text: string) => {
+  const addLog = (type: 'info' | 'success' | 'error' | 'warning', text: string) => {
     setLogs(prev => [...prev, { type, text }])
   }
 
@@ -391,6 +391,8 @@ export default function WebAuthnDemo() {
         throw new Error('Credential creation failed or was cancelled.')
       }
 
+      const attestationResponse = credential.response as AuthenticatorAttestationResponse
+
       // Convert credentials to readable text
       const rawId = bufferToBase64url(credential.rawId)
       
@@ -399,7 +401,7 @@ export default function WebAuthnDemo() {
       const clientDataObj = JSON.parse(clientDataDecoded)
       
       setClientDataJsonMock(clientDataDecoded)
-      setAuthenticatorDataMock(`rawId: ${rawId}\ntype: ${credential.type}\ntransports: ${credential.response.getTransports ? credential.response.getTransports().join(',') : 'n/a'}`)
+      setAuthenticatorDataMock(`rawId: ${rawId}\ntype: ${credential.type}\ntransports: ${attestationResponse.getTransports ? attestationResponse.getTransports().join(',') : 'n/a'}`)
 
       // Create a mock storage public key since parsing actual COSE public key requires complete CBOR parser library
       // But we will show a mock valid EC representation
@@ -412,7 +414,7 @@ export default function WebAuthnDemo() {
         signCount: 0,
         algorithm: 'ES256 (ECDSA P-256)',
         createdAt: new Date().toLocaleDateString(),
-        transports: credential.response.getTransports ? credential.response.getTransports() : ['internal']
+        transports: attestationResponse.getTransports ? attestationResponse.getTransports() : ['internal']
       }
 
       setCredentials(prev => [...prev, newCredential])
@@ -420,9 +422,10 @@ export default function WebAuthnDemo() {
 
       setRealVerificationStatus('Credential registered successfully!')
       addLog('success', `✔ Real Device Registration Successful! Passkey saved on device. ID: ${rawId.substring(0, 12)}...`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       setRealVerificationStatus('Error occurred during registration.')
-      addLog('error', `Real Device Error: ${err.message || err.toString()}`)
+      const msg = err instanceof Error ? err.message : String(err)
+      addLog('error', `Real Device Error: ${msg}`)
       console.error(err)
     }
   }
@@ -490,9 +493,10 @@ export default function WebAuthnDemo() {
 
       setRealVerificationStatus('Authentication successful!')
       addLog('success', `✔ Real Device Authentication Successful! Welcome, ${activeCred.username}!`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       setRealVerificationStatus('Error occurred during authentication.')
-      addLog('error', `Real Device Error: ${err.message || err.toString()}`)
+      const msg = err instanceof Error ? err.message : String(err)
+      addLog('error', `Real Device Error: ${msg}`)
       console.error(err)
     }
   }

@@ -34,6 +34,13 @@ export function formatBytes(
 
 /**
  * Format duration in seconds into human-readable ranges.
+ *
+ * Scales through milliseconds, seconds, minutes, hours, days, years, and multiples of the Age of the Universe.
+ * Transitions to clean scientific/exponential notation (e.g. "3.40e+28 years") when duration exceeds
+ * 1,000 universe lifetimes (>= 1.38e13 years) to prevent bloated display strings.
+ *
+ * @param seconds - Duration in seconds to format
+ * @returns Human-readable formatted duration string
  */
 export function formatDuration(seconds: number): string {
   if (seconds === Infinity) return "Practically infinite";
@@ -91,20 +98,8 @@ export function formatDuration(seconds: number): string {
   }
 
   const timesUniverse = seconds / AGE_OF_UNIVERSE;
-  if (timesUniverse < 1e3) {
+  if (timesUniverse < 1000) {
     return `${timesUniverse.toFixed(1).replace(/\.0$/, "")} × Age of the Universe`;
-  }
-  if (timesUniverse < 1e6) {
-    return `${(timesUniverse / 1e3).toFixed(1).replace(/\.0$/, "")} thousand × Age of the Universe`;
-  }
-  if (timesUniverse < 1e9) {
-    return `${(timesUniverse / 1e6).toFixed(1).replace(/\.0$/, "")} million × Age of the Universe`;
-  }
-  if (timesUniverse < 1e12) {
-    return `${(timesUniverse / 1e9).toFixed(1).replace(/\.0$/, "")} billion × Age of the Universe`;
-  }
-  if (timesUniverse < 1e15) {
-    return `${(timesUniverse / 1e12).toFixed(1).replace(/\.0$/, "")} trillion × Age of the Universe`;
   }
 
   return `${years.toExponential(2)} years`;

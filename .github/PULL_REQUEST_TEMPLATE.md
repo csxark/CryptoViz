@@ -39,9 +39,9 @@ introduces inconsistent architecture and will not be reviewed as-is.
 ## Testing
 
 - [ ] Unit tests added/updated for every code path changed (not just the happy path).
-- [ ] `pnpm test` passes locally.
-- [ ] `pnpm typecheck` passes locally.
-- [ ] `pnpm lint` passes locally.
+- [ ] `npm test` passes locally.
+- [ ] `npm run typecheck` passes locally.
+- [ ] `npm run lint` passes locally.
 - [ ] Coverage on any touched `lib/cipher/**` file stays at or above 80%.
 - [ ] E2E/a11y tests added if a route or interactive component changed.
 

@@ -30,6 +30,14 @@ const METADATA: CipherMetadata = {
 }
 
 // Educational / Default parameters (FrodoKEM-640 dimensions)
+/**
+ * FRODO PARAMS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const FRODO_PARAMS = {
   n: 8,          // Educational dimension (real Frodo640 uses 640; scaled for interactive performance & trace visualization)
   nBar: 4,       // Matrix columns for secret/public key
@@ -287,6 +295,15 @@ function parseMatrix(str: string): number[][] | null {
   return null
 }
 
+/**
+ * Generate Keypair cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param seed Input required by the Generate Keypair operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function generateKeypair(seed: number = 42): { publicKey: string; privateKey: string; matrixA: number[][]; secretS: number[][]; publicB: number[][] } {
   const { n, nBar, q, errorBound } = FRODO_PARAMS
   const A = generateMatrixA(seed, n, q)
@@ -308,6 +325,16 @@ export function generateKeypair(seed: number = 42): { publicKey: string; private
   }
 }
 
+/**
+ * Encapsulate Core cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param recipientPubKeyStr Input required by the Encapsulate Core operation.
+ * @param instrument Input required by the Encapsulate Core operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encapsulateCore(recipientPubKeyStr: string, instrument: boolean): CipherResult {
   const start = performance.now()
   const keypair = generateKeypair(12345)
@@ -391,6 +418,17 @@ export function encapsulateCore(recipientPubKeyStr: string, instrument: boolean)
   }
 }
 
+/**
+ * Decapsulate Core cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param cipherTextStr Input required by the Decapsulate Core operation.
+ * @param privateKeyStr Input required by the Decapsulate Core operation.
+ * @param instrument Input required by the Decapsulate Core operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decapsulateCore(cipherTextStr: string, privateKeyStr: string, instrument: boolean): CipherResult {
   const start = performance.now()
 
@@ -484,14 +522,44 @@ export function decapsulateCore(cipherTextStr: string, privateKeyStr: string, in
   }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param _input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(_input: string, key: string, options: CipherOptions = {}): CipherResult {
   return encapsulateCore(key, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   return decapsulateCore(input, key, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '',

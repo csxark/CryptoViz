@@ -5,7 +5,7 @@ import type { BenchmarkSession } from "@/types/benchmark";
 import {
   computeSessionComparison,
   type SessionPreset,
-} from "@/lib/utils/sessionComparison";
+} from "@/lib/utils/comparison";
 import SessionDeltaCard from "./SessionDeltaCard";
 import AlgorithmDiffTable from "./AlgorithmDiffTable";
 import SessionEnvironmentComparison from "./SessionEnvironmentComparison";

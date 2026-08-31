@@ -57,6 +57,18 @@ describe('GF(2^8) Galois Field Math', () => {
     expect(gfMultiply(0x53, invTwofish, 0x12d)).toBe(0x01);
   });
 
+  it('should match gfInverse for all non-zero elements in GF(2^8) via gfExtendedEuclideanWithTrace (#1715)', () => {
+    const moduli = [0x11b, 0x11d, 0x12d] as const;
+    for (const modulus of moduli) {
+      for (let a = 1; a < 256; a++) {
+        const inv = gfInverse(a, modulus);
+        const expectedHex = inv.toString(16).padStart(2, '0').toUpperCase();
+        const trace = gfExtendedEuclideanWithTrace(a, modulus);
+        expect(trace.inverseHex).toBe(expectedHex);
+      }
+    }
+  });
+
   it('should produce valid polynomial strings', () => {
     expect(toPolynomialString(0x57)).toBe('x^6 + x^4 + x^2 + x + 1');
   });

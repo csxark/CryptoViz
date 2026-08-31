@@ -7,7 +7,7 @@ import type {
   CipherDirection,
   CipherResult,
 } from '../../lib/cipher/types'
-import { useCipherWorker } from '../../lib/hooks/useCipherWorker'
+import { useCipherWorker } from '@/hooks/useCipherWorker'
 import CipherLifecycleBadge from '../cipher/CipherLifecycleBadge'
 import {
   type CipherWorkerOptions,
@@ -332,7 +332,7 @@ export default function CipherComparisonPanel({
               <div>
                 <p className="text-xs font-bold text-red-800 dark:text-red-300">Execution Error</p>
                 <p className="mt-0.5 text-xs text-red-700 dark:text-red-400">
-                  {error || workerError?.message || workerError?.code || 'Unknown error'}
+                  {error || workerError || 'Unknown error'}
                 </p>
               </div>
             </div>

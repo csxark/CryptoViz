@@ -50,7 +50,7 @@ async function compress(bytes: Uint8Array): Promise<{ bytes: Uint8Array; compres
   if (typeof CompressionStream === 'undefined') return { bytes, compressed: false }
   const stream = new CompressionStream('deflate')
   const writer = stream.writable.getWriter()
-  await writer.write(bytes)
+  await writer.write(bytes.slice())
   await writer.close()
   return { bytes: new Uint8Array(await new Response(stream.readable).arrayBuffer()), compressed: true }
 }
@@ -59,7 +59,7 @@ async function decompress(bytes: Uint8Array): Promise<Uint8Array> {
   if (typeof DecompressionStream === 'undefined') throw new Error('This browser cannot open compressed challenge links.')
   const stream = new DecompressionStream('deflate')
   const writer = stream.writable.getWriter()
-  await writer.write(bytes)
+  await writer.write(bytes.slice())
   await writer.close()
   return new Uint8Array(await new Response(stream.readable).arrayBuffer())
 }

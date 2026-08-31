@@ -50,17 +50,21 @@ function parseKeys(key: string): { topRight: Grid; bottomLeft: Grid } {
   return { topRight: buildGrid(parts[0]), bottomLeft: buildGrid(parts[1]) }
 }
 
-function prepareText(input: string): string {
+function prepareText(input: string): { prepared: string; wasPadded: boolean } {
   let clean = input.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '')
-  if (clean.length === 0) return clean
-  if (clean.length % 2 !== 0) clean += 'X'
-  return clean
+  if (clean.length === 0) return { prepared: clean, wasPadded: false }
+  let wasPadded = false
+  if (clean.length % 2 !== 0) {
+    clean += 'X'
+    wasPadded = true
+  }
+  return { prepared: clean, wasPadded }
 }
 
 function fourSquareCore(input: string, key: string, decrypt: boolean, instrument: boolean): CipherResult {
   const start = performance.now()
   const { topRight, bottomLeft } = parseKeys(key)
-  const prepared = prepareText(input)
+  const { prepared, wasPadded } = prepareText(input)
 
   const steps: CipherStep[] = []
   if (instrument) {
@@ -111,7 +115,10 @@ function fourSquareCore(input: string, key: string, decrypt: boolean, instrument
     output,
     outputEncoding: 'utf8',
     steps,
-    metadata: METADATA,
+    metadata: {
+      ...METADATA,
+      paddedCharacters: wasPadded ? 1 : 0,
+    } as typeof METADATA & { paddedCharacters: number },
     durationMs: performance.now() - start,
   }
 }

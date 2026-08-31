@@ -7,71 +7,42 @@
 
 import type { DataProvenanceMetadata } from "../provenance";
 
-/**
- * Encoding cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
- */
 export type Encoding = "utf8" | "hex" | "base64" | "binary";
 
-/**
- * Cipher Name cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
- */
-export type CipherName = string;
-
-/**
- * Cipher Direction cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
- */
 export type CipherDirection = "encrypt" | "decrypt";
 
-/**
- * Cipher Step cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
- */
 export interface CipherStep {
+  /** Step index, zero-based */
   index: number;
+
+  /** Primary label, e.g. "Round 3 — SubBytes" */
   label: string;
+
+  /** Secondary label, e.g. "Applying S-Box to each byte" */
   sublabel?: string;
+
+  /** Snapshot before this step (hex) */
   inputState: string;
+
+  /** Snapshot after this step (hex) */
   outputState: string;
+
+  /** Byte/char indices changed in this step */
   highlight?: number[];
+
+  /** Matrix data for AES state, Playfair grid, etc. */
   matrix?: string[][];
+
+  /** Key-value table for key schedule display */
   table?: { key: string; value: string }[];
-  sboxInspection?: {
-    family: string;
-    inputValue: string;
-    desIndex?: number;
-    serpentIndex?: number;
-  };
+
+  /** Human-readable explanation of what happened */
   note?: string;
+
+  /** True for major steps (show in summary mode) */
   isMilestone?: boolean;
 }
 
-/**
- * Cipher Result cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
- */
 export interface CipherResult {
   output: string;
   outputEncoding: Encoding;
@@ -81,14 +52,6 @@ export interface CipherResult {
   provenance?: DataProvenanceMetadata;
 }
 
-/**
- * Cipher Metadata cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
- */
 export interface CipherMetadata {
   name: string;
   keySize?: number;
@@ -99,37 +62,29 @@ export interface CipherMetadata {
     | "secure"
     | "legacy"
     | "deprecated"
-    | "broken"
-    | "mock"
-    | "recommended"
-    | "experimental";
+    | "broken";
 
   breakingComplexity?: string;
   yearDesigned?: number;
   standardBody?: string;
   securityWarning?: string;
-  provenance?: DataProvenanceMetadata;
+  provenance: DataProvenanceMetadata;
 }
 
-/**
- * Cipher Options cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
- */
 export interface CipherOptions {
   mode?: string;
-  padding?: boolean | string;
+  padding?: string;
   encoding?: Encoding;
   iv?: string;
   hash?: string;
   keyLength?: number;
   info?: string;
+
+  /** When true, capture state after every sub-step (for visualizer) */
   instrument?: boolean;
-  preserveFormatting?: boolean;
+
   signal?: AbortSignal;
+
   hexInput?: boolean;
   rounds?: number;
   N?: number;
@@ -138,6 +93,7 @@ export interface CipherOptions {
   dkLen?: number;
   salt?: string;
   iterations?: number;
+
   [key: string]: unknown;
 }
 
@@ -153,9 +109,18 @@ export interface TestVector {
   input: string;
   key: string;
   expected: string;
+
+  /** Expected output for decrypt (if different from encrypt) */
   expectedDecrypt?: string;
+
   description?: string;
+
+  /** Skip the encrypt direction in the KAT runner */
   skipEncrypt?: boolean;
+
+  /** Skip the decrypt direction in the KAT runner */
   skipDecrypt?: boolean;
+
+  /** Extra options forwarded to encrypt/decrypt */
   options?: Record<string, unknown>;
 }

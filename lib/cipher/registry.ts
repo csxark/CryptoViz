@@ -2123,6 +2123,18 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     options: [{ name: 'Winternitz Parameter (w)', id: 'w', type: 'select', default: 4, choices: [{ label: 'w=2', value: 2 }, { label: 'w=4', value: 4 }, { label: 'w=8', value: 8 }] }]
   },
   {
+    id: 'gronsfeld',
+    name: 'Gronsfeld Cipher',
+    category: 'classical',
+    description: 'A numeric variant of the Vigenère cipher where the key is a sequence of digits (0-9) instead of letters, making it easier to use but weaker.',
+    defaultKey: '31415',
+    defaultInput: 'ATTACK AT DAWN',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Digits (e.g. 31415)',
+    prerequisites: ['vigenere'],
+    recommendedNext: ['caesar', 'playfair'],
+  },
+  {
     id: 'csidh',
     name: 'CSIDH',
     category: 'asymmetric',

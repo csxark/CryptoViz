@@ -26,6 +26,18 @@ function mod(n: number, m: number): number {
   return ((n % m) + m) % m
 }
 
+// Computes the greatest common divisor of two integers
+function gcd(a: number, b: number): number {
+  let x = Math.abs(a)
+  let y = Math.abs(b)
+  while (y !== 0) {
+    const t = y
+    y = x % y
+    x = t
+  }
+  return x
+}
+
 // Extended Euclidean algorithm — returns [gcd, x] such that a*x + b*y = gcd
 function egcd(a: number, b: number): [number, number, number] {
   if (b === 0) return [a, 1, 0]
@@ -34,8 +46,9 @@ function egcd(a: number, b: number): [number, number, number] {
 }
 
 function modInverse(a: number, m: number): number | null {
-  const [g, x] = egcd(mod(a, m), m)
+  const g = gcd(a, m)
   if (g !== 1) return null
+  const [, x] = egcd(mod(a, m), m)
   return mod(x, m)
 }
 
@@ -58,6 +71,16 @@ export function parseHillKey(key: string): { matrix: Matrix2x2; det: number; det
     [v[2], v[3]],
   ]
   const det = mod(matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0], 26)
+  
+  // Explicit coprimality check against modulus 26
+  const commonFactor = gcd(det, 26)
+  if (commonFactor !== 1) {
+    throw new CipherError(
+      'INVALID_KEY',
+      `Key matrix determinant (${det}) is not coprime with 26 (gcd(${det}, 26) = ${commonFactor}). Common factor '${commonFactor}' prevents matrix inversion mod 26. Choose a key whose determinant is coprime with 26 — try "HILL", "GYBN", or "PQRS".`
+    )
+  }
+
   const detInverse = modInverse(det, 26)
   if (detInverse === null) {
     throw new CipherError(

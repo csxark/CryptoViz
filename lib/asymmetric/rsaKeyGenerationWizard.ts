@@ -16,6 +16,7 @@ export interface RsaWizardResult {
   input: RsaWizardInput;
   modulus: number;
   totient: number;
+  lambda: number;
   privateExponent: number;
   publicKey: string;
   privateKey: string;
@@ -63,6 +64,11 @@ export function gcd(a: number, b: number): number {
   return x;
 }
 
+export function lcm(a: number, b: number): number {
+  if (a === 0 || b === 0) return 0;
+  return Math.abs((a / gcd(a, b)) * b);
+}
+
 export function extendedGcd(
   a: number,
   b: number,
@@ -84,7 +90,7 @@ export function modInverse(value: number, modulus: number): number {
   const result = extendedGcd(value, modulus);
 
   if (result.gcd !== 1) {
-    throw new Error("Public exponent must be coprime with φ(n).");
+    throw new Error("Public exponent must be coprime with modulus.");
   }
 
   return ((result.x % modulus) + modulus) % modulus;
@@ -121,18 +127,18 @@ export function validateRsaWizardInput(input: RsaWizardInput): RsaWizardInput {
     throw new Error("p and q must be different primes.");
   }
 
-  const totient = (primeP - 1) * (primeQ - 1);
+  const lambda = lcm(primeP - 1, primeQ - 1);
 
   if (!Number.isInteger(publicExponent) || publicExponent <= 1) {
     throw new Error("Public exponent e must be an integer greater than 1.");
   }
 
-  if (publicExponent >= totient) {
-    throw new Error("Public exponent e must be smaller than φ(n).");
+  if (publicExponent >= lambda) {
+    throw new Error("Public exponent e must be smaller than λ(n).");
   }
 
-  if (gcd(publicExponent, totient) !== 1) {
-    throw new Error("Public exponent e must be coprime with φ(n).");
+  if (gcd(publicExponent, lambda) !== 1) {
+    throw new Error("Public exponent e must be coprime with λ(n).");
   }
 
   return { primeP, primeQ, publicExponent };
@@ -143,7 +149,8 @@ export function generateRsaWizard(input: RsaWizardInput): RsaWizardResult {
   const { primeP, primeQ, publicExponent } = safeInput;
   const modulus = primeP * primeQ;
   const totient = (primeP - 1) * (primeQ - 1);
-  const privateExponent = modInverse(publicExponent, totient);
+  const lambda = lcm(primeP - 1, primeQ - 1);
+  const privateExponent = modInverse(publicExponent, lambda);
 
   const steps: RsaWizardStep[] = [
     {
@@ -164,27 +171,27 @@ export function generateRsaWizard(input: RsaWizardInput): RsaWizardResult {
     },
     {
       id: "compute-totient",
-      title: "Compute Euler's totient",
-      formula: `φ(n) = (p - 1)(q - 1) = ${primeP - 1} × ${primeQ - 1}`,
-      result: `φ(n) = ${totient}`,
+      title: "Compute Carmichael's totient λ(n)",
+      formula: `λ(n) = lcm(p - 1, q - 1) = lcm(${primeP - 1}, ${primeQ - 1})`,
+      result: `λ(n) = ${lambda} (Euler's φ(n) = ${totient})`,
       explanation:
-        "Euler's totient φ(n) counts how many values below n are coprime with n. It connects public and private exponents following the original 1978 RSA paper. Note: Modern standards (RFC 8017 / PKCS#1 v2.2) prefer Carmichael's lambda λ(n) = lcm(p - 1, q - 1). Because λ(n) divides φ(n), both produce valid exponents satisfy e·d ≡ 1 (mod λ(n)), with λ(n) yielding the minimal valid d.",
+        "PKCS#1 v2.2 (RFC 8017) specifies Carmichael's lambda λ(n) = lcm(p - 1, q - 1) to derive the private exponent. While the original 1978 RSA paper used Euler's totient φ(n) = (p - 1)(q - 1), λ(n) yields the minimal private exponent d satisfying e · d ≡ 1 (mod λ(n)).",
     },
     {
       id: "choose-exponent",
       title: "Choose the public exponent",
-      formula: `gcd(e, φ(n)) = gcd(${publicExponent}, ${totient})`,
-      result: `gcd = ${gcd(publicExponent, totient)}`,
+      formula: `gcd(e, λ(n)) = gcd(${publicExponent}, ${lambda})`,
+      result: `gcd = ${gcd(publicExponent, lambda)}`,
       explanation:
-        "The public exponent e must be coprime with φ(n), otherwise it will not have a valid modular inverse.",
+        "The public exponent e must be coprime with Carmichael's lambda λ(n), ensuring a valid modular inverse exists.",
     },
     {
       id: "compute-private-exponent",
       title: "Compute the private exponent",
-      formula: `d ≡ e⁻¹ mod φ(n) = ${publicExponent}⁻¹ mod ${totient}`,
+      formula: `d ≡ e⁻¹ mod λ(n) = ${publicExponent}⁻¹ mod ${lambda}`,
       result: `d = ${privateExponent}`,
       explanation:
-        "The private exponent d reverses the public exponent under modular arithmetic. It must remain secret in real RSA systems.",
+        "The private exponent d is derived mod λ(n) in compliance with RFC 8017 / PKCS#1 v2.2. It reverses the public exponent transformation and must remain secret.",
     },
     {
       id: "assemble-keys",
@@ -200,13 +207,14 @@ export function generateRsaWizard(input: RsaWizardInput): RsaWizardResult {
     input: safeInput,
     modulus,
     totient,
+    lambda,
     privateExponent,
     publicKey: `(${modulus}, ${publicExponent})`,
     privateKey: `(${modulus}, ${privateExponent})`,
     steps,
     securityNotes: [
       "This wizard uses small primes for education only.",
-      "This wizard computes d mod φ(n) per the original 1978 RSA paper. Modern RFC 8017 / PKCS#1 v2.2 implementations use Carmichael's lambda λ(n) = lcm(p - 1, q - 1), yielding smaller but equivalent private exponents.",
+      "This wizard derives d mod λ(n) = lcm(p - 1, q - 1) in accordance with PKCS#1 v2.2 (RFC 8017). This produces the minimal valid private exponent.",
       "Real RSA keys should be generated with audited cryptographic libraries.",
       "Production RSA commonly uses 2048-bit or larger moduli.",
       "Never reuse demo primes or private exponents for real security.",
@@ -225,11 +233,11 @@ export function getRecommendedPublicExponents(totient: number): number[] {
 export function buildRsaWizardManualChecklist(): string[] {
   return [
     "Open the RSA Key Generation Wizard page.",
-    "Confirm the default p=61, q=53, e=17 example generates n=3233 and d=2753.",
-    "Change p or q to another prime and confirm n, φ(n), and d update.",
+    "Confirm the default p=61, q=53, e=17 example generates n=3233, λ(n)=780, and d=413 (or d=2753 if using φ(n)=3000).",
+    "Change p or q to another prime and confirm n, λ(n), and d update.",
     "Enter a non-prime value and confirm a friendly validation error appears.",
     "Enter the same value for p and q and confirm validation prevents it.",
-    "Try an exponent that is not coprime with φ(n) and confirm an error appears.",
+    "Try an exponent that is not coprime with λ(n) and confirm an error appears.",
     "Click each step and confirm the formula, result, and explanation update.",
     "Resize to mobile width and confirm the wizard remains usable.",
   ];

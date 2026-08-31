@@ -133,6 +133,13 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
       "The simplest polyalphabetic cipher: each letter is shifted by its position index, producing an ever-increasing Caesar shift",
     defaultKey: "",
     defaultInput: "Hello, World!",
+    id: "bacon",
+    name: "Bacon's Cipher",
+    category: "classical",
+    description:
+      'A steganographic cipher encoding each letter as a 5-bit binary string using two symbols (A and B), designed to hide messages in innocent-looking text.',
+    defaultKey: "",
+    defaultInput: "HELLO",
     securityStatus: "broken",
     id: "affine",
     name: "Affine Cipher",
@@ -2129,6 +2136,18 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     securityStatus: 'secure',
     keyPlaceholder: '64 hex characters (32-byte seed)',
     options: [{ name: 'Winternitz Parameter (w)', id: 'w', type: 'select', default: 4, choices: [{ label: 'w=2', value: 2 }, { label: 'w=4', value: 4 }, { label: 'w=8', value: 8 }] }]
+  },
+  {
+    id: 'gronsfeld',
+    name: 'Gronsfeld Cipher',
+    category: 'classical',
+    description: 'A numeric variant of the Vigenère cipher where the key is a sequence of digits (0-9) instead of letters, making it easier to use but weaker.',
+    defaultKey: '31415',
+    defaultInput: 'ATTACK AT DAWN',
+    securityStatus: 'broken',
+    keyPlaceholder: 'Digits (e.g. 31415)',
+    prerequisites: ['vigenere'],
+    recommendedNext: ['caesar', 'playfair'],
   },
   {
     id: 'csidh',

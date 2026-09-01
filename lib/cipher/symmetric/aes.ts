@@ -416,7 +416,7 @@ function aesInstrumented(
             label: `Block 1 — Round ${r} — MixColumns`,
             inputState: fromByteArray(stateBeforeMix, 'hex'),
             outputState: fromByteArray(state, 'hex'),
-           note: 'Treated each state column as a degree-3 polynomial over GF(2^8) and multiplied it by c(x) = {03}x³ + {01}x² + {01}x + {02}, reduced modulo x⁴ + 1. All coefficient arithmetic is performed in GF(2^8).',
+            note: 'Treated each state column as a degree-3 polynomial over GF(2^8) and multiplied it by c(x) = {03}x³ + {01}x² + {01}x + {02}, reduced modulo x⁴ + 1. All coefficient arithmetic is performed in GF(2^8).',
           })
 
           // AddRoundKey
@@ -647,6 +647,7 @@ function aesInstrumented(
     durationMs: performance.now() - start,
   }
 }
+
 function xorBlocks(a: Uint8Array, b: Uint8Array): Uint8Array {
   const result = new Uint8Array(16)
   for (let i = 0; i < 16; i++) {
@@ -814,6 +815,7 @@ function aesStreamInstrumented(
     durationMs: performance.now() - start,
   }
 }
+
 // PKCS7 padding helper
 function padPKCS7(bytes: Uint8Array, blockSize: number): Uint8Array {
   const paddingVal = blockSize - (bytes.length % blockSize)
@@ -896,6 +898,7 @@ function aesFast(
     durationMs: performance.now() - start,
   }
 }
+
 function getKeyBytes(key: string): Uint8Array {
   let keyBytes: Uint8Array
 
@@ -922,7 +925,6 @@ export function encrypt(
   const inputBytes = toByteArray(input, inEnc)
 
   const keyBytes = getKeyBytes(key)
-
 
   const mode = parseMode(options.mode)
 

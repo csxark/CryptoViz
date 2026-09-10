@@ -17,7 +17,7 @@ interface Params {
   autoCompute: boolean;
   options: CipherOptions;
   demoMode: boolean;
-  onResult: (result: CipherResult) => void;
+  onResult: (result: CipherResult | null) => void;
   onStepRestore: (step: number) => void;
   onHistory: (update: (prev: ConversionHistoryEntry[]) => ConversionHistoryEntry[]) => void;
   onError: (message: string | null) => void;
@@ -106,7 +106,7 @@ onStepRestore(
       }
     } catch (error: unknown) {
       if (error instanceof Error && error.name === "AbortError") return;
-      onResult({} as CipherResult);
+      onResult(null);
       onError(error instanceof Error ? error.message : "An error occurred during calculation.");
     } finally {
       if (abortRef.current === controller) abortRef.current = null;

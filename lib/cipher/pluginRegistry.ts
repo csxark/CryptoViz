@@ -79,16 +79,11 @@ export class CipherPluginRegistry {
         validKeyLengths: isSymmetric ? [128, 192, 256] : [0],
         validIvLengths: isAEAD ? [96, 128] : [],
       },
-      async execute(input: CipherInput): Promise<CipherOutput> {
-        const startTime = performance.now();
-        const ciphertext = input.text.split('').reverse().join('');
-        const endTime = performance.now();
-
-        return {
-          ciphertext,
-          plaintext: input.text,
-          executionTimeMs: Number((endTime - startTime).toFixed(3)),
-        };
+      async execute(_input: CipherInput): Promise<CipherOutput> {
+        throw new Error(
+          `CipherPluginRegistry: No real implementation registered for cipher "${def.id}". ` +
+          `Use the worker dispatch system instead.`
+        );
       },
       getTestVectors(): KnownAnswerTestVector[] {
         return vectorsForCipher;

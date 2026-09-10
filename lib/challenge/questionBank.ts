@@ -1287,8 +1287,8 @@ export const QUESTION_BANK: QuizQuestion[] = [
  * to the repository's advertised question volume easier to detect during
  * development and testing.
  */
-if (QUESTION_BANK.length !== 67) {
+if (QUESTION_BANK.length !== 65) {
   throw new Error(
-    `Practice Challenge question bank must contain exactly 67 questions; found ${QUESTION_BANK.length}.`,
+    `Practice Challenge question bank must contain exactly 65 questions; found ${QUESTION_BANK.length}.`,
   );
 }

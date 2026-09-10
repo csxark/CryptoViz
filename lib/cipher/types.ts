@@ -41,6 +41,13 @@ export interface CipherStep {
 
   /** True for major steps (show in summary mode) */
   isMilestone?: boolean;
+
+  sboxInspection?: {
+    family: string;
+    inputValue: string;
+    desIndex?: number;
+    serpentIndex?: number;
+  };
 }
 
 export interface CipherResult {
@@ -52,6 +59,8 @@ export interface CipherResult {
   provenance?: DataProvenanceMetadata;
 }
 
+export type CipherName = string;
+
 export interface CipherMetadata {
   name: string;
   keySize?: number;
@@ -59,21 +68,24 @@ export interface CipherMetadata {
   rounds?: number;
   modeOfOperation?: string;
   securityStatus:
+    | "recommended"
     | "secure"
     | "legacy"
     | "deprecated"
-    | "broken";
+    | "broken"
+    | "experimental"
+    | "mock";
 
   breakingComplexity?: string;
   yearDesigned?: number;
   standardBody?: string;
   securityWarning?: string;
-  provenance: DataProvenanceMetadata;
+  provenance?: DataProvenanceMetadata;
 }
 
 export interface CipherOptions {
   mode?: string;
-  padding?: string;
+  padding?: boolean | string;
   encoding?: Encoding;
   iv?: string;
   hash?: string;

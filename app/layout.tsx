@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = 'https://openprep.ai';
+const SITE_URL = 'https://cryptoviz.app';
 
 export const metadata: Metadata = {
-  title: 'OpenPrep AI - Smarter Exam Preparation and Analytics',
-  description: 'Master your curriculum, track study streaks, and simulate real testing conditions with AI-powered diagnostics.',
+  title: 'CryptoViz — Interactive Cryptography Visualizer & Learning Platform',
+  description: 'Explore, visualize, and learn cryptographic algorithms step-by-step. Interactive ciphers, hashing, key exchange, and modern encryption — all in your browser.',
   icons: {
     icon: '/icon.svg',
   },
@@ -27,16 +27,16 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   openGraph: {
-    title: 'OpenPrep AI - Smarter Exam Preparation and Analytics',
-    description: 'Master your curriculum, track study streaks, and simulate real testing conditions with AI-powered diagnostics.',
+    title: 'CryptoViz — Interactive Cryptography Visualizer & Learning Platform',
+    description: 'Explore, visualize, and learn cryptographic algorithms step-by-step. Interactive ciphers, hashing, key exchange, and modern encryption — all in your browser.',
     url: SITE_URL,
-    siteName: 'OpenPrep AI',
+    siteName: 'CryptoViz',
     images: [
       {
         url: `${SITE_URL}/assets/og-sharing-banner.png`,
         width: 1200,
         height: 630,
-        alt: 'OpenPrep AI Learning Workspace Preview Card Thumbnail',
+        alt: 'CryptoViz — Interactive Cryptography Visualizer',
       },
     ],
     locale: 'en_IN',
@@ -44,10 +44,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'OpenPrep AI - Smarter Exam Preparation and Analytics',
-    description: 'Master your curriculum, track study streaks, and simulate real testing conditions with AI-powered diagnostics.',
+    title: 'CryptoViz — Interactive Cryptography Visualizer & Learning Platform',
+    description: 'Explore, visualize, and learn cryptographic algorithms step-by-step. Interactive ciphers, hashing, key exchange, and modern encryption — all in your browser.',
     images: [`${SITE_URL}/assets/og-sharing-banner.png`],
-    creator: '@OpenPrepAI',
+    creator: '@CryptoViz',
   },
 };
 
@@ -63,24 +63,24 @@ export default function RootLayout({
         "@type": "WebApplication",
         "@id": `${SITE_URL}/#webapp`,
         "url": SITE_URL,
-        "name": "OpenPrep AI",
+        "name": "CryptoViz",
         "applicationCategory": "EducationalApplication",
         "operatingSystem": "All",
         "browserRequirements": "Requires JavaScript. Requires HTML5.",
         "offers": {
           "@type": "Offer",
           "price": "0.00",
-          "priceCurrency": "INR"
+          "priceCurrency": "USD"
         }
       },
       {
         "@type": "Course",
         "@id": `${SITE_URL}/#course`,
-        "name": "AI-Powered Adaptive Mock Examination Modules",
-        "description": "Standardized competitive exam tracking grids with integrated optical mark recognition bubble sheets.",
+        "name": "Interactive Cryptography Visualization & Learning",
+        "description": "Step-by-step visualization of classical, symmetric, asymmetric, and hash algorithms with mathematical traces.",
         "provider": {
           "@type": "Organization",
-          "name": "OpenPrep AI",
+          "name": "CryptoViz",
           "url": SITE_URL
         }
       }

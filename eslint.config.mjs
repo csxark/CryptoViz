@@ -42,6 +42,8 @@ export default [
       "react-hooks/exhaustive-deps": "off",
       "no-restricted-properties": "off",
       "jsx-a11y/role-supports-aria-props": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "import/no-anonymous-default-export": "off",
     },
   },
 ];

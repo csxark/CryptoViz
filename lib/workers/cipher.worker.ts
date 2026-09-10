@@ -5,7 +5,6 @@
  */
 
 
-import { deriveKey } from "../kdf/pbkdf2";
 import { deriveScryptKey } from "../kdf/scrypt";
 import {
   validateWorkload,
@@ -716,69 +715,30 @@ if (!result || typeof result !== "object") {        throw new CipherError(
         );
       }
 
-const batchSize =
-  typeof options?.traceBatchSize === "number"
-    ? Math.max(1, Math.floor(options.traceBatchSize))
-    : 32;
-
 const traceSteps = result.steps ?? [];
+const useTransfer = traceSteps.length >= WORKER_STEP_TRANSFER_THRESHOLD;
 
-workerScope.postMessage({
-  type: "TRACE_START",
-  requestId,
-  jobId: request.jobId,
-  totalSteps: traceSteps.length,
-});
-
-for (let offset = 0; offset < traceSteps.length; offset += batchSize) {
-  if (request.jobId && isJobCancelled(request.jobId)) {
-    throw new DOMException(
-      "The user aborted the request.",
-      "AbortError",
-    );
-  }
-
-  const batch = traceSteps.slice(offset, offset + batchSize);
-  const stepsBuffer = encodeCipherSteps(batch);
-  const transferable = stepsBuffer.buffer as ArrayBuffer;
-
-  workerScope.postMessage(
-    {
-      type: "TRACE_BATCH",
-      requestId,
-      jobId: request.jobId,
-      offset,
-      stepsBuffer: transferable,
-    },
-    [transferable],
-  );
-
-  await new Promise<void>((resolve) => {
-    const acknowledge = () => {
-      workerScope.removeEventListener("message", acknowledge);
-      resolve();
-    };
-
-    workerScope.addEventListener("message", acknowledge);
-  });
+let stepsBuffer: ArrayBuffer | undefined;
+if (useTransfer) {
+  const encoded = encodeCipherSteps(traceSteps);
+  stepsBuffer = encoded.buffer as ArrayBuffer;
 }
-
-workerScope.postMessage({
-  type: "TRACE_COMPLETE",
-  requestId,
-  jobId: request.jobId,
-});
 
 const response: WorkerResponse = {
   requestId,
   success: true,
   payload: {
-    result: { ...result, steps: [] },
+    result: useTransfer ? { ...result, steps: [] } : result,
+    ...(stepsBuffer ? { stepsBuffer } : {}),
   },
   timings: { durationMs },
 };
 
-workerScope.postMessage(response);    } catch (error: unknown) {
+if (stepsBuffer) {
+  workerScope.postMessage(response, [stepsBuffer]);
+} else {
+  workerScope.postMessage(response);
+}    } catch (error: unknown) {
       const durationMs = performance.now() - startTime;
 const { code, message, details, remediation } =
   toErrorDetails(error);

@@ -47,7 +47,7 @@ function caesarInstrumented(
   input: string,
   key: string,
   decrypt: boolean,
-  options: CipherOptions
+  _options: CipherOptions
 ): CipherResult {
   const start = performance.now()
   const shift = validateCaesarKey(key)
@@ -55,30 +55,19 @@ function caesarInstrumented(
   const steps: CipherStep[] = []
   const direction = decrypt ? 'backward' : 'forward'
   let output = ''
-  let startIdx = 0
-  const incrementalCache = options.incrementalCache as {
-    input: string
-    result: Pick<CipherResult, 'output' | 'steps'>
-  } | undefined
 
-  if (incrementalCache && input.startsWith(incrementalCache.input)) {
-    startIdx = incrementalCache.input.length
-    output = incrementalCache.result.output
-    steps.push(...incrementalCache.result.steps)
-  } else {
-    // Step 0: Key setup (milestone)
-    steps.push({
-      index: 0,
-      label: 'Key setup',
-      inputState: `KEY: ${key}`,
-      outputState: `SHIFT: ${decrypt ? '-' : '+'}${shift}`,
-      note: `Each letter will be shifted ${shift} positions ${direction} in the alphabet.${shift === 13 ? ' (This is ROT13 — self-inverse.)' : ''}`,
-      isMilestone: true,
-    })
-  }
+  // Step 0: Key setup (milestone)
+  steps.push({
+    index: 0,
+    label: 'Key setup',
+    inputState: `KEY: ${key}`,
+    outputState: `SHIFT: ${decrypt ? '-' : '+'}${shift}`,
+    note: `Each letter will be shifted ${shift} positions ${direction} in the alphabet.${shift === 13 ? ' (This is ROT13 — self-inverse.)' : ''}`,
+    isMilestone: true,
+  })
 
   // Steps 1..n: one per character
-  for (let i = startIdx; i < input.length; i++) {
+  for (let i = 0; i < input.length; i++) {
     const char = input[i]
     const result = transformChar(char, shift, decrypt)
     output += result
@@ -108,23 +97,13 @@ function caesarInstrumented(
   }
 }
 
-function caesarFast(input: string, key: string, decrypt: boolean, options: CipherOptions): CipherResult {
+function caesarFast(input: string, key: string, decrypt: boolean, _options: CipherOptions): CipherResult {
   const start = performance.now()
   const shift = validateCaesarKey(key)
 
   let output = ''
-  let startIdx = 0
-  const incrementalCache = options.incrementalCache as {
-    input: string
-    result: Pick<CipherResult, 'output' | 'steps'>
-  } | undefined
 
-  if (incrementalCache && input.startsWith(incrementalCache.input)) {
-    startIdx = incrementalCache.input.length
-    output = incrementalCache.result.output
-  }
-
-  for (let i = startIdx; i < input.length; i++) {
+  for (let i = 0; i < input.length; i++) {
     output += transformChar(input[i], shift, decrypt)
   }
 

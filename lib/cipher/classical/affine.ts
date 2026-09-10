@@ -21,12 +21,12 @@
  * @example
  * ```ts
  * const { output } = encrypt("HELLO", "5,8")
- * // output: "RJFFE"  (a=5, b=8)
+ * // output: "RCLLA"  (a=5, b=8)
  * ```
  *
  * @example
  * ```ts
- * const { output } = decrypt("RJFFE", "5,8")
+ * const { output } = decrypt("RCLLA", "5,8")
  * // output: "HELLO"
  * ```
  */
@@ -424,27 +424,27 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELLO',
     key: '5,8',
-    expected: 'RJFFE',
+    expected: 'RCLLA',
     description:
-      'Affine cipher with a=5, b=8. H(7)→(5·7+8)%26=43%26=17→R, E(4)→28%26=2→R, L(11)→63%26=11→L, L(11)→11→L, O(14)→78%26=0→A. Wait — recalc: 5·4+8=28%26=2→C? Let me verify: E(4)=5·4+8=28 mod26=2 → C. Let me trace carefully: H=7 → 5·7+8=43 mod26=17 → R, E=4 → 5·4+8=28 mod26=2 → C, L=11 → 5·11+8=63 mod26=11 → L, L=11 → 11 → L, O=14 → 5·14+8=78 mod26=0 → A. Expected: RCLLA.',
+      'Affine cipher with a=5, b=8. H(7)→(5·7+8)%26=17→R, E(4)→(5·4+8)%26=2→C, L(11)→(5·11+8)%26=11→L, L(11)→L, O(14)→(5·14+8)%26=0→A.',
   },
   {
     input: 'ATTACK AT DAWN',
     key: '5,8',
-    expected: 'IJJIKI GI JISB',
-    description: 'Affine cipher a=5, b=8 with spaces and mixed case.',
+    expected: 'IZZISG IZ XIOV',
+    description: 'Affine cipher a=5, b=8 with spaces.',
   },
   {
     input: 'abc',
     key: '3,5',
-    expected: 'fgh',
-    description: 'Lowercase input with a=3, b=5. a=0→5→f, b=1→8→h... verify: 3·0+5=5→f, 3·1+5=8→i, 3·2+5=11→l. Expected: fil.',
+    expected: 'fil',
+    description: 'Lowercase input with a=3, b=5. a(0)→(3·0+5)=5→f, b(1)→(3·1+5)=8→i, c(2)→(3·2+5)=11→l.',
   },
   {
     input: 'HELLO WORLD',
     key: '5,0',
-    expected: 'TMBBM QMBTN',
-    description: 'Pure multiplicative Affine (b=0). H=7→35%26=9→J? Verify: 5·7=35%26=9→J, E=4→20%26=20→U, L=11→55%26=3→D, L=3→D, O=14→70%26=18→S. Expected: JUDDS QMDDS?',
+    expected: 'JUDDS GSHDP',
+    description: 'Pure multiplicative Affine (b=0). H(7)→35%26=9→J, E(4)→20→U, L(11)→55%26=3→D, L→D, O(14)→70%26=18→S, W(22)→110%26=6→G, O→S, R(17)→85%26=7→H, L→D, D(3)→15→P.',
   },
   {
     input: 'X',
@@ -455,7 +455,7 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'Hello, World!',
     key: '7,3',
-    expected: 'Tija:, Nfwa!',
+    expected: 'Afccx, Bxscy!',
     description: 'Mixed case with punctuation — non-alpha chars pass through.',
   },
 ]

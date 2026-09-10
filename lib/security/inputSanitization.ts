@@ -1,12 +1,18 @@
 import DOMPurify from "dompurify";
-// @ts-expect-error
-import { JSDOM } from "jsdom";
 
 const domWindow =
   typeof window !== "undefined"
     ? (window as unknown as Window & typeof globalThis)
-    : (new JSDOM("").window as unknown as Window & typeof globalThis);
-const purifier = DOMPurify(domWindow);
+    : (() => {
+        try {
+          // Dynamic require so Turbopack/webpack do not pull jsdom (and node:fs) into client browser bundles
+          const jsdomMod = typeof require !== "undefined" ? eval("require")("jsdom") : null;
+          return jsdomMod ? (new jsdomMod.JSDOM("").window as unknown as Window & typeof globalThis) : ({} as unknown as Window & typeof globalThis);
+        } catch {
+          return {} as unknown as Window & typeof globalThis;
+        }
+      })();
+const purifier = typeof DOMPurify === "function" ? DOMPurify(domWindow) : DOMPurify;
 
 export type SanitizedInputKind =
   | "plain-text"

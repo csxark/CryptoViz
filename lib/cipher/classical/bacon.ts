@@ -143,7 +143,7 @@ function baconInstrumented(
       index: 1,
       label: 'Bacon encoding table (first half)',
       inputState: alpha.slice(0, 13),
-      outputState: alpha.slice(0, 13).map(c => letterToCode(c, useExtended).join('')).join(' '),
+      outputState: alpha.slice(0, 13).split('').map(c => letterToCode(c, useExtended).join('')).join(' '),
       matrix: tableRows,
       note: 'Each letter maps to a unique 5-bit binary code. 0=A, 1=B.',
       isMilestone: true,

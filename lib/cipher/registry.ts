@@ -133,6 +133,11 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
       "The simplest polyalphabetic cipher: each letter is shifted by its position index, producing an ever-increasing Caesar shift",
     defaultKey: "",
     defaultInput: "Hello, World!",
+    securityStatus: "broken",
+    prerequisites: ["caesar"],
+    recommendedNext: ["vigenere", "playfair"],
+  },
+  {
     id: "bacon",
     name: "Bacon's Cipher",
     category: "classical",
@@ -141,6 +146,10 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultKey: "",
     defaultInput: "HELLO",
     securityStatus: "broken",
+    prerequisites: ["caesar"],
+    recommendedNext: ["vigenere", "playfair"],
+  },
+  {
     id: "affine",
     name: "Affine Cipher",
     category: "classical",
@@ -150,7 +159,7 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     defaultInput: "Hello, World!",
     securityStatus: "broken",
     keyPlaceholder: "a,b (e.g. 5,8)",
-    practicalUseCases: ["Educational: demonstrates modular arithmetic in cryptography", "Historical: formalized in classical cryptanalysis"]
+    practicalUseCases: ["Educational: demonstrates modular arithmetic in cryptography", "Historical: formalized in classical cryptanalysis"],
     prerequisites: ["caesar"],
     recommendedNext: ["vigenere", "playfair"],
   },
@@ -2148,6 +2157,8 @@ export const CIPHER_REGISTRY: CipherDefinition[] = [
     keyPlaceholder: 'Keyword (e.g. SECRET)',
     prerequisites: ['caesar'],
     recommendedNext: ['vigenere', 'playfair'],
+  },
+  {
     id: 'gronsfeld',
     name: 'Gronsfeld Cipher',
     category: 'classical',

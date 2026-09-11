@@ -268,7 +268,7 @@ export function decrypt(
  * HELLO WORLD, key=31415:
  *   H(7)+3→K, E(4)+1→F, L(11)+4→P, L(11)+1→M, O(14)+5→T,
  *   space, W(22)+3→Z, O(14)+1→P, R(17)+4→V, L(11)+1→M, D(3)+5→I
- *   = KFPMT ZPVM
+ *   = KFPMT ZPVMI
  */
 export const TEST_VECTORS: TestVector[] = [
   {
@@ -306,7 +306,7 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELLO WORLD',
     key: '31415',
-    expected: 'KFPMT ZPVM',
+    expected: 'KFPMT ZPVMI',
     description: 'With spaces — non-alpha chars pass through.',
   },
 ]

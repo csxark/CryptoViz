@@ -196,7 +196,7 @@ describe("decodeMorse", () => {
 
   it("decodes with word separator /", () => {
     const result = decodeMorse(".... . / .-.. .-.. ---");
-    expect(result.decoded).toBe("HELLO");
+    expect(result.decoded).toBe("HE LLO");
   });
 
   it("handles empty input", () => {

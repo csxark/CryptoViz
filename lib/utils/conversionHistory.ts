@@ -94,17 +94,6 @@ export function saveConversionHistory(
   const normalized = normalizeConversionHistory(history, cipherId)
   const stored = normalized.map(({ cipherId: _cipherId, ...entry }) => entry)
 
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = normalized.map(({ cipherId: __cipherId, ...entry }) => entry)
-      window.localStorage.setItem(
-        getConversionHistoryStorageKey(cipherId),
-        JSON.stringify(stored),
-      )
-    } catch {
-      // Storage can be unavailable in private mode or when quota is full.
-    }
-  }
   safeSetItemJson(getConversionHistoryStorageKey(cipherId), stored)
 
   return normalized

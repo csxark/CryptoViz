@@ -254,7 +254,7 @@ export function decrypt(
  * Verified by hand:
  *   HELLO: H(7+0)→H, E(4+1)→F, L(11+2)→N, L(11+3)→O, O(14+4)→S = HFNOS
  *   ABC:   A(0+0)→A, B(1+1)→C, C(2+2)→E = ACE
- *   ATTACK: A(0+0)→A, T(19+1)→U, T(19+2)→V, A(0+3)→D, C(2+4)→G, K(10+5)→P = AVVDGP
+ *   ATTACK: A(0+0)→A, T(19+1)→U, T(19+2)→V, A(0+3)→D, C(2+4)→G, K(10+5)→P = AUVDGP
  */
 export const TEST_VECTORS: TestVector[] = [
   {
@@ -274,7 +274,7 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'ATTACK',
     key: '',
-    expected: 'AVVDGP',
+    expected: 'AUVDGP',
     description:
       'A(0+0)→A, T(19+1)→U, T(19+2)→V, A(0+3)→D, C(2+4)→G, K(10+5)→P',
   },
@@ -287,14 +287,14 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELLO WORLD',
     key: '',
-    expected: 'HFNOS AUQYF',
+    expected: 'HFNOS CVZUN',
     description:
-      'With space passthrough: HELLO→HFNOS, space stays, WORLD→AUQYF (positions continue from i=6).',
+      'With space passthrough: HELLO→HFNOS, space stays, WORLD→CVZUN (positions continue from i=6).',
   },
   {
     input: 'the quick brown fox',
     key: '',
-    expected: 'tig xkmeu fjlcb pgi',
+    expected: 'tig uzojs lcajb vfp',
     description:
       'Lowercase with spaces — spaces pass through, position counter continues for all characters.',
   },

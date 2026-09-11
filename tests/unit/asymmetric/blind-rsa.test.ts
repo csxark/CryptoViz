@@ -20,7 +20,7 @@ describe('Blind RSA', () => {
         const pk = JSON.parse(keys.publicKey)
         const sk = JSON.parse(keys.privateKey)
         const n = BigInt('0x' + pk.n)
-        const d = BigInt(sk.d)
+        const d = BigInt(sk.d.startsWith('0x') ? sk.d : '0x' + sk.d)
         const blinded_msg = BigInt('0x' + blindData.blindedMessage)
 
         // blind_sig = blinded_msg^d mod n

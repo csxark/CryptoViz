@@ -56,7 +56,7 @@ describe('useCipherWorker', () => {
     const decoder = new TextDecoder()
     const parsedPayload = JSON.parse(decoder.decode(sentBuffer))
 
-    expect(parsedPayload.type).toBe('encrypt')
+    expect(parsedPayload.type).toBe('EXECUTE')
     expect(parsedPayload.payload.cipherId).toBe('caesar')
     expect(parsedPayload.payload.input).toBe('hello')
     expect(parsedPayload.payload.key).toBe('3')
@@ -641,7 +641,8 @@ describe('useCipherWorker', () => {
     })
 
     const parsed = JSON.parse(new TextDecoder().decode(worker.postMessage.mock.calls[0][0] as Uint8Array))
-    expect(parsed.type).toBe('decrypt')
+    expect(parsed.type).toBe('EXECUTE')
+    expect(parsed.payload.type).toBe('decrypt')
     expect(parsed.payload.input).toBe('khoor')
 
     act(() => {

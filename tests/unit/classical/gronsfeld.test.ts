@@ -23,7 +23,7 @@ describe('Gronsfeld Cipher', () => {
     })
 
     it('preserves non-alphabetic characters', () => {
-      expect(encrypt('HELLO WORLD', '31415').output).toBe('KFPMT ZPVM')
+      expect(encrypt('HELLO WORLD', '31415').output).toBe('KFPMT ZPVMI')
     })
 
     it('preserves letter casing', () => {
@@ -60,7 +60,7 @@ describe('Gronsfeld Cipher', () => {
     })
 
     it('preserves non-alphabetic characters', () => {
-      expect(decrypt('KFPMT ZPVM', '31415').output).toBe('HELLO WORLD')
+      expect(decrypt('KFPMT ZPVMI', '31415').output).toBe('HELLO WORLD')
     })
 
     it('preserves letter casing', () => {

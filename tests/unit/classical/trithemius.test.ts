@@ -14,9 +14,9 @@ describe('Trithemius Cipher', () => {
       expect(encrypt('ABC').output).toBe('ACE')
     })
 
-    it('encrypts ATTACK to AVVDGP', () => {
+    it('encrypts ATTACK to AUVDGP', () => {
       // A(0+0)=0→A, T(19+1)=20→U, T(19+2)=21→V, A(0+3)=3→D, C(2+4)=6→G, K(10+5)=15→P
-      expect(encrypt('ATTACK').output).toBe('AVVDGP')
+      expect(encrypt('ATTACK').output).toBe('AUVDGP')
     })
 
     it('preserves letter casing', () => {
@@ -24,7 +24,7 @@ describe('Trithemius Cipher', () => {
     })
 
     it('passes non-alphabetic characters through unchanged', () => {
-      expect(encrypt('HELLO, WORLD!').output).toBe('HFNOS, AUQYF!')
+      expect(encrypt('HELLO, WORLD!').output).toBe('HFNOS, DWAVO!')
     })
 
     it('single letter at position 0 is identity', () => {
@@ -39,7 +39,7 @@ describe('Trithemius Cipher', () => {
 
     it('handles long input with wrapping shifts', () => {
       // After position 26, shifts wrap around (26 mod 26 = 0)
-      const input = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAA' // 27 A's
+      const input = 'A'.repeat(27) // 27 A's
       const result = encrypt(input)
       // First 26 letters: A shifts by 0,1,...,25 → A,B,...,Z
       // 27th letter: A shifts by 26 mod 26 = 0 → A
@@ -56,8 +56,8 @@ describe('Trithemius Cipher', () => {
       expect(decrypt('ACE').output).toBe('ABC')
     })
 
-    it('decrypts AVVDGP back to ATTACK', () => {
-      expect(decrypt('AVVDGP').output).toBe('ATTACK')
+    it('decrypts AUVDGP back to ATTACK', () => {
+      expect(decrypt('AUVDGP').output).toBe('ATTACK')
     })
 
     it('preserves letter casing', () => {
@@ -65,7 +65,7 @@ describe('Trithemius Cipher', () => {
     })
 
     it('passes non-alphabetic characters through unchanged', () => {
-      expect(decrypt('HFNOS, AUQYF!').output).toBe('HELLO, WORLD!')
+      expect(decrypt('HFNOS, DWAVO!').output).toBe('HELLO, WORLD!')
     })
 
     it('single letter at position 0 is identity', () => {
@@ -75,7 +75,7 @@ describe('Trithemius Cipher', () => {
     it('decrypts wrapping shifts correctly', () => {
       const encrypted = 'ABCDEFGHIJKLMNOPQRSTUVWXYZA' // 27 chars
       const decrypted = decrypt(encrypted)
-      expect(decrypted.output).toBe('AAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+      expect(decrypted.output).toBe('A'.repeat(27))
     })
   })
 

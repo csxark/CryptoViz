@@ -202,3 +202,79 @@ describe("Cipher output depends on both input and key", () => {
     expect(r2.output).toBe("OLSSV");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Test: A→B→A round-trip regression (frozen result detection)
+// ---------------------------------------------------------------------------
+describe("Frozen result regression — A→B→A cycle", () => {
+  it("Caesar: A→B→A produces correct outputs each time", () => {
+    const rA1 = caesar.encrypt("HELLO WORLD", "3");
+    expect(rA1.output).toBe("KHOOR ZRUOG");
+
+    const rB = caesar.encrypt("GOODBYE", "5");
+    expect(rB.output).toBe("LTTIGDJ");
+
+    const rA2 = caesar.encrypt("HELLO WORLD", "3");
+    expect(rA2.output).toBe("KHOOR ZRUOG");
+  });
+
+  it("Vigenere: A→B→A produces correct outputs each time", () => {
+    const rA1 = vigenere.encrypt("ATTACKATDAWN", "LEMON");
+    expect(rA1.output).toBe("LXFOPVEFRNHR");
+
+    const rB = vigenere.encrypt("DEFENDCASTLE", "ORANGE");
+    // Independently verified: D+O=R, E+R=V, F+A=F, E+N=R, N+G=T, D+E=H, C+O=Q, A+R=R, S+A=S, T+N=G, L+G=R, E+E=I
+    expect(rB.output).toBe("RVFRTHQRSGRI");
+
+    const rA2 = vigenere.encrypt("ATTACKATDAWN", "LEMON");
+    expect(rA2.output).toBe("LXFOPVEFRNHR");
+  });
+
+  it("Affine: A→B→A produces correct outputs each time", () => {
+    const rA1 = affine.encrypt("HELLO", "5,8");
+    expect(rA1.output).toBe("RCLLA");
+
+    const rB = affine.encrypt("WORLD", "7,3");
+    // W(22)*7+3=157 mod26=1 → B, O(14)*7+3=101 mod26=23 → X,
+    // R(17)*7+3=122 mod26=18 → S, L(11)*7+3=80 mod26=2 → C,
+    // D(3)*7+3=24 mod26=24 → Y
+    expect(rB.output).toBe("BXSCY");
+
+    const rA2 = affine.encrypt("HELLO", "5,8");
+    expect(rA2.output).toBe("RCLLA");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Additional golden vectors — independently verified
+// ---------------------------------------------------------------------------
+describe("Additional golden vectors", () => {
+  it("Caesar: shift 0 is identity", () => {
+    expect(caesar.encrypt("HELLO", "0").output).toBe("HELLO");
+  });
+
+  it("Caesar: shift 26 is identity", () => {
+    expect(caesar.encrypt("HELLO", "26").output).toBe("HELLO");
+  });
+
+  it("Caesar: shift 1 on Z wraps to A", () => {
+    expect(caesar.encrypt("Z", "1").output).toBe("A");
+  });
+
+  it("Vigenere: single-letter key A is identity", () => {
+    expect(vigenere.encrypt("HELLO", "A").output).toBe("HELLO");
+  });
+
+  it("Beaufort: round-trip is identity", () => {
+    const enc = beaufort.encrypt("HELLO", "KEY");
+    const dec = beaufort.decrypt(enc.output, "KEY");
+    expect(dec.output).toBe("HELLO");
+  });
+
+  it("Playfair: round-trip preserves message (modulo X padding)", () => {
+    const enc = playfair.encrypt("HELLO", "KEYWORD");
+    const dec = playfair.decrypt(enc.output, "KEYWORD");
+    // Playfair may add X padding, so check starts-with
+    expect(dec.output.startsWith("HEL")).toBe(true);
+  });
+});

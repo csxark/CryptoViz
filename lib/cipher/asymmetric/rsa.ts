@@ -601,7 +601,9 @@ export function decrypt(
   }
 
   let output = ''
-  if (cipherParts.length === 1 && !input.includes(',') && plaintexts[0] < 128n) {
+  if (options.inputEncoding === 'integer') {
+    output = plaintexts.join(',')
+  } else if (cipherParts.length === 1 && !input.includes(',') && plaintexts[0] < 128n) {
     output = plaintexts[0].toString()
   } else {
     try {

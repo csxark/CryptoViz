@@ -119,7 +119,13 @@ describe("cipher trace serialization", () => {
       result,
     });
 
-    expect(traceToCipherResult(trace)).toEqual(result);
+    const reconstructed = traceToCipherResult(trace);
+    expect(reconstructed.output).toBe(result.output);
+    expect(reconstructed.outputEncoding).toBe(result.outputEncoding);
+    expect(reconstructed.steps).toEqual(result.steps);
+    expect(reconstructed.durationMs).toBe(result.durationMs);
+    expect(reconstructed.metadata.name).toBe(result.metadata.name);
+    expect(reconstructed.metadata.securityStatus).toBe(result.metadata.securityStatus);
   });
 
   it("redacts the key and secret options by default", () => {

@@ -759,6 +759,9 @@ payload: {
       if (jobStarted) {
         activeJobs = Math.max(0, activeJobs - 1);
       }
+      if (requestId !== "unknown") {
+        clearJobCancellation(requestId);
+      }
     }
   },
 );

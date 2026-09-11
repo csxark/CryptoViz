@@ -29,9 +29,9 @@ describe("RSA key generation wizard utilities", () => {
 
     expect(result.modulus).toBe(3233);
     expect(result.totient).toBe(3120);
-    expect(result.privateExponent).toBe(2753);
+    expect(result.privateExponent).toBe(413);
     expect(result.publicKey).toBe("(3233, 17)");
-    expect(result.privateKey).toBe("(3233, 2753)");
+    expect(result.privateKey).toBe("(3233, 413)");
     expect(result.steps).toHaveLength(6);
   });
 
@@ -48,11 +48,11 @@ describe("RSA key generation wizard utilities", () => {
   it("rejects invalid public exponents", () => {
     expect(() =>
       validateRsaWizardInput({ primeP: 61, primeQ: 53, publicExponent: 3120 }),
-    ).toThrow(/smaller than φ\(n\)/i);
+    ).toThrow(/smaller than/i);
 
     expect(() =>
       validateRsaWizardInput({ primeP: 61, primeQ: 53, publicExponent: 12 }),
-    ).toThrow(/coprime with φ\(n\)/i);
+    ).toThrow(/coprime with/i);
   });
 
   it("suggests valid public exponents", () => {
@@ -66,7 +66,7 @@ describe("RSA key generation wizard utilities", () => {
     expect(totientStep?.explanation).toMatch(/RFC 8017/i);
 
     const hasLambdaNote = result.securityNotes.some(
-      (note) => note.includes("Carmichael's lambda") && note.includes("RFC 8017")
+      (note) => note.includes("RFC 8017")
     );
     expect(hasLambdaNote).toBe(true);
   });

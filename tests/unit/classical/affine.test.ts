@@ -22,7 +22,7 @@ describe('Affine Cipher', () => {
     })
 
     it('passes non-alphabetic characters through unchanged', () => {
-      expect(encrypt('HELLO, WORLD!', '5,8').output).toBe('RCLLA, FMCLA!')
+      expect(encrypt('HELLO, WORLD!', '5,8').output).toBe('RCLLA, OAPLX!')
     })
 
     it('preserves letter casing', () => {
@@ -71,7 +71,7 @@ describe('Affine Cipher', () => {
     })
 
     it('passes non-alphabetic characters through unchanged', () => {
-      expect(decrypt('RCLLA, FMCLA!', '5,8').output).toBe('HELLO, WORLD!')
+      expect(decrypt('RCLLA, OAPLX!', '5,8').output).toBe('HELLO, WORLD!')
     })
 
     it('preserves letter casing', () => {
@@ -86,28 +86,28 @@ describe('Affine Cipher', () => {
   describe('round-trip encrypt -> decrypt', () => {
     it('round-trips with key 5,8', () => {
       const { output } = encrypt('HELLO WORLD', '5,8')
-      expect(decrypt(output, '5,8').output).toBe('HELLOWORLD')
+      expect(decrypt(output, '5,8').output).toBe('HELLO WORLD')
     })
 
     it('round-trips with key 3,5', () => {
       const { output } = encrypt('ATTACK AT DAWN', '3,5')
-      expect(decrypt(output, '3,5').output).toBe('ATTACKATDAWN')
+      expect(decrypt(output, '3,5').output).toBe('ATTACK AT DAWN')
     })
 
     it('round-trips with key 7,3', () => {
       const { output } = encrypt('CRYPTOGRAPHY IS FUN', '7,3')
-      expect(decrypt(output, '7,3').output).toBe('CRYPTOGRAPHYISFUN')
+      expect(decrypt(output, '7,3').output).toBe('CRYPTOGRAPHY IS FUN')
     })
 
     it('round-trips lowercase input', () => {
       const { output } = encrypt('hello world', '11,4')
-      expect(decrypt(output, '11,4').output).toBe('helloworld')
+      expect(decrypt(output, '11,4').output).toBe('hello world')
     })
 
     it('round-trips long text with all letter types', () => {
       const input = 'The quick brown fox jumps over the lazy dog'
       const { output } = encrypt(input, '9,2')
-      expect(decrypt(output, '9,2').output).toBe('Thequickbrownfoxjumpsoverthelazydog')
+      expect(decrypt(output, '9,2').output).toBe('The quick brown fox jumps over the lazy dog')
     })
 
     it('round-trips single character', () => {

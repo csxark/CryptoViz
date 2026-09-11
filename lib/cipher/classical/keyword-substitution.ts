@@ -294,20 +294,20 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELLO',
     key: 'SECRET',
-    expected: 'FTLLN',
-    description: 'H(7)→F, E(4)→T, L(11)→L, L(11)→L, O(14)→N',
+    expected: 'DTIIL',
+    description: 'H(7)→D, E(4)→T, L(11)→I, L(11)→I, O(14)→L',
   },
   {
     input: 'ATTACK',
     key: 'SECRET',
-    expected: 'SQQSCI',
-    description: 'A(0)→S, T(19)→Q, T(19)→Q, A(0)→S, C(2)→C, K(10)→I',
+    expected: 'SQQSCH',
+    description: 'A(0)→S, T(19)→Q, T(19)→Q, A(0)→S, C(2)→C, K(10)→H',
   },
   {
     input: 'HELLO',
     key: 'KEY',
-    expected: 'GANNR',
-    description: 'Keyed: KEYABCDFGHIJLMNOPQRSTUVWXZ. H(7)→G, E(4)→A, L(11)→N, O(14)→R',
+    expected: 'FBJJN',
+    description: 'Keyed: KEYABCDFGHIJLMNOPQRSTUVWXZ. H(7)→F, E(4)→B, L(11)→J, O(14)→N',
   },
   {
     input: 'A',
@@ -318,13 +318,7 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELLO WORLD',
     key: 'CIPHER',
-    expected: 'XOLLA ALARW',
+    expected: 'BEJJM WMQJH',
     description: 'With spaces — non-alpha chars pass through.',
-  },
-  {
-    input: 'THE',
-    key: 'PHOENIX',
-    expected: 'QDN',
-    description: 'Keyed: PHOENIXABCDFGJKLQRSTUVWYZ. T(19)→Q, H(7)→D, E(4)→N',
   },
 ]

@@ -5,20 +5,20 @@ import { CipherError } from '@/lib/utils/errors'
 describe('Keyword Substitution Cipher', () => {
   describe('encrypt()', () => {
     it('encrypts HELLO with keyword SECRET', () => {
-      // Keyed: SECRETABDFGHIJKLMNOPQUVWXYZ
-      // H(7)→F, E(4)→T, L(11)→L, L(11)→L, O(14)→N
-      expect(encrypt('HELLO', 'SECRET').output).toBe('FTLLN')
+      // Keyed: SECRTABDFGHIJKLMNOPQUVWXYZ
+      // H(7)→D, E(4)→T, L(11)→I, L(11)→I, O(14)→L
+      expect(encrypt('HELLO', 'SECRET').output).toBe('DTIIL')
     })
 
     it('encrypts ATTACK with keyword SECRET', () => {
-      // A(0)→S, T(19)→Q, T(19)→Q, A(0)→S, C(2)→C, K(10)→I
-      expect(encrypt('ATTACK', 'SECRET').output).toBe('SQQSCI')
+      // A(0)→S, T(19)→Q, T(19)→Q, A(0)→S, C(2)→C, K(10)→H
+      expect(encrypt('ATTACK', 'SECRET').output).toBe('SQQSCH')
     })
 
     it('encrypts HELLO with keyword KEY', () => {
       // Keyed: KEYABCDFGHIJLMNOPQRSTUVWXZ
-      // H(7)→G, E(4)→A, L(11)→N, L(11)→N, O(14)→R
-      expect(encrypt('HELLO', 'KEY').output).toBe('GANNR')
+      // H(7)→F, E(4)→B, L(11)→J, L(11)→J, O(14)→N
+      expect(encrypt('HELLO', 'KEY').output).toBe('FBJJN')
     })
 
     it('encrypts A with keyword B', () => {
@@ -27,11 +27,11 @@ describe('Keyword Substitution Cipher', () => {
     })
 
     it('preserves non-alphabetic characters', () => {
-      expect(encrypt('HELLO, WORLD!', 'CIPHER').output).toBe('XOLLA, ALARW!')
+      expect(encrypt('HELLO, WORLD!', 'CIPHER').output).toBe('BEJJM, WMQJH!')
     })
 
     it('preserves letter casing', () => {
-      expect(encrypt('Hello', 'SECRET').output).toBe('Ftlln')
+      expect(encrypt('Hello', 'SECRET').output).toBe('Dtiil')
     })
 
     it('produces different output for different keywords', () => {
@@ -62,24 +62,24 @@ describe('Keyword Substitution Cipher', () => {
   })
 
   describe('decrypt()', () => {
-    it('decrypts FTLLN with keyword SECRET', () => {
-      expect(decrypt('FTLLN', 'SECRET').output).toBe('HELLO')
+    it('decrypts DTIIL with keyword SECRET', () => {
+      expect(decrypt('DTIIL', 'SECRET').output).toBe('HELLO')
     })
 
-    it('decrypts SQQSCI with keyword SECRET', () => {
-      expect(decrypt('SQQSCI', 'SECRET').output).toBe('ATTACK')
+    it('decrypts SQQSCH with keyword SECRET', () => {
+      expect(decrypt('SQQSCH', 'SECRET').output).toBe('ATTACK')
     })
 
-    it('decrypts GANNR with keyword KEY', () => {
-      expect(decrypt('GANNR', 'KEY').output).toBe('HELLO')
+    it('decrypts FBJJN with keyword KEY', () => {
+      expect(decrypt('FBJJN', 'KEY').output).toBe('HELLO')
     })
 
     it('preserves non-alphabetic characters', () => {
-      expect(decrypt('XOLLA, ALARW!', 'CIPHER').output).toBe('HELLO, WORLD!')
+      expect(decrypt('BEJJM, WMQJH!', 'CIPHER').output).toBe('HELLO, WORLD!')
     })
 
     it('preserves letter casing', () => {
-      expect(decrypt('Ftlln', 'SECRET').output).toBe('Hello')
+      expect(decrypt('Dtiil', 'SECRET').output).toBe('Hello')
     })
 
     it('identity keyword decrypts to itself', () => {
@@ -249,7 +249,7 @@ describe('Keyword Substitution Cipher', () => {
     it('keyed alphabet starts with keyword letters', () => {
       const result = encrypt('A', 'SECRET', { instrument: true })
       const keyedAlpha = result.steps[0].outputState
-      expect(keyedAlpha.startsWith('SECRET')).toBe(true)
+      expect(keyedAlpha.startsWith('SECRT')).toBe(true)
     })
 
     it('different keywords produce different keyed alphabets', () => {

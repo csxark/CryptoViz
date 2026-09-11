@@ -19,7 +19,7 @@ describe('Polybius Square — known-answer vectors', () => {
   it('verifies HELLOWORLD KAT vector with key POLYBIUS', () => {
     const key = 'POLYBIUS'
     const input = 'HELLOWORLD'
-    const expected = '35 32 13 13 12 51 12 45 13 31'
+    const expected = '35 32 13 13 12 53 12 45 13 31'
 
     const encResult = encrypt(input, key)
     expect(encResult.output).toBe(expected)

@@ -6,7 +6,7 @@ describe("Bacon's Cipher", () => {
   describe('encrypt()', () => {
     it('encrypts HELP correctly (standard alphabet)', () => {
       // H=7(00111)=AABBB, E=4(00100)=AABAA, L=10(01010)=ABABA, P=14(01110)=ABBBA
-      expect(encrypt('HELP').output).toBe('AABBBAAAABAABAABBBA')
+      expect(encrypt('HELP').output).toBe('AABBBAABAAABABAABBBA')
     })
 
     it('encrypts A to AAAAA', () => {
@@ -23,7 +23,7 @@ describe("Bacon's Cipher", () => {
     })
 
     it('encrypts ABC to expected pattern', () => {
-      expect(encrypt('ABC').output).toBe('AAAAA AAAAB AAABA')
+      expect(encrypt('ABC').output).toBe('AAAAAAAAABAAABA')
     })
 
     it('strips non-alphabetic characters', () => {
@@ -51,17 +51,17 @@ describe("Bacon's Cipher", () => {
     })
 
     it('supports extended (26-letter) mode via key', () => {
-      const extResult = encrypt('I', 'extended').output
-      const stdResult = encrypt('I', '').output
-      // In standard mode, I and J share the same code (ABAAA)
-      // In extended mode, I has a unique code
+      const extResult = encrypt('J', 'extended').output
+      const stdResult = encrypt('J', '').output
+      // In standard mode, J maps to I (ABAAA)
+      // In extended mode, J has a unique code (ABAAB)
       expect(extResult).not.toBe(stdResult)
     })
   })
 
   describe('decrypt()', () => {
-    it('decrypts AABBBAAAABAABAABBBA back to HELP', () => {
-      expect(decrypt('AABBBAAAABAABAABBBA').output).toBe('HELP')
+    it('decrypts AABBBAABAAABABAABBBA back to HELP', () => {
+      expect(decrypt('AABBBAABAAABABAABBBA').output).toBe('HELP')
     })
 
     it('decrypts AAAAA back to A', () => {
@@ -114,9 +114,14 @@ describe("Bacon's Cipher", () => {
       expect(decrypt(output).output).toBe('HELLO')
     })
 
-    it('round-trips full alphabet', () => {
+    it('round-trips full alphabet (extended mode)', () => {
+      const { output } = encrypt('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'extended')
+      expect(decrypt(output, 'extended').output).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    })
+
+    it('round-trips full alphabet (standard mode merges J->I and V->U)', () => {
       const { output } = encrypt('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-      expect(decrypt(output).output).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+      expect(decrypt(output).output).toBe('ABCDEFGHIIKLMNOPQRSTUUWXYZ')
     })
 
     it('round-trips single letter', () => {

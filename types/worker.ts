@@ -46,31 +46,6 @@ export interface WorkerProgressMessage {
   currentMilestone: string
 }
 
-export interface WorkerTraceStartMessage {
-  type: 'TRACE_START'
-  requestId: string
-  jobId?: string
-  totalSteps: number
-}
-
-export interface WorkerTraceBatchMessage {
-  type: 'TRACE_BATCH'
-  requestId: string
-  jobId?: string
-  offset: number
-  stepsBuffer: ArrayBuffer
-}
-
-export interface WorkerTraceCompleteMessage {
-  type: 'TRACE_COMPLETE'
-  requestId: string
-  jobId?: string
-}
-
-export interface WorkerTraceAckMessage {
-  type: 'TRACE_ACK'
-  requestId: string
-}
 export interface WorkerResponsePayload {
   result?: CipherResult
   /** Serialized trace for large results, transferred as an ArrayBuffer. */
@@ -124,10 +99,6 @@ export type WorkerResponse = WorkerResponseSuccess | WorkerResponseFailure
 export type WorkerProtocolMessage =
   | WorkerMessage
   | WorkerProgressMessage
-  | WorkerTraceStartMessage
-  | WorkerTraceBatchMessage
-  | WorkerTraceCompleteMessage
-  | WorkerTraceAckMessage
   | WorkerErrorMessage
   | WorkerResponse
 export interface WorkerResponseTimings {

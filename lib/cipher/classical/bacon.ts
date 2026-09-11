@@ -47,7 +47,7 @@ const METADATA = {
 // ---------------------------------------------------------------------------
 
 /** Standard Bacon alphabet (I/J merged, U/V merged) — 24 letters → 5-bit */
-const BACON_STANDARD = 'ABCDEFGHIKLMNOPQRSTU VWXYZ'
+const BACON_STANDARD = 'ABCDEFGHIKLMNOPQRSTUWXYZ'
 /** Extended Bacon alphabet (all 26 letters) — 26 letters → 5-bit */
 const BACON_EXTENDED = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -57,8 +57,13 @@ function getAlphabet(useExtended: boolean): string {
 
 /** Map a letter to its 5-bit Bacon code (array of 0s and 1s). */
 function letterToCode(letter: string, useExtended: boolean): number[] {
+  let char = letter.toUpperCase()
+  if (!useExtended) {
+    if (char === 'J') char = 'I'
+    if (char === 'V') char = 'U'
+  }
   const alpha = getAlphabet(useExtended)
-  const idx = alpha.indexOf(letter)
+  const idx = alpha.indexOf(char)
   if (idx === -1) return []
   return [
     (idx >> 4) & 1,
@@ -81,13 +86,11 @@ function codeToLetter(code: number[], useExtended: boolean): string {
 // ---------------------------------------------------------------------------
 
 function cleanInput(input: string, useExtended: boolean): string {
-  const alpha = getAlphabet(useExtended)
-  const alphaSet = new Set(alpha)
-  return input
-    .toUpperCase()
-    .split('')
-    .filter(ch => alphaSet.has(ch))
-    .join('')
+  let upper = input.toUpperCase().replace(/[^A-Z]/g, '')
+  if (!useExtended) {
+    upper = upper.replace(/J/g, 'I').replace(/V/g, 'U')
+  }
+  return upper
 }
 
 // ---------------------------------------------------------------------------
@@ -203,7 +206,7 @@ function baconInstrumented(
   }
 
   // Decryption path
-  const clean = cleanInput(input, useExtended)
+  const clean = input.toUpperCase().replace(/[^AB]/g, '')
 
   if (clean.length === 0) {
     throw new CipherError('INVALID_INPUT', 'Input must contain at least A or B symbols.')
@@ -303,7 +306,7 @@ function baconFast(input: string, key: string, encrypting: boolean): CipherResul
   }
 
   // Decryption
-  const clean = cleanInput(input, useExtended)
+  const clean = input.toUpperCase().replace(/[^AB]/g, '')
   if (clean.length === 0) {
     throw new CipherError('INVALID_INPUT', 'Input must contain at least A or B symbols.')
   }
@@ -395,7 +398,7 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'HELP',
     key: '',
-    expected: 'AABBBAAAABAABAABBBA',
+    expected: 'AABBBAABAAABABAABBBA',
     description:
       "Standard Bacon's: H=AABBB, E=AABAA, L=ABABA, P=ABBBA",
   },
@@ -420,13 +423,13 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'ABC',
     key: '',
-    expected: 'AAAAA AAAAB AAABA',
+    expected: 'AAAAAAAAABAAABA',
     description: 'First three letters of the alphabet.',
   },
   {
     input: 'HELLO',
     key: '',
-    expected: 'AABBBAAAABAABAABBBAAABBA',
+    expected: 'AABBBAABAAABABAABABAABBAB',
     description: "Standard Bacon's with H=E=L=L=O — note L repeats.",
   },
 ]

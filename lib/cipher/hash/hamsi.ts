@@ -18,23 +18,22 @@ const METADATA: CipherMetadata = {
 function u32(n: number): number { return n >>> 0 }
 function rotl(x: number, n: number): number { return u32((x << n) | (x >>> (32 - n))) }
 
-// Serpent S7 bitslice (3-bit in, 3-bit out over 32 parallel lanes)
-function s7(a: number, b: number, c: number): [number, number, number] {
-    const t1 = a ^ b
-    const t2 = a & c
-    const t3 = c ^ t2
-    const t4 = b | t3
-    const out_a = t1 ^ t4
-    const t5 = b & t4
-    const out_b = t1 | t5
-    const out_c = (b | out_a) ^ (c | out_b)
-    return [u32(out_a), u32(out_b), u32(out_c)]
+// Serpent S7 standard 4-bit S-box permutation
+const S7 = [1, 13, 15, 0, 14, 8, 2, 11, 7, 4, 12, 10, 9, 3, 5, 6];
+
+function applyS7Word(w: number): number {
+    let res = 0;
+    for (let i = 0; i < 8; i++) {
+        const nib = (w >>> (i * 4)) & 0xf;
+        res |= S7[nib] << (i * 4);
+    }
+    return u32(res);
 }
 
 function theta(state: number[]) {
-    // Simplified Theta linear layer for visualizer
-    for (let i = 0; i < state.length; i++) {
-        state[i] = u32(state[i] ^ rotl(state[(i + 1) % state.length], 1))
+    const len = state.length;
+    for (let i = 0; i < len; i++) {
+        state[i] = u32(state[i] ^ rotl(state[(i + 1) % len], 1) ^ rotl(state[(i + 3) % len], 7));
     }
 }
 
@@ -72,12 +71,11 @@ function hamsiCore(input: string, outputBits: number, instrument: boolean): Ciph
 
         // Permutation rounds
         for (let r = 0; r < rounds; r++) {
-            // Gamma (Bitslice S7)
-            for (let i = 0; i < stateWords; i += 4) {
-                const [a, b, c] = s7(state[i], state[i + 1], state[i + 2])
-                state[i] = a; state[i + 1] = b; state[i + 2] = c
+            // Gamma (Serpent S7 S-box layer)
+            for (let i = 0; i < stateWords; i++) {
+                state[i] = applyS7Word(state[i]);
             }
-            // Pi (Simplified word rotation)
+            // Pi (Word rotation)
             const tmp = state.shift()!
             state.push(tmp)
             // Theta

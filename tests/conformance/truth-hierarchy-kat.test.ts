@@ -133,10 +133,17 @@ describe('Authoritative Known-Answer Tests (KAT) & Truth Hierarchy', () => {
   });
 
   describe('DES & 3DES (NIST FIPS 46-3 & SP 800-67)', () => {
-    it('DES matches published NBS/NIST standard vector', () => {
+    it('DES matches published NBS/NIST standard vector and Node.js des-ede3 (K1=K2=K3) oracle', () => {
       const key = '133457799bbcdff1';
       const pt = '0123456789abcdef';
       const expectedCt = '85e813540f0ab405';
+
+      // Independent Oracle Check: In des-ede3 with K1=K2=K3=K, E(D(E(pt))) = E(pt), proving DES bit-exactness against OpenSSL
+      const key3 = key + key + key;
+      const cipher = nodeCrypto.createCipheriv('des-ede3', Buffer.from(key3, 'hex'), null);
+      cipher.setAutoPadding(false);
+      const oracleCt = cipher.update(Buffer.from(pt, 'hex')).toString('hex') + cipher.final().toString('hex');
+      expect(oracleCt.toLowerCase()).toBe(expectedCt);
 
       const cvResult = desEngine.encrypt(pt, key, { encoding: 'hex', padding: 'none' });
       expect(cvResult.output.toLowerCase()).toBe(expectedCt);

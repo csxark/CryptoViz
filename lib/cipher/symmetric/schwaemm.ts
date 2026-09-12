@@ -65,7 +65,7 @@ function constantTimeCompare(a: number[], b: number[]): boolean {
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'SCHWAEMM key+nonce')
-    if (keyBytes.length !== 48) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 48 bytes (16-byte key + 32-byte nonce).')
+    if (keyBytes.length !== 48) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 48 bytes (16-byte key + 32-byte nonce).')
 
     const K = keyBytes.slice(0, 16)
     const N = keyBytes.slice(16, 48)
@@ -123,7 +123,7 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
 export function decrypt(ciphertext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'SCHWAEMM key+nonce')
-    if (keyBytes.length !== 48) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 48 bytes.')
+    if (keyBytes.length !== 48) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 48 bytes.')
 
     const K = keyBytes.slice(0, 16)
     const N = keyBytes.slice(16, 48)
@@ -172,7 +172,7 @@ export function decrypt(ciphertext: string, key: string, options: CipherOptions 
     }
 
     if (!constantTimeCompare(expectedTag, receivedTag)) {
-        throw new CipherError('AUTH_TAG_MISMATCH', 'SCHWAEMM authentication tag mismatch.')
+        throw new CipherError('AUTH_TAG_MISMATCH', 'AUTH_TAG_MISMATCH: SCHWAEMM authentication tag mismatch.')
     }
 
     return { output: toHex(ptBytes), outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: performance.now() - start }

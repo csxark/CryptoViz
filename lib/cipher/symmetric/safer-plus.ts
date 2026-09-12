@@ -39,7 +39,11 @@ function PHT(a: number, b: number): [number, number] {
     return [u8(2 * a + b), u8(a + b)]
 }
 
-// Armenian Network (Simplified representation of the 2-pass PHT wiring)
+function invPHT(y1: number, y2: number): [number, number] {
+    return [u8(y1 - y2), u8(2 * y2 - y1)]
+}
+
+// Armenian Network (2-pass PHT wiring)
 function armenianNetwork(state: Uint8Array): Uint8Array {
     const buf = new ArrayBuffer(16)
     const s = new Uint8Array(buf)
@@ -55,6 +59,25 @@ function armenianNetwork(state: Uint8Array): Uint8Array {
         s[i] = a; s[i + 8] = b
         const [c, d] = PHT(s[i + 1], s[i + 9])
         s[i + 1] = c; s[i + 9] = d
+    }
+    return s
+}
+
+function invArmenianNetwork(state: Uint8Array): Uint8Array {
+    const buf = new ArrayBuffer(16)
+    const s = new Uint8Array(buf)
+    s.set(state)
+    // Inverse Lower layer
+    for (let i = 0; i < 8; i += 2) {
+        const [c, d] = invPHT(s[i + 1], s[i + 9])
+        s[i + 1] = c; s[i + 9] = d
+        const [a, b] = invPHT(s[i], s[i + 8])
+        s[i] = a; s[i + 8] = b
+    }
+    // Inverse Upper layer
+    for (let i = 0; i < 16; i += 2) {
+        const [a, b] = invPHT(s[i], s[i + 1])
+        s[i] = a; s[i + 1] = b
     }
     return s
 }
@@ -133,9 +156,8 @@ function saferPlusCore(input: string, key: string, doDecrypt: boolean, instrumen
             // Decrypt logic (Inverse PHT, Inverse X/L, Subtract Keys)
             for (let i = 0; i < 16; i++) state[i] = u8(state[i] - roundKeys[8][i])
             for (let r = 7; r >= 0; r--) {
-                // Inverse Armenian (simplified representation)
-                state.set(armenianNetwork(state)) // PHT is its own inverse if using mod 256 and proper coefficients, but SAFER+ uses specific inverse PHT. 
-                // For visualizer, we assume structural symmetry.
+                // Inverse Armenian PHT Network
+                state.set(invArmenianNetwork(state))
 
                 for (let i = 0; i < 16; i++) state[i] = u8(state[i] - roundKeys[r + 1][i])
                 for (let i = 0; i < 16; i++) {

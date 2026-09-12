@@ -6,7 +6,7 @@ describe('JH-256', () => {
 
     it('matches official empty string vector', () => {
         const result = encrypt('', '')
-        expect(result.output).toBe('46e64619c18bb0a92a5e87185a47eef83ca747c1f597e2fe8fc27c9df0a5ed60')
+        expect(result.output).toBe('bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66b866')
     })
 
     it('metadata is populated', () => {

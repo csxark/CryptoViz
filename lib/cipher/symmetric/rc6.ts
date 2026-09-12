@@ -686,7 +686,7 @@ export function decrypt(input: string, key: string, options?: Rc6Options): Ciphe
   }
   
   return {
-    output: outHex,
+    output: outHex.toLowerCase(),
     outputEncoding: 'hex' as const,
     steps: [],
     metadata: {

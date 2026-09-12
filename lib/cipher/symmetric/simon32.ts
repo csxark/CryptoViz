@@ -75,9 +75,12 @@ function simon32Core(input: string, key: string, dec: boolean, instrument: boole
     if (ib.length % 4 !== 0 || ib.length === 0)
         throw new CipherError('INVALID_INPUT', 'SIMON-32/64 input must be non-empty multiple of 4 bytes (32 bits).')
 
-    // Load 64-bit key as four 16-bit words (Little-Endian per spec)
+    // Load 64-bit key as four 16-bit words (k0 is lowest word, k3 is highest word)
     const K = new Uint16Array(4)
-    for (let i = 0; i < 4; i++) K[i] = u16(kb[i * 2] | (kb[i * 2 + 1] << 8))
+    for (let i = 0; i < 4; i++) {
+        const byteOff = (3 - i) * 2
+        K[i] = u16((kb[byteOff] << 8) | kb[byteOff + 1])
+    }
 
     const rk = keySchedule(K)
     const outBytes = new Uint8Array(ib.length)
@@ -94,9 +97,8 @@ function simon32Core(input: string, key: string, dec: boolean, instrument: boole
     const blocks = ib.length / 4
     for (let b = 0; b < blocks; b++) {
         const off = b * 4
-        // Little-endian 16-bit word loading
-        let x = u16(ib[off] | (ib[off + 1] << 8))
-        let y = u16(ib[off + 2] | (ib[off + 3] << 8))
+        let x = u16((ib[off] << 8) | ib[off + 1])
+        let y = u16((ib[off + 2] << 8) | ib[off + 3])
 
         if (!dec) {
             for (let r = 0; r < 32; r++) {
@@ -112,10 +114,10 @@ function simon32Core(input: string, key: string, dec: boolean, instrument: boole
             }
         }
 
-        outBytes[off] = x & 0xFF
-        outBytes[off + 1] = (x >>> 8) & 0xFF
-        outBytes[off + 2] = y & 0xFF
-        outBytes[off + 3] = (y >>> 8) & 0xFF
+        outBytes[off] = (x >>> 8) & 0xFF
+        outBytes[off + 1] = x & 0xFF
+        outBytes[off + 2] = (y >>> 8) & 0xFF
+        outBytes[off + 3] = y & 0xFF
 
         if (instrument) {
             steps.push({

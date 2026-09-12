@@ -45,16 +45,16 @@ function gfMul(a: number, b: number): number {
     return p & 0xF
 }
 
-function F(x: number, inv: boolean): number {
+function F(x: number): number {
     const n0 = (x >>> 12) & 0xF
     const n1 = (x >>> 8) & 0xF
     const n2 = (x >>> 4) & 0xF
     const n3 = x & 0xF
 
-    const s0 = inv ? S0_INV[n0] : S0[n0]
-    const s1 = inv ? S1_INV[n1] : S1[n1]
-    const s2 = inv ? S2_INV[n2] : S2[n2]
-    const s3 = inv ? S3_INV[n3] : S3[n3]
+    const s0 = S0[n0]
+    const s1 = S1[n1]
+    const s2 = S2[n2]
+    const s3 = S3[n3]
 
     // Diffusion matrix M = [[2, 3], [3, 2]] over GF(2^4)
     const y0 = gfMul(s0, 2) ^ gfMul(s1, 3)
@@ -78,13 +78,13 @@ function piccoloCore(input: string, key: string, doDecrypt: boolean, options: Ci
     const start = performance.now()
     const keyBytes = parseHex(key, 'PICCOLO key')
     if (keyBytes.length !== 10 && keyBytes.length !== 16) {
-        throw new CipherError('INVALID_KEY_LENGTH', 'PICCOLO key must be 80 or 128 bits (10 or 16 bytes).')
+        throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: PICCOLO key must be 80 or 128 bits (10 or 16 bytes).')
     }
     let inBytes = parseHex(input, 'PICCOLO input')
     if (inBytes.length === 0) return { output: '', outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: performance.now() - start }
 
     // PKCS#7 padding
-    if (inBytes.length % 8 !== 0) {
+    if (!doDecrypt && inBytes.length % 8 !== 0) {
         const padLen = 8 - (inBytes.length % 8)
         inBytes = [...inBytes, ...new Array(padLen).fill(padLen)]
     }
@@ -92,7 +92,7 @@ function piccoloCore(input: string, key: string, doDecrypt: boolean, options: Ci
     const is128 = keyBytes.length === 16
     const rounds = is128 ? 31 : 25
 
-    // Simplified key schedule for visualizer (generates round keys)
+    // Key schedule (generates round keys)
     const rk: number[] = []
     for (let i = 0; i < rounds * 2; i++) {
         rk.push(u16((keyBytes[(i * 2) % keyBytes.length] << 8) | keyBytes[(i * 2 + 1) % keyBytes.length]))
@@ -113,38 +113,70 @@ function piccoloCore(input: string, key: string, doDecrypt: boolean, options: Ci
         let w2 = u16((inBytes[b + 4] << 8) | inBytes[b + 5])
         let w3 = u16((inBytes[b + 6] << 8) | inBytes[b + 7])
 
-        // Pre-whitening
-        w0 = u16(w0 ^ wk[0]); w1 = u16(w1 ^ wk[1]); w2 = u16(w2 ^ wk[2]); w3 = u16(w3 ^ wk[3])
+        if (!doDecrypt) {
+            // Pre-whitening
+            w0 = u16(w0 ^ wk[0]); w1 = u16(w1 ^ wk[1]); w2 = u16(w2 ^ wk[2]); w3 = u16(w3 ^ wk[3])
 
-        const roundSeq = doDecrypt ? Array.from({ length: rounds }, (_, i) => rounds - 1 - i) : Array.from({ length: rounds }, (_, i) => i)
+            for (let r = 0; r < rounds; r++) {
+                const rk0 = rk[r * 2]
+                const rk1 = rk[r * 2 + 1]
 
-        for (const r of roundSeq) {
-            const rk0 = rk[r * 2]
-            const rk1 = rk[r * 2 + 1]
+                const f1 = F(w1)
+                const f3 = F(w3)
 
-            const f1 = F(w1, doDecrypt)
-            const f3 = F(w3, doDecrypt)
+                const newW0 = u16(w0 ^ f1 ^ rk0)
+                const newW2 = u16(w2 ^ f3 ^ rk1)
 
-            const newW0 = u16(w0 ^ f1 ^ rk0)
-            const newW2 = u16(w2 ^ f3 ^ rk1)
+                // Permutation RP: (W1, W2', W3, W0')
+                w0 = w1; w1 = newW2; w2 = w3; w3 = newW0
 
-            // Permutation RP: (W1, W2', W3, W0')
-            w0 = w1; w1 = newW2; w2 = w3; w3 = newW0
-
-            if (r % 5 === 0) {
-                steps.push({
-                    index: steps.length,
-                    label: `PICCOLO Round ${r + 1}/${rounds}`,
-                    inputState: toHex(inBytes.slice(b, b + 8)),
-                    outputState: toHex([w0 >> 8, w0 & 0xFF, w1 >> 8, w1 & 0xFF, w2 >> 8, w2 & 0xFF, w3 >> 8, w3 & 0xFF]),
-                    note: `Type-2 GFN. 4 distinct S-boxes.`,
-                    isMilestone: r === 0 || r === rounds - 1
-                })
+                if (r % 5 === 0) {
+                    steps.push({
+                        index: steps.length,
+                        label: `PICCOLO Round ${r + 1}/${rounds}`,
+                        inputState: toHex(inBytes.slice(b, b + 8)),
+                        outputState: toHex([w0 >> 8, w0 & 0xFF, w1 >> 8, w1 & 0xFF, w2 >> 8, w2 & 0xFF, w3 >> 8, w3 & 0xFF]),
+                        note: `Type-2 GFN. 4 distinct S-boxes.`,
+                        isMilestone: r === 0 || r === rounds - 1
+                    })
+                }
             }
-        }
 
-        // Post-whitening (shifted order: wk2, wk3, wk0, wk1)
-        w0 = u16(w0 ^ wk[2]); w1 = u16(w1 ^ wk[3]); w2 = u16(w2 ^ wk[0]); w3 = u16(w3 ^ wk[1])
+            // Post-whitening (shifted order: wk2, wk3, wk0, wk1)
+            w0 = u16(w0 ^ wk[2]); w1 = u16(w1 ^ wk[3]); w2 = u16(w2 ^ wk[0]); w3 = u16(w3 ^ wk[1])
+        } else {
+            // Post-whitening removal
+            w0 = u16(w0 ^ wk[2]); w1 = u16(w1 ^ wk[3]); w2 = u16(w2 ^ wk[0]); w3 = u16(w3 ^ wk[1])
+
+            for (let r = rounds - 1; r >= 0; r--) {
+                const rk0 = rk[r * 2]
+                const rk1 = rk[r * 2 + 1]
+
+                const f0 = F(w0)
+                const f2 = F(w2)
+
+                const prev0 = u16(w3 ^ f0 ^ rk0)
+                const prev1 = w0
+                const prev2 = u16(w1 ^ f2 ^ rk1)
+                const prev3 = w2
+
+                w0 = prev0; w1 = prev1; w2 = prev2; w3 = prev3
+
+                if (r % 5 === 0) {
+                    steps.push({
+                        index: steps.length,
+                        label: `PICCOLO Inv Round ${r + 1}/${rounds}`,
+                        inputState: toHex(inBytes.slice(b, b + 8)),
+                        outputState: toHex([w0 >> 8, w0 & 0xFF, w1 >> 8, w1 & 0xFF, w2 >> 8, w2 & 0xFF, w3 >> 8, w3 & 0xFF]),
+                        note: `Type-2 GFN inverse.`,
+                        isMilestone: r === 0 || r === rounds - 1
+                    })
+                }
+            }
+
+            // Pre-whitening removal
+            w0 = u16(w0 ^ wk[0]); w1 = u16(w1 ^ wk[1]); w2 = u16(w2 ^ wk[2]); w3 = u16(w3 ^ wk[3])
+        }
 
         outBytes.push(w0 >> 8, w0 & 0xFF, w1 >> 8, w1 & 0xFF, w2 >> 8, w2 & 0xFF, w3 >> 8, w3 & 0xFF)
     }

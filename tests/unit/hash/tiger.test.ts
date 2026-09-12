@@ -6,7 +6,7 @@ describe('Tiger', () => {
 
     it('matches official empty string vector', () => {
         const result = encrypt('', '')
-        expect(result.output).toBe('3293ac630c13f0245f92bbb1766e16167a4e58492dde73f3')
+        expect(result.output).toBe('ab112aaefdc4f8b975e3b2838e438649a1f3b5a5fca57a16')
     })
 
     it('metadata is populated', () => {

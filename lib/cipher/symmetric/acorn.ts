@@ -42,27 +42,31 @@ function shiftRight(state: number[], newBit: number): void {
 function maj(a: number, b: number, c: number): number { return (a & b) ^ (a & c) ^ (b & c) }
 function ch(a: number, b: number, c: number): number { return (a & b) ^ (~a & c) }
 
+function acornKeystream(state: number[]): number {
+    const s12 = getBit(state, 12)
+    const s154 = getBit(state, 154)
+    const s235 = getBit(state, 235)
+    const s61 = getBit(state, 61)
+    const s193 = getBit(state, 193)
+    const s230 = getBit(state, 230)
+    const s111 = getBit(state, 111)
+    const s66 = getBit(state, 66)
+    return (s12 ^ s154 ^ maj(s235, s61, s193) ^ ch(s230, s111, s66)) & 1
+}
+
 function acornStep(state: number[], ca: number, cb: number, k_t: number): number {
     const s0 = getBit(state, 0)
-    const s12 = getBit(state, 12)
     const s23 = getBit(state, 23)
-    const s61 = getBit(state, 61)
-    const s66 = getBit(state, 66)
     const s107 = getBit(state, 107)
-    const s111 = getBit(state, 111)
-    const s154 = getBit(state, 154)
     const s160 = getBit(state, 160)
-    const s193 = getBit(state, 193)
     const s196 = getBit(state, 196)
-    const s230 = getBit(state, 230)
-    const s235 = getBit(state, 235)
     const s244 = getBit(state, 244)
 
-    const keystream = s12 ^ s154 ^ maj(s235, s61, s193) ^ ch(s230, s111, s66)
+    const keystream = acornKeystream(state)
     const feedback = s0 ^ (s107 ^ 1) ^ maj(s244, s23, s160) ^ (ca & s196) ^ (cb & k_t)
 
     shiftRight(state, feedback & 1)
-    return keystream & 1
+    return keystream
 }
 
 function parseHex(s: string, lbl: string): Uint8Array {
@@ -86,7 +90,7 @@ function constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyNonce = parseHex(key, 'ACORN key+nonce')
-    if (keyNonce.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 32 bytes (16-byte key + 16-byte nonce).')
+    if (keyNonce.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 32 bytes (16-byte key + 16-byte nonce).')
 
     const K = keyNonce.slice(0, 16)
     const N = keyNonce.slice(16, 32)
@@ -111,13 +115,11 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
     // AD processing
     for (let i = 0; i < ad.length * 8; i++) {
         const ad_bit = (ad[i >>> 3] >>> (7 - (i & 7))) & 1
-        const ks = acornStep(state, 1, 0, ad_bit)
+        acornStep(state, 1, 0, ad_bit)
     }
 
     // Encryption
-    const ctBytes = new Uint8Array(ptBytes.length + 16) // +16 for tag
     let ctBitIdx = 0
-
     for (let i = 0; i < ptBytes.length * 8; i++) {
         const pt_bit = (ptBytes[i >>> 3] >>> (7 - (i & 7))) & 1
         const ks = acornStep(state, 0, 1, pt_bit)
@@ -147,10 +149,71 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
     return { output: toHex(outBytes), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
-// ... decrypt implementation similar ...
 export function decrypt(ciphertext: string, key: string, options: CipherOptions = {}): CipherResult {
-    // Simplified for artifact length
-    return { output: '', outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: 0 }
+    const start = performance.now()
+    const keyNonce = parseHex(key, 'ACORN key+nonce')
+    if (keyNonce.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 32 bytes (16-byte key + 16-byte nonce).')
+
+    const K = keyNonce.slice(0, 16)
+    const N = keyNonce.slice(16, 32)
+    const ad = parseHex((options.ad as string) || '', 'AD')
+    const ctBytesWithTag = parseHex(ciphertext, 'ciphertext')
+    if (ctBytesWithTag.length < 16) throw new CipherError('INVALID_INPUT', 'Ciphertext too short for tag.')
+
+    const ptLen = ctBytesWithTag.length - 16
+    const ctBytes = ctBytesWithTag.slice(0, ptLen)
+    const receivedTag = ctBytesWithTag.slice(ptLen)
+    const ptBytes = new Uint8Array(ptLen)
+
+    const state = new Array(10).fill(0)
+    const steps: CipherStep[] = []
+
+    // Initialization: load key and nonce
+    for (let i = 0; i < 128; i++) setBit(state, i, (K[i >>> 3] >>> (7 - (i & 7))) & 1)
+    for (let i = 0; i < 128; i++) setBit(state, 128 + i, (N[i >>> 3] >>> (7 - (i & 7))) & 1)
+    for (let i = 256; i < 260; i++) setBit(state, i, 1)
+
+    // Run 1792 initialization cycles
+    for (let i = 0; i < 1792; i++) {
+        const k_i = (K[i >>> 3] >>> (7 - (i & 7))) & 1
+        acornStep(state, 1, 1, k_i ^ 1)
+    }
+
+    // AD processing
+    for (let i = 0; i < ad.length * 8; i++) {
+        const ad_bit = (ad[i >>> 3] >>> (7 - (i & 7))) & 1
+        acornStep(state, 1, 0, ad_bit)
+    }
+
+    // Decryption
+    for (let i = 0; i < ptLen * 8; i++) {
+        const ct_bit = (ctBytes[i >>> 3] >>> (7 - (i & 7))) & 1
+        const ks = acornKeystream(state)
+        const pt_bit = ct_bit ^ ks
+        acornStep(state, 0, 1, pt_bit)
+
+        const byteIdx = i >>> 3
+        const bitIdx = 7 - (i & 7)
+        ptBytes[byteIdx] |= (pt_bit << bitIdx)
+    }
+
+    // Tag generation (768 cycles)
+    for (let i = 0; i < 768; i++) acornStep(state, 1, 1, 0)
+
+    // Read 128 tag bits
+    const expectedTag = new Uint8Array(16)
+    for (let i = 0; i < 128; i++) {
+        const ks = acornStep(state, 1, 1, 0)
+        const byteIdx = i >>> 3
+        const bitIdx = 7 - (i & 7)
+        expectedTag[byteIdx] |= (ks << bitIdx)
+    }
+
+    if (!constantTimeCompare(expectedTag, receivedTag)) {
+        throw new CipherError('AUTH_TAG_MISMATCH', 'AUTH_TAG_MISMATCH: ACORN authentication tag mismatch.')
+    }
+
+    return { output: toHex(ptBytes), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
 export const TEST_VECTORS: TestVector[] = [

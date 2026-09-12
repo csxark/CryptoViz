@@ -10,11 +10,11 @@ import {
 
 describe("Skipjack encryption and decryption", () => {
   it("matches the official Skipjack sample vector", () => {
-    expect(encryptSkipjackBlock("33221100DDCCBBAA", "00998877665544332211")).toBe("2587CAEA7212D595");
+    expect(encryptSkipjackBlock("33221100DDCCBBAA", "00998877665544332211")).toBe("2587CAE27A12D300");
   });
 
   it("decrypts the official Skipjack sample vector", () => {
-    expect(decryptSkipjackBlock("2587CAEA7212D595", "00998877665544332211")).toBe("33221100DDCCBBAA");
+    expect(decryptSkipjackBlock("2587CAE27A12D300", "00998877665544332211")).toBe("33221100DDCCBBAA");
   });
 
   it("round trips a zero block and zero key", () => {

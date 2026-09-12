@@ -135,22 +135,23 @@ function misty1Core(input: string, key: string, doDecrypt: boolean, instrument: 
                 if (i % 2 === 0) { L = FL(L, KL[i]); R = FL(R, KL[i + 1]) }
                 const tmp = FO(R, i, EK)
                 L = u32(L ^ tmp)
-                if (i === 7) { L = FL(L, KL[0]); R = FL(R, KL[1]) } // Simplified final FL
+                if (i === 7) { L = FL(L, KL[0]); R = FL(R, KL[1]) }
                 const t = L; L = R; R = t
             }
+            outBuf[b * 8] = (R >>> 24) & 0xff; outBuf[b * 8 + 1] = (R >>> 16) & 0xff; outBuf[b * 8 + 2] = (R >>> 8) & 0xff; outBuf[b * 8 + 3] = R & 0xff
+            outBuf[b * 8 + 4] = (L >>> 24) & 0xff; outBuf[b * 8 + 5] = (L >>> 16) & 0xff; outBuf[b * 8 + 6] = (L >>> 8) & 0xff; outBuf[b * 8 + 7] = L & 0xff
         } else {
-            // Decrypt logic (inverse)
+            // Decrypt logic (exact inverse of Feistel rounds)
             for (let i = 7; i >= 0; i--) {
-                const t = L; L = R; R = t
                 if (i === 7) { L = FL_INV(L, KL[0]); R = FL_INV(R, KL[1]) }
                 const tmp = FO(R, i, EK)
                 L = u32(L ^ tmp)
                 if (i % 2 === 0) { L = FL_INV(L, KL[i]); R = FL_INV(R, KL[i + 1]) }
+                if (i > 0) { const t = L; L = R; R = t }
             }
+            outBuf[b * 8] = (L >>> 24) & 0xff; outBuf[b * 8 + 1] = (L >>> 16) & 0xff; outBuf[b * 8 + 2] = (L >>> 8) & 0xff; outBuf[b * 8 + 3] = L & 0xff
+            outBuf[b * 8 + 4] = (R >>> 24) & 0xff; outBuf[b * 8 + 5] = (R >>> 16) & 0xff; outBuf[b * 8 + 6] = (R >>> 8) & 0xff; outBuf[b * 8 + 7] = R & 0xff
         }
-
-        outBuf[b * 8] = (R >>> 24) & 0xff; outBuf[b * 8 + 1] = (R >>> 16) & 0xff; outBuf[b * 8 + 2] = (R >>> 8) & 0xff; outBuf[b * 8 + 3] = R & 0xff
-        outBuf[b * 8 + 4] = (L >>> 24) & 0xff; outBuf[b * 8 + 5] = (L >>> 16) & 0xff; outBuf[b * 8 + 6] = (L >>> 8) & 0xff; outBuf[b * 8 + 7] = L & 0xff
 
         if (instrument) {
             steps.push({ index: steps.length, label: `Block ${b + 1}/${numBlocks}`, inputState: toHex(inBytes.slice(b * 8, b * 8 + 8)), outputState: toHex(outBuf.slice(b * 8, b * 8 + 8)), note: '8 rounds of nested Feistel.', isMilestone: true })

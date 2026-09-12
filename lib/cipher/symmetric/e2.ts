@@ -201,9 +201,8 @@ function e2Core(input: string, key: string, doDecrypt: boolean, instrument: bool
             // Post-whitening
             for (let i = 0; i < 8; i++) left[i] ^= whiteningKeys[1][i]
         } else {
-            // Decryption: reverse order
+            // Decryption: undo post-whitening, run Feistel with reversed keys, undo final swap, undo pre-whitening
             for (let i = 0; i < 8; i++) left[i] ^= whiteningKeys[1][i]
-            const temp = left; left = right; right = temp
 
             for (let r = 11; r >= 0; r--) {
                 const fOut = roundFunction(right, roundKeys[r])
@@ -213,7 +212,10 @@ function e2Core(input: string, key: string, doDecrypt: boolean, instrument: bool
                 right = newLeft
             }
 
-            const temp2 = left; left = right; right = temp2
+            // Undo final swap
+            const temp = left; left = right; right = temp
+
+            // Undo pre-whitening
             for (let i = 0; i < 8; i++) left[i] ^= whiteningKeys[0][i]
         }
 

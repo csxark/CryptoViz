@@ -3,6 +3,8 @@ import * as des from "@/lib/cipher/symmetric/des";
 import * as sha256 from "@/lib/cipher/hash/sha256";
 import * as sha3 from "@/lib/cipher/hash/sha3";
 import * as hmac from "@/lib/cipher/hash/hmac";
+import * as ecdsa from "@/lib/cipher/asymmetric/ecdsa";
+import { ml_kem768 } from "@noble/post-quantum/ml-kem.js";
 import { toByteArray, fromByteArray } from "@/lib/utils/encoding";
 import type { KnownAnswerTestVector } from "@/tests/vectors/types";
 import type { CipherDispatchTable } from "./runner";
@@ -99,6 +101,20 @@ function runHmac(vector: KnownAnswerTestVector): string {
   return hmac.encrypt(vector.plaintextHex, vector.keyHex, { encoding: "hex" }).output;
 }
 
+// --- Asymmetric / PQC ---------------------------------------------------
+
+function runEcdsaSecp256k1(vector: KnownAnswerTestVector): string {
+  const plaintext = new TextDecoder().decode(hexToBytes(vector.plaintextHex));
+  return ecdsa.encrypt(plaintext, vector.keyHex).output;
+}
+
+function runMlKem768(vector: KnownAnswerTestVector): string {
+  const pubKey = hexToBytes(vector.keyHex);
+  const msg = hexToBytes(vector.plaintextHex);
+  const enc = ml_kem768.encapsulate(pubKey, msg);
+  return bytesToHex(enc.cipherText);
+}
+
 /**
  * Maps a KnownAnswerTestVector's `algorithm` field to a function that
  * independently re-derives the ciphertext/digest using CryptoViz's own
@@ -117,4 +133,6 @@ export const cipherDispatchTable: CipherDispatchTable = {
   "SHA-256": runDigest(sha256),
   "SHA3-256": runDigest(sha3),
   "HMAC-SHA256": runHmac,
+  "ECDSA-SECP256K1": runEcdsaSecp256k1,
+  "ML-KEM-768": runMlKem768,
 };

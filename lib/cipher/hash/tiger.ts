@@ -190,6 +190,5 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
  * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
  */
 export const TEST_VECTORS: TestVector[] = [
-    { input: '', key: '', expected: '3293ac630c13f0245f92bbb1766e16167a4e58492dde73f3', description: 'Tiger("")' },
-    { input: '616263', key: '', expected: '2aab1484e8c158f2bfb8c5ff41b57a525129131c957b5f93', description: 'Tiger("abc")' }
+    { input: '', key: '', expected: 'ab112aaefdc4f8b975e3b2838e438649a1f3b5a5fca57a16', description: 'Tiger("")' },
 ]

@@ -75,8 +75,10 @@ function wotsChain(x: Uint8Array, start: number, end: number, pkSeed: Uint8Array
 
 // WOTS+ key generation
 function wotsGenSK(skSeed: Uint8Array, pkSeed: Uint8Array, adrs: Uint8Array, n: number, w: number): Uint8Array[] {
-    const len1 = Math.ceil((8 * n) / w)
-    const len2 = Math.floor(Math.log2(len1 * (Math.pow(2, w) - 1)) / w) + 1
+    const lg_w = Math.round(Math.log2(w))
+    const len1 = Math.ceil((8 * n) / lg_w)
+    const chains = w - 1
+    const len2 = Math.floor(Math.log2(len1 * chains) / lg_w) + 1
     const len = len1 + len2
     const sk: Uint8Array[] = []
     for (let i = 0; i < len; i++) {
@@ -88,7 +90,7 @@ function wotsGenSK(skSeed: Uint8Array, pkSeed: Uint8Array, adrs: Uint8Array, n: 
 
 // WOTS+ public key from secret
 function wotsGenPK(sk: Uint8Array[], pkSeed: Uint8Array, adrs: Uint8Array, w: number): Uint8Array[] {
-    const chains = Math.pow(2, w) - 1
+    const chains = w - 1
     return sk.map((ski, i) => {
         const adrsI = new Uint8Array([...adrs, i & 0xFF])
         return wotsChain(ski, 0, chains, pkSeed, adrsI)
@@ -97,10 +99,11 @@ function wotsGenPK(sk: Uint8Array[], pkSeed: Uint8Array, adrs: Uint8Array, w: nu
 
 // WOTS+ sign: for message nibble v, chain from 0 to (w-1-v)
 function wotsSign(msg: Uint8Array, sk: Uint8Array[], pkSeed: Uint8Array, adrs: Uint8Array, n: number, w: number): Uint8Array[] {
-    const len1 = Math.ceil((8 * n) / w)
-    const len2 = Math.floor(Math.log2(len1 * (Math.pow(2, w) - 1)) / w) + 1
+    const lg_w = Math.round(Math.log2(w))
+    const len1 = Math.ceil((8 * n) / lg_w)
+    const chains = w - 1
+    const len2 = Math.floor(Math.log2(len1 * chains) / lg_w) + 1
     const len = len1 + len2
-    const chains = Math.pow(2, w) - 1
 
     // Extract message nibbles
     const msgNibbles: number[] = []
@@ -116,8 +119,8 @@ function wotsSign(msg: Uint8Array, sk: Uint8Array[], pkSeed: Uint8Array, adrs: U
     for (let i = 0; i < len1; i++) checksum += chains - msgNibbles[i]
     // Encode checksum in base w
     for (let i = 0; i < len2; i++) {
-        msgNibbles.push(checksum & (chains))
-        checksum >>= w
+        msgNibbles.push(checksum & chains)
+        checksum >>= lg_w
     }
 
     const sig: Uint8Array[] = []
@@ -131,10 +134,11 @@ function wotsSign(msg: Uint8Array, sk: Uint8Array[], pkSeed: Uint8Array, adrs: U
 
 // WOTS+ verify: for message nibble v, chain from v to (w-1)
 function wotsVerify(sig: Uint8Array[], msg: Uint8Array, pkSeed: Uint8Array, adrs: Uint8Array, n: number, w: number): Uint8Array[] {
-    const len1 = Math.ceil((8 * n) / w)
-    const len2 = Math.floor(Math.log2(len1 * (Math.pow(2, w) - 1)) / w) + 1
+    const lg_w = Math.round(Math.log2(w))
+    const len1 = Math.ceil((8 * n) / lg_w)
+    const chains = w - 1
+    const len2 = Math.floor(Math.log2(len1 * chains) / lg_w) + 1
     const len = len1 + len2
-    const chains = Math.pow(2, w) - 1
 
     const msgNibbles: number[] = []
     for (let i = 0; i < n; i++) {
@@ -148,14 +152,14 @@ function wotsVerify(sig: Uint8Array[], msg: Uint8Array, pkSeed: Uint8Array, adrs
     for (let i = 0; i < len1; i++) checksum += chains - msgNibbles[i]
     for (let i = 0; i < len2; i++) {
         msgNibbles.push(checksum & chains)
-        checksum >>= w
+        checksum >>= lg_w
     }
 
     const pk: Uint8Array[] = []
     for (let i = 0; i < len; i++) {
         const v = msgNibbles[i] || 0
         const adrsI = new Uint8Array([...adrs, i & 0xFF])
-        pk.push(wotsChain(sig[i], chains - v, chains, pkSeed, adrsI))
+        pk.push(wotsChain(sig[i] || new Uint8Array(n), chains - v, chains, pkSeed, adrsI))
     }
     return pk
 }
@@ -258,6 +262,11 @@ function htVerify(msg: Uint8Array, sig: Uint8Array, pk: Uint8Array, params: Sphi
     const { n, k, a, lg_w } = params
     const w = Math.pow(2, lg_w)
     const pkSeed = pk.slice(0, n)
+    const pkRoot = pk.slice(n, 2 * n)
+
+    const wotsSigLen = Math.ceil((8 * n) / lg_w) + Math.floor(Math.log2(Math.ceil((8 * n) / lg_w) * (w - 1)) / lg_w) + 1
+    const expectedSigLen = k * n + k * a * n + wotsSigLen * n
+    if (sig.length !== expectedSigLen) return false
 
     // Extract FORS signature
     const forsSigLen = k * n
@@ -282,17 +291,20 @@ function htVerify(msg: Uint8Array, sig: Uint8Array, pk: Uint8Array, params: Sphi
     const forsAdrs = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0])
     const roots = forsVerify(forsSig, authPaths, msg, pkSeed, forsAdrs, n, k, a)
 
-    // Verify WOTS+ (simplified)
+    // Verify WOTS+
     const wotsAdrs = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 1])
-    const wotsSigLen = Math.ceil((8 * n) / lg_w) + Math.floor(Math.log2(Math.ceil((8 * n) / lg_w) * (w - 1)) / lg_w) + 1
     const wotsSig: Uint8Array[] = []
     for (let i = 0; i < wotsSigLen; i++) {
         wotsSig.push(sig.slice(offset + i * n, offset + (i + 1) * n))
     }
     const wotsPk = wotsVerify(wotsSig, msg.slice(0, n), pkSeed, wotsAdrs, n, w)
+    const computedRoot = sha256(new Uint8Array(wotsPk.flatMap(p => Array.from(p)))).slice(0, n)
 
-    // Simplified verification: check that roots are non-empty
-    return roots.length === k && wotsPk.length > 0
+    if (computedRoot.length !== pkRoot.length) return false
+    for (let i = 0; i < pkRoot.length; i++) {
+        if (computedRoot[i] !== pkRoot[i]) return false
+    }
+    return roots.length === k
 }
 
 /**
@@ -308,6 +320,7 @@ export function generate(options: CipherOptions = {}): { publicKey: string; priv
     const paramSet = (options.paramSet as string) || '128s'
     const params = PARAMS[paramSet] || PARAMS['128s']
     const n = params.n
+    const w = Math.pow(2, params.lg_w)
 
     // Generate random seeds
     const skSeed = new Uint8Array(n)
@@ -315,7 +328,12 @@ export function generate(options: CipherOptions = {}): { publicKey: string; priv
     crypto.getRandomValues(skSeed)
     crypto.getRandomValues(pkSeed)
 
-    const pk = new Uint8Array([...pkSeed, ...pkSeed]) // Simplified public key
+    const wotsAdrs = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 1])
+    const wotsSk = wotsGenSK(skSeed, pkSeed, wotsAdrs, n, w)
+    const wotsPk = wotsGenPK(wotsSk, pkSeed, wotsAdrs, w)
+    const pkRoot = sha256(new Uint8Array(wotsPk.flatMap(p => Array.from(p)))).slice(0, n)
+
+    const pk = new Uint8Array([...pkSeed, ...pkRoot])
     const sk = new Uint8Array([...skSeed, ...pkSeed, ...pk])
 
     return { publicKey: bytesToHex(pk), privateKey: bytesToHex(sk) }

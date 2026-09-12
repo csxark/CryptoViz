@@ -90,15 +90,76 @@ function toHex(b: Uint8Array): string {
     return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
+const Z3: readonly number[] = [
+    1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1,
+]
+
+function rotl32(x: number, r: number): number { return ((x << r) | (x >>> (32 - r))) >>> 0 }
+function rotr32(x: number, r: number): number { return ((x >>> r) | (x << (32 - r))) >>> 0 }
+
+function simon64_128_core(ib: Uint8Array, kb: Uint8Array, dec: boolean): Uint8Array {
+    const kw: number[] = [
+        ((kb[0] << 24) | (kb[1] << 16) | (kb[2] << 8) | kb[3]) >>> 0,
+        ((kb[4] << 24) | (kb[5] << 16) | (kb[6] << 8) | kb[7]) >>> 0,
+        ((kb[8] << 24) | (kb[9] << 16) | (kb[10] << 8) | kb[11]) >>> 0,
+        ((kb[12] << 24) | (kb[13] << 16) | (kb[14] << 8) | kb[15]) >>> 0,
+    ]
+    const k: number[] = [kw[3], kw[2], kw[1], kw[0]]
+    for (let i = 0; i < 40; i++) {
+        let tmp = (rotr32(k[i + 3], 3) ^ k[i + 1]) >>> 0
+        tmp = (tmp ^ rotr32(tmp, 1)) >>> 0
+        const new_k = (k[i] ^ tmp ^ Z3[i % 62] ^ 0xFFFFFFFC) >>> 0
+        k.push(new_k)
+    }
+
+    const ob = new Uint8Array(ib.length)
+    for (let b = 0; b < ib.length; b += 8) {
+        let x = ((ib[b] << 24) | (ib[b + 1] << 16) | (ib[b + 2] << 8) | ib[b + 3]) >>> 0
+        let y = ((ib[b + 4] << 24) | (ib[b + 5] << 16) | (ib[b + 6] << 8) | ib[b + 7]) >>> 0
+
+        if (!dec) {
+            for (let i = 0; i < 44; i++) {
+                const f = (((rotl32(x, 1) & rotl32(x, 8)) ^ rotl32(x, 2)) >>> 0)
+                const new_x = (y ^ f ^ k[i]) >>> 0
+                y = x
+                x = new_x
+            }
+        } else {
+            for (let i = 43; i >= 0; i--) {
+                const f = (((rotl32(y, 1) & rotl32(y, 8)) ^ rotl32(y, 2)) >>> 0)
+                const prev_y = (x ^ f ^ k[i]) >>> 0
+                const prev_x = y
+                x = prev_x
+                y = prev_y
+            }
+        }
+
+        ob[b] = (x >>> 24) & 0xFF
+        ob[b + 1] = (x >>> 16) & 0xFF
+        ob[b + 2] = (x >>> 8) & 0xFF
+        ob[b + 3] = x & 0xFF
+        ob[b + 4] = (y >>> 24) & 0xFF
+        ob[b + 5] = (y >>> 16) & 0xFF
+        ob[b + 6] = (y >>> 8) & 0xFF
+        ob[b + 7] = y & 0xFF
+    }
+    return ob
+}
+
 function simonCore(input: string, key: string, dec: boolean, instrument: boolean): CipherResult {
     const t0 = performance.now()
     validateKey(key)
     const kb = parseHex(key, 'SIMON key')
     if (kb.length !== 16)
-        throw new CipherError('INVALID_KEY_LENGTH', `SIMON-128/128 requires 16-byte (128-bit) key. Got ${kb.length * 8} bits.`)
+        throw new CipherError('INVALID_KEY_LENGTH', `SIMON requires 16-byte (128-bit) key. Got ${kb.length * 8} bits.`)
     const ib = parseHex(input, 'SIMON input')
-    if (ib.length === 0 || ib.length % 16 !== 0)
-        throw new CipherError('INVALID_INPUT', `SIMON-128/128 input must be non-empty multiple of 16 bytes.`)
+    if (ib.length === 0 || (ib.length % 8 !== 0 && ib.length % 16 !== 0))
+        throw new CipherError('INVALID_INPUT', `SIMON input must be non-empty multiple of 8 or 16 bytes.`)
+    if (ib.length % 16 !== 0 && ib.length % 8 === 0) {
+        const ob = simon64_128_core(ib, kb, dec)
+        return { output: toHex(ob), outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: performance.now() - t0 }
+    }
     const k = keySchedule(kb)
     const nb = ib.length / 16
     const ob = new Uint8Array(ib.length)

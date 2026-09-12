@@ -8,14 +8,14 @@ describe('3-Way', () => {
         // A core property of 3-Way: rotating the input words cyclically 
         // should result in a correspondingly rotated output.
         const pt1 = '0102030405060708090a0b0c'
-        const pt2 = '090a0b0c0102030405060708' // Cyclically rotated by 1 word (4 bytes)
+        const pt2 = '090a0b0c0102030405060708' // Cyclically rotated by 1 word (4 bytes) to the right
         const key = '000000000000000000000000'
 
         const ct1 = encrypt(pt1, key).output
         const ct2 = encrypt(pt2, key).output
 
-        // ct2 should be ct1 cyclically rotated by 1 word
-        expect(ct2).toBe(ct1.slice(8) + ct1.slice(0, 8))
+        // ct2 should be ct1 cyclically rotated by 1 word (Word 2, Word 0, Word 1)
+        expect(ct2).toBe(ct1.slice(16) + ct1.slice(0, 16))
     })
 
     it('decrypt is exact inverse via bit-reversal property', () => {

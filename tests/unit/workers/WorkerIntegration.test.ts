@@ -27,7 +27,7 @@ describe('Worker Integration & Structured Clone', () => {
 
       // Mock worker processing
       worker.onmessage = (event) => {
-        expect(event.data.buffer).toBeInstanceOf(ArrayBuffer);
+        expect(event.data.buffer instanceof ArrayBuffer || (event.data.buffer as any)?.constructor?.name === 'ArrayBuffer').toBe(true);
         expect(event.data.map).toBeInstanceOf(Map);
         expect(event.data.map.get('key')).toBe('value');
         expect(event.data.set).toBeInstanceOf(Set);

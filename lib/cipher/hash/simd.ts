@@ -91,8 +91,13 @@ function simdCore(input: string, outputBits: number, instrument: boolean): Ciphe
         }
     }
 
-    const outLen = outputBits / 8
-    return { output: toHex(state.map(v => v & 0xFF).slice(0, outLen)), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
+    const targetBytes = outputBits / 8
+    const outBytes: number[] = []
+    for (let i = 0; i < state.length && outBytes.length < targetBytes; i++) {
+        const w = state[i]
+        outBytes.push(w & 0xff, (w >> 8) & 0xff, (w >> 16) & 0xff, (w >> 24) & 0xff)
+    }
+    return { output: toHex(outBytes.slice(0, targetBytes)), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {

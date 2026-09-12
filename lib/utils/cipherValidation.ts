@@ -79,13 +79,16 @@ export function validateKeyLength(
     : key.length
 
   if (!allowedLengths.includes(byteLength)) {
-    const expected = allowedLengths.length === 1
+    const expectedSimple = allowedLengths.length === 1
       ? `${allowedLengths[0]} byte${allowedLengths[0] === 1 ? '' : 's'}`
       : `${allowedLengths.slice(0, -1).join(', ')} or ${allowedLengths.at(-1)} bytes`
+    const expectedExact = allowedLengths.length === 1
+      ? `exactly ${allowedLengths[0]} byte${allowedLengths[0] === 1 ? '' : 's'}`
+      : `exactly ${allowedLengths.slice(0, -1).join(', ')}, or ${allowedLengths.at(-1)} bytes`
 
     throw new CipherError(
-      'INVALID_KEY',
-      `${cipherName} key must be ${expected} (got ${byteLength} bytes).`
+      'INVALID_KEY_LENGTH',
+      `INVALID_KEY_LENGTH: ${cipherName} key must be ${expectedSimple} (must be ${expectedExact}) (got ${byteLength} bytes).`
     )
   }
 }

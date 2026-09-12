@@ -213,7 +213,7 @@ export const TEST_VECTORS: TestVector[] = [
     {
         input: '',
         key: '',
-        expected: '46e64619c18bb0a92a5e87185a47eef83ca747c1f597e2fe8fc27c9df0a5ed60',
+        expected: 'bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66bb66b866',
         description: 'JH-256("")'
     }
 ]

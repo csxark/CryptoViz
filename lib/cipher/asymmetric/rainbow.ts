@@ -52,7 +52,7 @@ function applyAffine(map: AffineMap, x: number[]): number[] {
     const out: number[] = []
     for (let i = 0; i < map.matrix.length; i++) {
         let sum = map.vector[i]
-        for (let j = 0; j < x.length; j++) {
+        for (let j = 0; j < map.matrix[i].length && j < x.length; j++) {
             sum = modQ(sum + map.matrix[i][j] * x[j])
         }
         out.push(sum)
@@ -60,35 +60,74 @@ function applyAffine(map: AffineMap, x: number[]): number[] {
     return out
 }
 
-function invertAffine(map: AffineMap, y: number[]): number[] {
-    // Toy inversion: for small parameters, brute-force search
-    for (let probe = 0; probe < Math.pow(Q, N_VARS); probe++) {
-        const x: number[] = []
-        let tmp = probe
-        for (let i = 0; i < N_VARS; i++) {
-            x.push(tmp % Q)
-            tmp = Math.floor(tmp / Q)
-        }
-        const result = applyAffine(map, x)
-        let match = true
-        for (let i = 0; i < y.length; i++) {
-            if (result[i] !== y[i]) { match = false; break }
-        }
-        if (match) return x
+function modInvQ(a: number): number {
+    a = modQ(a)
+    for (let i = 1; i < Q; i++) {
+        if ((a * i) % Q === 1) return i
     }
-    throw new CipherError('INVALID_INPUT', 'Affine map not invertible for given y')
+    return 1
 }
 
-// Random affine map generation
-function randomAffine(rows: number, cols: number): AffineMap {
-    const matrix: number[][] = []
-    for (let i = 0; i < rows; i++) {
-        const row: number[] = []
-        for (let j = 0; j < cols; j++) row.push(Math.floor(Math.random() * Q))
-        matrix.push(row)
+function invertAffine(map: AffineMap, y: number[]): number[] {
+    const n = map.matrix.length
+    const aug: number[][] = []
+    for (let i = 0; i < n; i++) {
+        const row = [...map.matrix[i]]
+        row.push(modQ(y[i] - map.vector[i]))
+        aug.push(row)
     }
-    const vector: number[] = []
-    for (let i = 0; i < rows; i++) vector.push(Math.floor(Math.random() * Q))
+
+    for (let col = 0; col < n; col++) {
+        let pivotRow = -1
+        for (let r = col; r < n; r++) {
+            if (aug[r][col] !== 0) {
+                pivotRow = r
+                break
+            }
+        }
+        if (pivotRow === -1) {
+            throw new CipherError('INVALID_INPUT', 'Affine map not invertible for given y')
+        }
+        if (pivotRow !== col) {
+            const temp = aug[col]
+            aug[col] = aug[pivotRow]
+            aug[pivotRow] = temp
+        }
+        const inv = modInvQ(aug[col][col])
+        for (let j = col; j <= n; j++) {
+            aug[col][j] = modQ(aug[col][j] * inv)
+        }
+        for (let r = 0; r < n; r++) {
+            if (r !== col && aug[r][col] !== 0) {
+                const factor = aug[r][col]
+                for (let j = col; j <= n; j++) {
+                    aug[r][j] = modQ(aug[r][j] - factor * aug[col][j])
+                }
+            }
+        }
+    }
+
+    return aug.map(row => row[n])
+}
+
+// Random invertible affine map generation (L * U with non-zero diagonal)
+function randomInvertibleAffine(dim: number): AffineMap {
+    const L: number[][] = Array.from({ length: dim }, (_, i) =>
+        Array.from({ length: dim }, (_, j) => (i === j ? 1 : i > j ? Math.floor(Math.random() * Q) : 0))
+    )
+    const U: number[][] = Array.from({ length: dim }, (_, i) =>
+        Array.from({ length: dim }, (_, j) => (i === j ? 1 + Math.floor(Math.random() * (Q - 1)) : i < j ? Math.floor(Math.random() * Q) : 0))
+    )
+    const matrix: number[][] = Array.from({ length: dim }, (_, i) =>
+        Array.from({ length: dim }, (_, j) => {
+            let sum = 0
+            for (let k = 0; k < dim; k++) {
+                sum = modQ(sum + L[i][k] * U[k][j])
+            }
+            return sum
+        })
+    )
+    const vector: number[] = Array.from({ length: dim }, () => Math.floor(Math.random() * Q))
     return { matrix, vector }
 }
 
@@ -169,8 +208,8 @@ interface RainbowKeys {
 }
 
 function keygen(): { pub: AffineMap, priv: RainbowKeys } {
-    const S = randomAffine(N_VARS, N_VARS)
-    const T = randomAffine(M_EQS, M_EQS)
+    const S = randomInvertibleAffine(N_VARS)
+    const T = randomInvertibleAffine(M_EQS)
     // Public key P = T ∘ F ∘ S (represented as an affine map on "evaluation")
     // For this toy implementation, we keep S and T private and compute P on the fly
     return {

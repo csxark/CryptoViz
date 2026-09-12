@@ -18,11 +18,7 @@ describe("NIST & RFC Known-Answer Test Vector Suite Execution", () => {
 
     results.forEach((result) => {
       const { vector } = result;
-      // Algorithms without a wired-up executor (e.g. ECC/PQC today) are
-      // reported as skipped, not silently passed - see docs/testVectors.md.
-      const test = result.mismatchType === "UNSUPPORTED_ALGORITHM" ? it.skip : it;
-
-      test(`executes ${vector.algorithm} [${vector.id}] correctly against expected ciphertext`, () => {
+      it(`executes ${vector.algorithm} [${vector.id}] correctly against expected ciphertext`, () => {
         expect(result.passed, formatMismatchDiagnostic(result)).toBe(true);
       });
     });

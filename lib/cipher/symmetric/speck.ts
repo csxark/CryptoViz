@@ -97,10 +97,58 @@ function parseKey(key: string): bigint[] {
   return keySchedule(k0, k1)
 }
 
+function rotl32(x: number, r: number): number { return ((x << r) | (x >>> (32 - r))) >>> 0 }
+function rotr32(x: number, r: number): number { return ((x >>> r) | (x << (32 - r))) >>> 0 }
+
+function speck64_128_core(ib: Uint8Array, kb: Uint8Array, dec: boolean): Uint8Array {
+    const kw: number[] = [
+        ((kb[0] << 24) | (kb[1] << 16) | (kb[2] << 8) | kb[3]) >>> 0,
+        ((kb[4] << 24) | (kb[5] << 16) | (kb[6] << 8) | kb[7]) >>> 0,
+        ((kb[8] << 24) | (kb[9] << 16) | (kb[10] << 8) | kb[11]) >>> 0,
+        ((kb[12] << 24) | (kb[13] << 16) | (kb[14] << 8) | kb[15]) >>> 0,
+    ]
+    const k: number[] = [kw[3]]
+    const l: number[] = [kw[2], kw[1], kw[0]]
+    for (let i = 0; i < 26; i++) {
+        const new_l = (((rotr32(l[i], 8) + k[i]) >>> 0) ^ i) >>> 0
+        const new_k = (rotl32(k[i], 3) ^ new_l) >>> 0
+        l.push(new_l)
+        k.push(new_k)
+    }
+
+    const ob = new Uint8Array(ib.length)
+    for (let b = 0; b < ib.length; b += 8) {
+        let x = ((ib[b] << 24) | (ib[b + 1] << 16) | (ib[b + 2] << 8) | ib[b + 3]) >>> 0
+        let y = ((ib[b + 4] << 24) | (ib[b + 5] << 16) | (ib[b + 6] << 8) | ib[b + 7]) >>> 0
+
+        if (!dec) {
+            for (let i = 0; i < 27; i++) {
+                x = (((rotr32(x, 8) + y) >>> 0) ^ k[i]) >>> 0
+                y = (rotl32(y, 3) ^ x) >>> 0
+            }
+        } else {
+            for (let i = 26; i >= 0; i--) {
+                y = rotr32((y ^ x) >>> 0, 3)
+                x = rotl32((((x ^ k[i]) - y) >>> 0), 8)
+            }
+        }
+
+        ob[b] = (x >>> 24) & 0xFF
+        ob[b + 1] = (x >>> 16) & 0xFF
+        ob[b + 2] = (x >>> 8) & 0xFF
+        ob[b + 3] = x & 0xFF
+        ob[b + 4] = (y >>> 24) & 0xFF
+        ob[b + 5] = (y >>> 16) & 0xFF
+        ob[b + 6] = (y >>> 8) & 0xFF
+        ob[b + 7] = y & 0xFF
+    }
+    return ob
+}
+
 function parseBlockInput(input: string): Uint8Array {
   const bytes = parseHexBytes(input, 'Speck input')
-  if (bytes.length === 0 || bytes.length % 16 !== 0) {
-    throw new CipherError('INVALID_INPUT', `Speck input must be a non-empty multiple of 16 bytes (128-bit blocks). Got ${bytes.length} bytes.`)
+  if (bytes.length === 0 || (bytes.length % 8 !== 0 && bytes.length % 16 !== 0)) {
+    throw new CipherError('INVALID_INPUT', `Speck input must be a non-empty multiple of 16 bytes (or 8 for Speck-64). Got ${bytes.length} bytes.`)
   }
   return bytes
 }
@@ -129,8 +177,12 @@ function decryptBlock(x0: bigint, y0: bigint, k: bigint[]): [bigint, bigint] {
 
 function speckCore(input: string, key: string, decrypt: boolean, instrument: boolean): CipherResult {
   const start = performance.now()
-  const k = parseKey(key)
   const bytes = parseBlockInput(input)
+  if (bytes.length % 16 !== 0 && bytes.length % 8 === 0) {
+    const ob = speck64_128_core(bytes, parseHexBytes(key, 'Speck key'), decrypt)
+    return { output: bytesToHex(ob), outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: performance.now() - start }
+  }
+  const k = parseKey(key)
   const numBlocks = bytes.length / 16
 
   const steps: CipherStep[] = []

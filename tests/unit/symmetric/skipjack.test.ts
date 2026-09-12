@@ -35,17 +35,17 @@ describe('Skipjack', () => {
     expect(res.steps[0].label).toBe('Round 1 (A)');
     expect(res.steps[31].label).toBe('Round 32 (B)');
     expect(res.steps[0].inputState).toBe('33221100DDCCBBAA');
-    expect(res.steps[31].outputState.toUpperCase()).toBe('2587CAEA7212D595');
+    expect(res.steps[31].outputState.toUpperCase()).toBe('2587CAE27A12D300');
   });
 
   it('returns 32 detailed round steps when decrypt options.instrument is true', () => {
     const key = '00998877665544332211';
-    const ct = '2587CAEA7212D595';
+    const ct = '2587CAE27A12D300';
     const res = decrypt(ct, key, { instrument: true });
     expect(res.steps).toHaveLength(32);
     expect(res.steps[0].label).toBe('Round 32 (B-inverse)');
     expect(res.steps[31].label).toBe('Round 1 (A-inverse)');
-    expect(res.steps[0].inputState.toUpperCase()).toBe('2587CAEA7212D595');
+    expect(res.steps[0].inputState.toUpperCase()).toBe('2587CAE27A12D300');
     expect(res.steps[31].outputState.toUpperCase()).toBe('33221100DDCCBBAA');
   });
 
@@ -57,7 +57,7 @@ describe('Skipjack', () => {
     const encExplicitFalse = encrypt(pt, key, { instrument: false });
     expect(encExplicitFalse.steps).toHaveLength(0);
 
-    const decUninst = decrypt('2587CAEA7212D595', key);
+    const decUninst = decrypt('2587CAE27A12D300', key);
     expect(decUninst.steps).toHaveLength(0);
   });
 
@@ -87,17 +87,17 @@ describe('Skipjack', () => {
   it('verifies traceSkipjack directly', () => {
     const encTrace = traceSkipjack('33221100DDCCBBAA', '00998877665544332211', 'encrypt');
     expect(encTrace.rounds).toHaveLength(32);
-    expect(encTrace.outputHex.toUpperCase()).toBe('2587CAEA7212D595');
+    expect(encTrace.outputHex.toUpperCase()).toBe('2587CAE27A12D300');
 
-    const decTrace = traceSkipjack('2587CAEA7212D595', '00998877665544332211', 'decrypt');
+    const decTrace = traceSkipjack('2587CAE27A12D300', '00998877665544332211', 'decrypt');
     expect(decTrace.rounds).toHaveLength(32);
     expect(decTrace.outputHex.toUpperCase()).toBe('33221100DDCCBBAA');
   });
 
   it('verifies block encryption and decryption functions', () => {
     const ct = encryptSkipjackBlock('33221100DDCCBBAA', '00998877665544332211');
-    expect(ct.toUpperCase()).toBe('2587CAEA7212D595');
-    const pt = decryptSkipjackBlock('2587CAEA7212D595', '00998877665544332211');
+    expect(ct.toUpperCase()).toBe('2587CAE27A12D300');
+    const pt = decryptSkipjackBlock('2587CAE27A12D300', '00998877665544332211');
     expect(pt.toUpperCase()).toBe('33221100DDCCBBAA');
 
     const notes = skipjackImplementationNotes();

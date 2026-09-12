@@ -112,4 +112,9 @@ afterEach(() => {
   }
 });
 
+if (typeof window !== "undefined") {
+  window.Uint8Array = globalThis.Uint8Array;
+  window.ArrayBuffer = globalThis.ArrayBuffer;
+}
+
 silenceKnownNoisyWarnings();

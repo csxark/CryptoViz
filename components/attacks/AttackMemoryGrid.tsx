@@ -51,6 +51,7 @@ export default function AttackMemoryGrid({ bytes }: { bytes: InteractiveByte[] }
       aria-rowcount={bytes.length ? Math.ceil(bytes.length / 4) : 0}
       className="grid grid-cols-4 gap-2 sm:grid-cols-8 md:grid-cols-16"
     >
+      <div role="row" className="contents">
       {bytes.map((byte, index) => {
         const value = byte.status === 'recovered'
           ? `0x${byte.value!.toString(16).padStart(2, '0')}`
@@ -82,6 +83,7 @@ export default function AttackMemoryGrid({ bytes }: { bytes: InteractiveByte[] }
           </div>
         )
       })}
+      </div>
     </div>
   )
 }

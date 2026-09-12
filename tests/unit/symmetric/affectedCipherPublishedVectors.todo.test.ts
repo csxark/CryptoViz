@@ -13,52 +13,46 @@ import {
  * error bodies. Keeping this file separate avoids guessing current export names
  * while still documenting the exact regression coverage expected by the issue.
  */
+import { encrypt as encryptNoekeon } from "../../../lib/cipher/symmetric/noekeon";
+import { encrypt as encryptPresent } from "../../../lib/cipher/symmetric/present";
+import { encrypt as encryptRc6 } from "../../../lib/cipher/symmetric/rc6";
+import { encrypt as encryptSeed } from "../../../lib/cipher/symmetric/seed";
+import { encrypt as encryptSimon } from "../../../lib/cipher/symmetric/simon";
+import { encrypt as encryptSpeck } from "../../../lib/cipher/symmetric/speck";
+import { encrypt as encryptTwofish } from "../../../lib/cipher/symmetric/twofish";
+
 const adapters: CipherAdapter[] = [
   {
     cipher: "NOEKEON",
-    encryptBlock: () => {
-      throw new Error("Wire this adapter to the real NOEKEON encrypt helper.");
-    },
+    encryptBlock: (pt, key) => encryptNoekeon(pt, key).output,
   },
   {
     cipher: "PRESENT",
-    encryptBlock: () => {
-      throw new Error("Wire this adapter to the real PRESENT encrypt helper.");
-    },
+    encryptBlock: (pt, key) => encryptPresent(pt, key).output,
   },
   {
     cipher: "RC6",
-    encryptBlock: () => {
-      throw new Error("Wire this adapter to the real RC6 encrypt helper.");
-    },
+    encryptBlock: (pt, key) => encryptRc6(pt, key).output,
   },
   {
     cipher: "SEED",
-    encryptBlock: () => {
-      throw new Error("Wire this adapter to the real SEED encrypt helper.");
-    },
+    encryptBlock: (pt, key) => encryptSeed(pt, key).output,
   },
   {
     cipher: "SIMON",
-    encryptBlock: () => {
-      throw new Error("Wire this adapter to the real SIMON encrypt helper.");
-    },
+    encryptBlock: (pt, key) => encryptSimon(pt, key).output,
   },
   {
     cipher: "SPECK",
-    encryptBlock: () => {
-      throw new Error("Wire this adapter to the real SPECK encrypt helper.");
-    },
+    encryptBlock: (pt, key) => encryptSpeck(pt, key).output,
   },
   {
     cipher: "TWOFISH",
-    encryptBlock: () => {
-      throw new Error("Wire this adapter to the real Twofish encrypt helper.");
-    },
+    encryptBlock: (pt, key) => encryptTwofish(pt, key).output,
   },
 ];
 
-describe.skip("affected cipher implementations against published vectors", () => {
+describe("affected cipher implementations against published vectors (todo completed)", () => {
   it("passes every known-answer vector after adapters are wired to real cipher exports", () => {
     const results = runPublishedVectorSuite(adapters);
     const summary = buildCipherVectorAuditSummary(results);

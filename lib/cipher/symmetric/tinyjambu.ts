@@ -67,13 +67,13 @@ function constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyNonce = parseHex(key, 'TinyJAMBU key+nonce')
-    if (keyNonce.length !== 28) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 28 bytes (16-byte key + 12-byte nonce) for TinyJAMBU-128.')
+    if (keyNonce.length !== 28) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 28 bytes (16-byte key + 12-byte nonce) for TinyJAMBU-128.')
 
     const K = keyNonce.slice(0, 16)
     const N = keyNonce.slice(16, 28)
     const ad = parseHex((options.ad as string) || '', 'AD')
     const ptBytes = parseHex(plaintext, 'plaintext');
-    const outBytes = new Uint8Array(ptBytes.length + 16);
+    const outBytes = new Uint8Array(ptBytes.length + 8);
 
     const s = new Array(4).fill(0)
     const steps: CipherStep[] = []
@@ -106,7 +106,6 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
     }
 
     // Encryption
-    const ctBytes = new Uint8Array(ptBytes.length + 8) // +8 for tag
     s[1] ^= (0b101 << 25) // Frame bit for message -> tag
 
     for (let i = 0; i < ptBytes.length * 8; i++) {
@@ -141,9 +140,85 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
     return { output: toHex(outBytes), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
-// ... decrypt implementation similar ...
 export function decrypt(ciphertext: string, key: string, options: CipherOptions = {}): CipherResult {
-    return { output: '', outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: 0 }
+    const start = performance.now()
+    const keyNonce = parseHex(key, 'TinyJAMBU key+nonce')
+    if (keyNonce.length !== 28) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 28 bytes (16-byte key + 12-byte nonce) for TinyJAMBU-128.')
+
+    const K = keyNonce.slice(0, 16)
+    const N = keyNonce.slice(16, 28)
+    const ad = parseHex((options.ad as string) || '', 'AD')
+    const ctBytesWithTag = parseHex(ciphertext, 'ciphertext')
+    if (ctBytesWithTag.length < 8) throw new CipherError('INVALID_INPUT', 'Ciphertext too short for tag.')
+
+    const ptLen = ctBytesWithTag.length - 8
+    const ctBytes = ctBytesWithTag.slice(0, ptLen)
+    const receivedTag = ctBytesWithTag.slice(ptLen)
+    const ptBytes = new Uint8Array(ptLen)
+
+    const s = new Array(4).fill(0)
+    const steps: CipherStep[] = []
+
+    // Initialization: 1024 rounds for TinyJAMBU-128
+    for (let i = 0; i < 1024; i++) {
+        const k_bit = (K[(i >>> 3) % 16] >>> (7 - (i & 7))) & 1
+        nlfsrStep(s, k_bit)
+    }
+
+    // Nonce injection: 3 x 32-bit groups, 640 steps each
+    for (let g = 0; g < 3; g++) {
+        s[1] ^= (0b001 << 25)
+        for (let i = 0; i < 640; i++) {
+            const n_bit = (N[g * 4 + (i >>> 3)] >>> (7 - (i & 7))) & 1
+            nlfsrStep(s, n_bit)
+        }
+    }
+
+    // AD processing
+    if (ad.length > 0) {
+        s[1] ^= (0b011 << 25)
+        for (let i = 0; i < ad.length * 8; i++) {
+            const ad_bit = (ad[i >>> 3] >>> (7 - (i & 7))) & 1
+            nlfsrStep(s, ad_bit)
+        }
+    } else {
+        s[1] ^= (0b011 << 25)
+    }
+
+    // Decryption
+    s[1] ^= (0b101 << 25)
+    for (let i = 0; i < ptLen * 8; i++) {
+        const ct_bit = (ctBytes[i >>> 3] >>> (7 - (i & 7))) & 1
+        const ks = (s[0] >>> 1) & 1
+        const pt_bit = ct_bit ^ ks
+        nlfsrStep(s, pt_bit)
+
+        const byteIdx = i >>> 3
+        const bitIdx = 7 - (i & 7)
+        ptBytes[byteIdx] |= (pt_bit << bitIdx)
+    }
+
+    // Tag generation: 1024 steps
+    s[1] ^= (0b111 << 25)
+    for (let i = 0; i < 1024; i++) {
+        const k_bit = (K[(i >>> 3) % 16] >>> (7 - (i & 7))) & 1
+        nlfsrStep(s, k_bit)
+    }
+
+    // Read 64 tag bits
+    const expectedTag = new Uint8Array(8)
+    for (let i = 0; i < 64; i++) {
+        const ks = nlfsrStep(s, 0)
+        const byteIdx = i >>> 3
+        const bitIdx = 7 - (i & 7)
+        expectedTag[byteIdx] |= (ks << bitIdx)
+    }
+
+    if (!constantTimeCompare(expectedTag, receivedTag)) {
+        throw new CipherError('AUTH_TAG_MISMATCH', 'AUTH_TAG_MISMATCH: TinyJAMBU authentication tag mismatch.')
+    }
+
+    return { output: toHex(ptBytes), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
 export const TEST_VECTORS: TestVector[] = [

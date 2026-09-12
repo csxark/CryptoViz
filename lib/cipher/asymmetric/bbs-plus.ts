@@ -6,8 +6,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError } from '../../utils/errors'
-// @ts-expect-error
-import { bls12_381 } from '@noble/curves/bls12-381'
+import { bls12_381 } from '@noble/curves/bls12-381.js'
 
 const METADATA: CipherMetadata = {
     name: 'BBS+',
@@ -19,8 +18,8 @@ const METADATA: CipherMetadata = {
 
 const G1 = bls12_381.G1
 const G2 = bls12_381.G2
-const P1 = G1.ProjectivePoint.BASE
-const P2 = G2.ProjectivePoint.BASE
+const P1 = G1.Point.BASE
+const P2 = G2.Point.BASE
 
 function bytesToHex(b: Uint8Array): string { return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('') }
 function hexToBytes(hex: string): Uint8Array {
@@ -32,17 +31,16 @@ function hexToBytes(hex: string): Uint8Array {
 }
 
 export function generate(): { publicKey: string, privateKey: string } {
-    const sk = bls12_381.utils.randomPrivateKey()
-    const pk = G2.ProjectivePoint.BASE.multiply(bls12_381.utils.normPrivateKeyToScalar(sk))
+    const pair = bls12_381.shortSignatures.keygen()
     return {
-        publicKey: bytesToHex(pk.toRawBytes(true)),
-        privateKey: bytesToHex(sk)
+        publicKey: bytesToHex(pair.publicKey.toBytes(true)),
+        privateKey: bytesToHex(pair.secretKey)
     }
 }
 
 export function sign(messages: string[], privateKey: string): string {
     const sk = BigInt('0x' + privateKey)
-    const e = bls12_381.utils.normPrivateKeyToScalar(bls12_381.utils.randomPrivateKey())
+    const e = 12345n
 
     // Simplified BBS+ signing: B = P1 + H(m1) + ... + H(mL)
     let B = P1
@@ -53,25 +51,24 @@ export function sign(messages: string[], privateKey: string): string {
     }
 
     // A = (1 / (e + sk)) * B
-    const e_plus_sk = bls12_381.utils.normPrivateKeyToScalar(new Uint8Array([...new Uint8Array(32).fill(0), ...new TextEncoder().encode(e.toString())])) // Simplified
     // In real BBS+, we need modular inverse of (e + sk) mod r
     // For visualizer, we simulate the signature structure
     const A = B.multiply(BigInt(12345)) // Placeholder for actual scalar inverse multiplication
 
-    const sig = new Uint8Array([...A.toRawBytes(true), ...new Uint8Array(32).fill(0)]) // A (48 bytes) + e (32 bytes)
+    const sig = new Uint8Array([...A.toBytes(true), ...new Uint8Array(32).fill(0)]) // A (48 bytes) + e (32 bytes)
     return bytesToHex(sig)
 }
 
 export function verify(messages: string[], publicKey: string, signature: string): boolean {
     try {
-        const pk = G2.ProjectivePoint.fromHex(hexToBytes(publicKey))
+        const pk = G2.Point.fromHex(publicKey)
         const sigBytes = hexToBytes(signature)
-        const A = G1.ProjectivePoint.fromHex(sigBytes.slice(0, 48))
+        const A = G1.Point.fromHex(bytesToHex(sigBytes.slice(0, 48)))
         const e = BigInt('0x' + bytesToHex(sigBytes.slice(48, 80)))
 
         // Simplified verification: check pairing e(A, pk + e*P2) == e(B, P2)
         // For visualizer, we just check if the signature structure is valid
-        return A.toRawBytes(true).length === 48
+        return A.toBytes(true).length === 48
     } catch (e) {
         return false
     }
@@ -86,7 +83,13 @@ export function proveDisclosure(messages: string[], publicKey: string, signature
 export function verifyDisclosure(disclosedMessages: string[], publicKey: string, proof: string, disclosedIndices: number[]): boolean {
     try {
         const proofData = JSON.parse(new TextDecoder().decode(hexToBytes(proof)))
-        return proofData.disclosed.length === disclosedIndices.length
+        if (!Array.isArray(proofData.disclosed)) return false
+        if (proofData.disclosed.length !== disclosedIndices.length) return false
+        if (disclosedMessages.length !== disclosedIndices.length) return false
+        for (let i = 0; i < disclosedMessages.length; i++) {
+            if (disclosedMessages[i] !== proofData.disclosed[i]) return false
+        }
+        return true
     } catch (e) {
         return false
     }

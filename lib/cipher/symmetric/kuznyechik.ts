@@ -80,9 +80,11 @@ function R(state: Bytes): Bytes {
 
 function R_inv(state: Bytes): Bytes {
     const out: Bytes = new Uint8Array(16)
-    for (let i = 0; i < 15; i++) out[i + 1] = state[i]
-    out[0] = state[15]
-    out[15] = l_transform(out)
+    for (let i = 0; i < 15; i++) out[i] = state[i + 1]
+    const temp = new Uint8Array(16)
+    for (let i = 0; i < 15; i++) temp[i] = out[i]
+    temp[15] = 0
+    out[15] = state[0] ^ l_transform(temp)
     return out
 }
 
@@ -105,7 +107,7 @@ function S(state: Bytes): Bytes {
 }
 
 function S_inv(state: Bytes): Bytes {
-    const out: Bytes = new Uint8Array(16)
+    const out = new Uint8Array(16)
     for (let i = 0; i < 16; i++) out[i] = Pi_inv[state[i]]
     return out
 }
@@ -128,18 +130,17 @@ function toHex(b: Bytes): string {
     return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
+function F_step(k: Bytes, a1: Bytes, a0: Bytes): [Bytes, Bytes] {
+    const res = L(S(X(k, a1)))
+    return [X(res, a0), a1]
+}
+
 // ── Key Schedule ─────────────────────────────────────────────────────────────
 function keySchedule(keyBytes: Bytes): Bytes[] {
-    const roundKeys: Bytes[] = []
     const k1: Bytes = keyBytes.slice(0, 16)
     const k2: Bytes = keyBytes.slice(16, 32)
-    roundKeys.push(k1)
-    roundKeys.push(k2)
 
-    let a: Bytes = Uint8Array.from(k1)
-    let b: Bytes = Uint8Array.from(k2)
-
-    // Iteration constants C_i = l(i)
+    // Iteration constants C_i = L(Vec_128(i)) where Vec_128(i) has i at byte index 15
     const C: Bytes[] = new Array(32)
     for (let i = 1; i <= 32; i++) {
         const tmp: Bytes = new Uint8Array(16)
@@ -147,38 +148,22 @@ function keySchedule(keyBytes: Bytes): Bytes[] {
         C[i - 1] = L(tmp)
     }
 
-    for (let iter = 1; iter <= 4; iter++) {
-        for (let j = 1; j <= 8; j++) {
-            const cIdx = 8 * (iter - 1) + j - 1
-            const tmp = X(a, C[cIdx])
-            const sOut = S(tmp)
-            const lOut = L(sOut)
-            const newB = X(b, lOut)
-            a = newB
-            b = new Uint8Array(tmp) // swap halves
-            // Wait, Feistel round: left_new = right_old, right_new = left_old ^ F(right_old)
-            // Let's correct Feistel:
+    const roundKeys: Bytes[] = [new Uint8Array(k1), new Uint8Array(k2)]
+    let curA1: Bytes = new Uint8Array(k1)
+    let curA0: Bytes = new Uint8Array(k2)
+
+    for (let iter = 0; iter < 4; iter++) {
+        for (let j = 0; j < 8; j++) {
+            const cIdx = 8 * iter + j
+            const [nextA1, nextA0] = F_step(C[cIdx], curA1, curA0)
+            curA1 = nextA1
+            curA0 = nextA0
         }
-        // The Feistel loop above has a logic flaw in my draft. Let's do it cleanly:
+        roundKeys.push(new Uint8Array(curA1))
+        roundKeys.push(new Uint8Array(curA0))
     }
 
-    // Clean Feistel expansion:
-    const keys: Bytes[] = [new Uint8Array(k1), new Uint8Array(k2)]
-    for (let iter = 1; iter <= 4; iter++) {
-        let left: Bytes = new Uint8Array(keys[keys.length - 2])
-        let right: Bytes = new Uint8Array(keys[keys.length - 1])
-        for (let j = 1; j <= 8; j++) {
-            const cIdx = 8 * (iter - 1) + j - 1
-            const f_in: Bytes = X(right, C[cIdx])
-            const f_out: Bytes = L(S(f_in))
-            const newRight: Bytes = X(left, f_out)
-            left = right
-            right = newRight
-        }
-        keys.push(left)
-        keys.push(right)
-    }
-    return keys.slice(0, 10)
+    return roundKeys.slice(0, 10)
 }
 
 function kuznyechikEncrypt(block: Bytes, roundKeys: Bytes[]): Bytes {

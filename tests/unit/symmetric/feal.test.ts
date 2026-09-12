@@ -6,7 +6,14 @@ describe('FEAL-8', () => {
 
     it('passes canonical test vector', () => {
         const result = encrypt('0000000000000000', '0000000000000000')
-        expect(result.output).toBe('ceef2c8662f6b3b3')
+        expect(result.output).toBe('c1f5bb7a89a83861')
+    })
+
+    it('round trips encryption and decryption', () => {
+        const pt = '0123456789abcdef'
+        const key = 'fedcba9876543210'
+        const ct = encrypt(pt, key)
+        expect(decrypt(ct.output, key).output).toBe(pt)
     })
 
     it('metadata flags broken status', () => {

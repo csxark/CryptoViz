@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * Bundle Size & Lazy-Loading Budget Checker (#1321)
  *

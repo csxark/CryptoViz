@@ -98,7 +98,7 @@ function constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyNonce = parseHex(key, 'Romulus key+nonce')
-    if (keyNonce.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 32 bytes (16-byte key + 16-byte nonce).')
+    if (keyNonce.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 32 bytes (16-byte key + 16-byte nonce).')
 
     const K = keyNonce.slice(0, 16)
     const N = keyNonce.slice(16, 32)
@@ -163,7 +163,7 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
 export function decrypt(ciphertext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyNonce = parseHex(key, 'Romulus key+nonce')
-    if (keyNonce.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 32 bytes.')
+    if (keyNonce.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 32 bytes.')
 
     const K = keyNonce.slice(0, 16)
     const N = keyNonce.slice(16, 32)
@@ -217,7 +217,7 @@ export function decrypt(ciphertext: string, key: string, options: CipherOptions 
     const expectedTag = skinny128_384_plus(K, N, tk3_final, S)
 
     if (!constantTimeCompare(expectedTag, receivedTag)) {
-        throw new CipherError('AUTH_TAG_MISMATCH', 'Romulus-N authentication tag mismatch.')
+        throw new CipherError('AUTH_TAG_MISMATCH', 'AUTH_TAG_MISMATCH: Romulus-N authentication tag mismatch.')
     }
 
     return { output: toHex(new Uint8Array(ptBytes)), outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: performance.now() - start }

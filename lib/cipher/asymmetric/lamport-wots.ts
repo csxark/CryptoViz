@@ -25,6 +25,13 @@ function hexToBytes(hex: string): Uint8Array {
     return out
 }
 function bytesToHex(bytes: Uint8Array): string { return Array.from(bytes).map(x => x.toString(16).padStart(2, '0')).join('') }
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+    if (a.length !== b.length) return false
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false
+    }
+    return true
+}
 function hashChain(seed: Uint8Array, iterations: number): Uint8Array {
     let current = new Uint8Array(seed)
     for (let i = 0; i < iterations; i++) current = sha256(current)
@@ -42,7 +49,20 @@ function lamportCore(input: string, key: string, verify: boolean): CipherResult 
         steps.push({ index: 0, label: 'Lamport Signing', inputState: input, outputState: '256 revealed secrets', note: 'One-time use only.', isMilestone: true })
         return { output: sig.map(bytesToHex).join(''), outputEncoding: 'hex', steps, metadata: METADATA_LAMPORT, durationMs: performance.now() - start }
     }
-    const valid = hexToBytes(input).length === 256 * 32
+    const sigBytes = hexToBytes(input)
+    let valid = sigBytes.length === 256 * 32
+    if (valid) {
+        for (let i = 0; i < 256; i++) {
+            const sigI = sigBytes.subarray(i * 32, (i + 1) * 32)
+            const h = sha256(sigI)
+            const pk0 = sha256(sha256(new Uint8Array([...seed, 0x4C, (i >> 8) & 0xFF, i & 0xFF, 0])))
+            const pk1 = sha256(sha256(new Uint8Array([...seed, 0x4C, (i >> 8) & 0xFF, i & 0xFF, 1])))
+            if (!bytesEqual(h, pk0) && !bytesEqual(h, pk1)) {
+                valid = false
+                break
+            }
+        }
+    }
     steps.push({ index: 0, label: 'Lamport Verification', inputState: input, outputState: valid ? 'Valid' : 'Invalid', isMilestone: true })
     return { output: valid ? '01' : '00', outputEncoding: 'hex', steps, metadata: METADATA_LAMPORT, durationMs: performance.now() - start }
 }

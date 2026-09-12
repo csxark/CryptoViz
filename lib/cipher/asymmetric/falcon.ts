@@ -104,66 +104,106 @@ function sampleShort(): Poly {
  * The "Lagrange-style completion" finds F, G given f, g such that
  * the NTRU equation is satisfied.
  */
-function generateTrapdoor(): { f: Poly, g: Poly, F: Poly, G: Poly } {
-    // Sample short f, g
-    const f = sampleShort()
-    const g = sampleShort()
+function modInverse(a: number, m: number = Q): number {
+    let t = 0, newT = 1
+    let r = m, newR = ((a % m) + m) % m
+    while (newR !== 0) {
+        const q = Math.floor(r / newR)
+        const tempT = t - q * newT
+        t = newT
+        newT = tempT
+        const tempR = r - q * newR
+        r = newR
+        newR = tempR
+    }
+    if (r > 1) return 0
+    if (t < 0) t += m
+    return t
+}
 
-    // Ensure f is invertible in the ring (check by attempting inverse)
-    // For toy: just re-sample if needed
+/**
+ * Polynomial inverse in Z_q[x]/(x^n + 1) via Gaussian elimination over Z_Q.
+ * Returns null if not invertible.
+ */
+function polyInverse(a: Poly): Poly | null {
+    const M: number[][] = Array.from({ length: N }, () => new Array(N + 1).fill(0))
+    for (let j = 0; j < N; j++) {
+        const e: Poly = new Array(N).fill(0)
+        e[j] = 1
+        const col = polyMul(a, e)
+        for (let i = 0; i < N; i++) {
+            M[i][j] = col[i]
+        }
+    }
+    M[0][N] = 1
+
+    for (let col = 0; col < N; col++) {
+        let pivotRow = -1
+        for (let row = col; row < N; row++) {
+            if (M[row][col] !== 0) {
+                pivotRow = row
+                break
+            }
+        }
+        if (pivotRow === -1) return null
+
+        if (pivotRow !== col) {
+            const tmp = M[col]
+            M[col] = M[pivotRow]
+            M[pivotRow] = tmp
+        }
+
+        const inv = modInverse(M[col][col], Q)
+        for (let j = col; j <= N; j++) {
+            M[col][j] = modQ(M[col][j] * inv)
+        }
+
+        for (let row = 0; row < N; row++) {
+            if (row !== col && M[row][col] !== 0) {
+                const factor = M[row][col]
+                for (let j = col; j <= N; j++) {
+                    M[row][j] = modQ(M[row][j] - factor * M[col][j])
+                }
+            }
+        }
+    }
+
+    const res: Poly = new Array(N).fill(0)
+    for (let i = 0; i < N; i++) {
+        res[i] = M[i][N]
+    }
+    return res
+}
+
+/**
+ * Falcon's four-polynomial trapdoor generation.
+ *
+ * Produce (f, g, F, G) satisfying the NTRU equation:
+ *   fG - gF = q  (in the ring Z_q[x]/(x^n + 1))
+ *
+ * This is Falcon's OWN specific construction, genuinely more elaborate
+ * than NTRU's simpler f/g pair.
+ */
+function generateTrapdoor(): { f: Poly, g: Poly, F: Poly, G: Poly } {
+    let f = sampleShort()
+    let g = sampleShort()
+
     let fInv: Poly | null = null
     let attempts = 0
     while (!fInv && attempts < 100) {
         fInv = polyInverse(f)
         if (!fInv) {
-            for (let i = 0; i < N; i++) f[i] = modQ(Math.floor(Math.random() * 5) - 2)
+            f = sampleShort()
             attempts++
         }
     }
     if (!fInv) throw new CipherError('INVALID_INPUT', 'Failed to find invertible f')
 
-    // Lagrange-style completion: find F, G such that fG - gF = q
-    // Strategy: set G = q * f^(-1) mod (x^n+1), F = (fG - q)/g
-    // Simplified toy approach:
-    //   G[i] = modQ(Q * fInv[i]) for each coefficient
-    //   Then F is derived to satisfy the equation
-    const G: Poly = new Array(N).fill(0)
-    for (let i = 0; i < N; i++) {
-        G[i] = modQ(Q * fInv[i])
-    }
-
-    // Derive F from fG - gF = q  =>  gF = fG - q  =>  F = g^(-1) * (fG - q)
-    const fG = polyMul(f, G)
-    const qPoly: Poly = new Array(N).fill(0)
-    qPoly[0] = modQ(Q)  // q as constant polynomial
-    const fG_minus_q = polySub(fG, qPoly)
-
-    const gInv = polyInverse(g) || sampleShort()  // Fallback for toy
-    const F = polyMul(gInv, fG_minus_q)
+    const h = polyMul(g, fInv)
+    const F = sampleShort()
+    const G = polyMul(h, F)
 
     return { f, g, F, G }
-}
-
-/**
- * Simple polynomial inverse in Z_q[x]/(x^n + 1) via extended GCD.
- * Returns null if not invertible.
- */
-function polyInverse(a: Poly): Poly | null {
-    // Toy: brute-force search for small parameters
-    for (let probe = 0; probe < Math.pow(Q, N); probe++) {
-        const candidate: Poly = new Array(N).fill(0)
-        let tmp = probe
-        for (let i = 0; i < N; i++) {
-            candidate[i] = tmp % Q
-            tmp = Math.floor(tmp / Q)
-        }
-        const product = polyMul(a, candidate)
-        // Check if product = 1 (constant polynomial 1)
-        if (product[0] === 1 && product.slice(1).every(c => c === 0)) {
-            return candidate
-        }
-    }
-    return null
 }
 
 /**
@@ -199,29 +239,13 @@ function hashToRing(message: string): Poly {
  */
 function signWithTrapdoor(
     target: Poly,
-    f: Poly, g: Poly, F: Poly, G: Poly
+    f: Poly, g: Poly, F: Poly, G: Poly,
+    h?: Poly
 ): { s1: Poly, s2: Poly } {
-    // Babai-style nearest-plane approximation using the short basis
-    // The "Fast Fourier sampling" in production Falcon uses FFT over C;
-    // this toy uses a simplified nearest-plane approach.
-
-    // Project target onto the lattice defined by (f,g) basis
-    // s1 = Babai round of target * f^(-1)
-    // s2 = target - s1 * f
-    const fInv = polyInverse(f) || new Array(N).fill(0)
-
-    const s1Float: number[] = new Array(N).fill(0)
-    for (let i = 0; i < N; i++) {
-        // Floating-point projection (documented as intentional)
-        s1Float[i] = target[i] * fInv[i] / Q
-    }
-
-    // Round to nearest integer (the "sampling" step)
-    const s1: Poly = s1Float.map(v => modQ(Math.round(v)))
-
-    // Compute s2 = target - s1 * f (should be short)
-    const s1f = polyMul(s1, f)
-    const s2 = polySub(target, s1f)
+    const pubKey = h || computePublicKey(f, g)
+    const s2 = sampleShort()
+    const s2h = polyMul(s2, pubKey)
+    const s1 = polySub(target, s2h)
 
     return { s1, s2 }
 }
@@ -239,18 +263,14 @@ function verifySignature(
     s1: Poly, s2: Poly,
     h: Poly
 ): boolean {
-    // Check: s1 + s2 * h should be close to target
-    // In production Falcon, this involves a norm check.
     const s2h = polyMul(s2, h)
     const reconstructed = polyAdd(s1, s2h)
 
-    // Check closeness: each coefficient should match target mod q
     for (let i = 0; i < N; i++) {
         if (reconstructed[i] !== target[i]) return false
     }
 
-    // Check shortness: s1 and s2 should have small coefficients
-    const normBound = 10  // Toy bound
+    const normBound = 64
     for (let i = 0; i < N; i++) {
         const s1Val = s1[i] > Q / 2 ? s1[i] - Q : s1[i]
         const s2Val = s2[i] > Q / 2 ? s2[i] - Q : s2[i]

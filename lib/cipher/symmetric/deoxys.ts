@@ -93,7 +93,7 @@ function constantTimeCompare(a: number[], b: number[]): boolean {
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'Deoxys key+nonce')
-    if (keyBytes.length !== 48) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 48 bytes (32-byte key + 16-byte nonce).')
+    if (keyBytes.length !== 48) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 48 bytes (32-byte key + 16-byte nonce).')
 
     const K1 = keyBytes.slice(0, 16)
     const K2 = keyBytes.slice(16, 32)
@@ -152,7 +152,7 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
 export function decrypt(ciphertext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'Deoxys key+nonce')
-    if (keyBytes.length !== 48) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 48 bytes.')
+    if (keyBytes.length !== 48) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 48 bytes.')
 
     const K1 = keyBytes.slice(0, 16)
     const K2 = keyBytes.slice(16, 32)
@@ -200,7 +200,7 @@ export function decrypt(ciphertext: string, key: string, options: CipherOptions 
     const expectedTag = deoxys_tbc_384(K2, tagTweak, checksum)
 
     if (!constantTimeCompare(expectedTag, receivedTag)) {
-        throw new CipherError('AUTH_TAG_MISMATCH', 'Deoxys-II authentication tag mismatch.')
+        throw new CipherError('AUTH_TAG_MISMATCH', 'AUTH_TAG_MISMATCH: Deoxys-II authentication tag mismatch.')
     }
 
     return { output: toHex(ptBytes), outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: performance.now() - start }

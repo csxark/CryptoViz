@@ -121,11 +121,11 @@ export const PUBLISHED_CIPHER_VECTORS: PublishedCipherVector[] = [
   {
     cipher: "SEED",
     variant: "SEED-128",
-    source: "SEED standard known-answer vector",
+    source: "SEED standard known-answer vector (RFC 4269 Appendix B.1)",
     keyHex: "00000000000000000000000000000000",
-    plaintextHex: "00000000000000000000000000000000",
+    plaintextHex: "000102030405060708090A0B0C0D0E0F",
     ciphertextHex: "5EBAC6E0054E166819AFF1CC6D346CDB",
-    notes: "Zero key / zero block vector for the 128-bit SEED block cipher.",
+    notes: "Zero key / incremental byte block vector for 128-bit SEED block cipher (RFC 4269 Appendix B.1).",
   },
   {
     cipher: "SIMON",

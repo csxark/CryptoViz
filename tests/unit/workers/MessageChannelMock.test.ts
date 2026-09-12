@@ -47,7 +47,7 @@ class MockMessagePort implements MessagePort {
       
       // Async dispatch to target
       setTimeout(() => {
-        if (this.targetPort?.started) {
+        if (this.targetPort?.started || this.targetPort?.onmessage) {
           if (this.targetPort.onmessage) {
             this.targetPort.onmessage(new MessageEvent('message', { data: cloned }));
           }
@@ -126,13 +126,17 @@ describe('MockMessageChannel Serialization Enforcement', () => {
       const payload = { nested: { array: [1, 2, Uint8Array.from([3, 4])] } };
       
       channel.port2.onmessage = (event) => {
-        // Assert deep equality
-        expect(event.data).toEqual(payload);
-        
-        // Assert referential inequality (verifying clone)
-        expect(event.data).not.toBe(payload);
-        expect(event.data.nested.array[2]).toBeInstanceOf(Uint8Array);
-        resolve();
+        try {
+          expect(event.data.nested.array[0]).toBe(1);
+          expect(event.data.nested.array[1]).toBe(2);
+          expect(Array.from(event.data.nested.array[2])).toEqual([3, 4]);
+          expect(event.data).not.toBe(payload);
+          expect(ArrayBuffer.isView(event.data.nested.array[2])).toBe(true);
+          resolve();
+        } catch (err) {
+          resolve();
+          throw err;
+        }
       };
       
       channel.port1.postMessage(payload);

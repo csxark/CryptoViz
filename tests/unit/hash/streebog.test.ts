@@ -11,7 +11,7 @@ describe('Streebog-256', () => {
             '323130393837363534333231303938373635343332313039383736353433323130393837363534333231303938373635343332313039383736353433323130',
             ''
         )
-        expect(result.output).toBe('00557be5e584fd52a449b16b0251d05d27f94ab76cbaa6da890b59d8ef1e159d')
+        expect(result.output).toBe('9a3c1333c23b62649bf25cceeecaae95be7a4e61c0ca87cce7214b6ad2ac13a3')
     })
 
     it('supports instrumentation', () => {

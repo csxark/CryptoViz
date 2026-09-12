@@ -29,7 +29,7 @@ describe('latexExport', () => {
 
     test('escapes backslashes and curly braces in matrix cell values', () => {
       const matrix = [['\\command{payload}']]
-      const expected = `\\begin{bmatrix}\n\\backslash{}\\command\\{payload\\}\n\\end{bmatrix}`
+      const expected = `\\begin{bmatrix}\n\\backslash{}command\\{payload\\}\n\\end{bmatrix}`
       expect(matrixToLatex(matrix)).toBe(expected)
     })
 

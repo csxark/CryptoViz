@@ -98,43 +98,55 @@ function khufuCore(input: string, key: string, doDecrypt: boolean, instrument: b
         let L = u32((inBytes[b * 8] << 24) | (inBytes[b * 8 + 1] << 16) | (inBytes[b * 8 + 2] << 8) | inBytes[b * 8 + 3])
         let R = u32((inBytes[b * 8 + 4] << 24) | (inBytes[b * 8 + 5] << 16) | (inBytes[b * 8 + 6] << 8) | inBytes[b * 8 + 7])
 
-        // Initial key whitening (using first 8 bytes of key)
-        L ^= u32((keyBytes[0] << 24) | (keyBytes[1] << 16) | (keyBytes[2] << 8) | keyBytes[3])
-        R ^= u32((keyBytes[4] << 24) | (keyBytes[5] << 16) | (keyBytes[6] << 8) | keyBytes[7])
+        const kInL = u32((keyBytes[0] << 24) | (keyBytes[1] << 16) | (keyBytes[2] << 8) | keyBytes[3])
+        const kInR = u32((keyBytes[4] << 24) | (keyBytes[5] << 16) | (keyBytes[6] << 8) | keyBytes[7])
+        const kOutL = u32((keyBytes[56] << 24) | (keyBytes[57] << 16) | (keyBytes[58] << 8) | keyBytes[59])
+        const kOutR = u32((keyBytes[60] << 24) | (keyBytes[61] << 16) | (keyBytes[62] << 8) | keyBytes[63])
 
-        const rounds = 16
-        const roundSeq = doDecrypt ? Array.from({ length: rounds }, (_, i) => rounds - 1 - i) : Array.from({ length: rounds }, (_, i) => i)
+        if (!doDecrypt) {
+            L ^= kInL
+            R ^= kInR
 
-        for (const r of roundSeq) {
-            // Group of 8 rounds determines which byte position is used for S-box indexing
-            const group = Math.floor(r / 8)
-            const shift = (3 - group) * 8 // Byte 3, 2, 1, 0 for groups 0, 1, 2, 3
-
-            const indexByte = doDecrypt
-                ? ((R >>> shift) & 0xFF)
-                : ((L >>> shift) & 0xFF)
-
-            const sboxVal = sbox[indexByte]
-
-            if (doDecrypt) {
-                L ^= sboxVal
+            for (let r = 0; r < 16; r++) {
+                const group = Math.floor(r / 8)
+                const shift = (3 - group) * 8
+                const indexByte = (L >>> shift) & 0xFF
+                R = u32(R ^ sbox[indexByte])
                 const temp = L; L = R; R = temp
-            } else {
-                R ^= sboxVal
-                const temp = L; L = R; R = temp
+
+                if (instrument && r % 4 === 0) {
+                    steps.push({ index: steps.length, label: `Round ${r + 1}/16 (Group ${group})`, inputState: `${L.toString(16)} ${R.toString(16)}`, outputState: `S-box indexed by byte ${3 - group}`, note: 'Feistel XOR and swap. Byte position cycles every 8 rounds.', isMilestone: true })
+                }
             }
 
-            if (instrument && r % 4 === 0) {
-                steps.push({ index: steps.length, label: `Round ${r + 1}/16 (Group ${group})`, inputState: `${L.toString(16)} ${R.toString(16)}`, outputState: `S-box indexed by byte ${3 - group}`, note: 'Feistel XOR and swap. Byte position cycles every 8 rounds.', isMilestone: true })
+            // Undo final swap
+            const temp = L; L = R; R = temp
+
+            L ^= kOutL
+            R ^= kOutR
+        } else {
+            L ^= kOutL
+            R ^= kOutR
+
+            // Re-apply final swap
+            let temp = L; L = R; R = temp
+
+            for (let r = 15; r >= 0; r--) {
+                // Undo round swap
+                temp = L; L = R; R = temp
+                const group = Math.floor(r / 8)
+                const shift = (3 - group) * 8
+                const indexByte = (L >>> shift) & 0xFF
+                R = u32(R ^ sbox[indexByte])
+
+                if (instrument && r % 4 === 0) {
+                    steps.push({ index: steps.length, label: `Round ${r + 1}/16 (Group ${group})`, inputState: `${L.toString(16)} ${R.toString(16)}`, outputState: `S-box indexed by byte ${3 - group}`, note: 'Feistel XOR and swap. Byte position cycles every 8 rounds.', isMilestone: true })
+                }
             }
+
+            L ^= kInL
+            R ^= kInR
         }
-
-        // Undo final swap
-        const temp = L; L = R; R = temp
-
-        // Final key whitening (using last 8 bytes of key)
-        L ^= u32((keyBytes[56] << 24) | (keyBytes[57] << 16) | (keyBytes[58] << 8) | keyBytes[59])
-        R ^= u32((keyBytes[60] << 24) | (keyBytes[61] << 16) | (keyBytes[62] << 8) | keyBytes[63])
 
         outBuf.push((L >>> 24) & 0xff, (L >>> 16) & 0xff, (L >>> 8) & 0xff, L & 0xff)
         outBuf.push((R >>> 24) & 0xff, (R >>> 16) & 0xff, (R >>> 8) & 0xff, R & 0xff)

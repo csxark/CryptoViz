@@ -14,7 +14,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput, validateKey } from '../../utils'
-import { encrypt as desEncrypt, decrypt as desDecrypt } from './des'
+import { generateSubkeys, processBlock, bytesToBlock, blockToBytes } from './des'
 
 const METADATA: CipherMetadata = {
     name: 'DES-X',
@@ -69,21 +69,29 @@ function desXCore(input: string, key: string, doDecrypt: boolean, instrument: bo
         })
     }
 
+    const subkeys = generateSubkeys(new Uint8Array(k1))
+
     for (let b = 0; b < numBlocks; b++) {
         const block = inBytes.slice(b * 8, b * 8 + 8)
 
         if (!doDecrypt) {
             // ENCRYPT: C = k2 XOR DES(k1, k0 XOR P)
-            const whitenedInput = xorBytes(block, k0)
-            const desResult = parseHex(desEncrypt(toHex(whitenedInput), toHex(k1)).output, 'DES output')
-            const finalBlock = xorBytes(desResult, k2)
+            const whitenedInput = new Uint8Array(xorBytes(block, k0))
+            const inBlock = bytesToBlock(whitenedInput)
+            const outBlock = processBlock(inBlock, subkeys, false)
+            const desResult = new Uint8Array(8)
+            blockToBytes(outBlock, desResult)
+            const finalBlock = xorBytes(Array.from(desResult), k2)
             outBuf.push(...finalBlock)
         } else {
             // DECRYPT: P = k0 XOR DES_decrypt(k1, k2 XOR C)
             // NOTE: k2 removed FIRST, mirroring encryption's LAST step
-            const whitenedInput = xorBytes(block, k2)
-            const desResult = parseHex(desDecrypt(toHex(whitenedInput), toHex(k1)).output, 'DES output')
-            const finalBlock = xorBytes(desResult, k0)
+            const whitenedInput = new Uint8Array(xorBytes(block, k2))
+            const inBlock = bytesToBlock(whitenedInput)
+            const outBlock = processBlock(inBlock, subkeys, true)
+            const desResult = new Uint8Array(8)
+            blockToBytes(outBlock, desResult)
+            const finalBlock = xorBytes(Array.from(desResult), k0)
             outBuf.push(...finalBlock)
         }
 

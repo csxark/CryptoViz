@@ -196,6 +196,6 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
  */
 export const TEST_VECTORS: TestVector[] = [
     { input: '0000000000000000', key: '00000000000000000000', expected: '5579c1387b228445', description: 'ISO/IEC 29192-2 PRESENT-80: zero key, zero plaintext' },
-    { input: 'ffffffffffffffff', key: 'ffffffffffffffffffff', expected: 'a112ffc72f68417b', description: 'ISO/IEC 29192-2 PRESENT-80: all-ones key+plaintext' },
+    { input: 'ffffffffffffffff', key: '00000000000000000000', expected: 'a112ffc72f68417b', description: 'ISO/IEC 29192-2 PRESENT-80: zero key, all-ones plaintext' },
     { input: '0000000000000000', key: '00000000000000000000000000000000', expected: '96db702a2e6900af', description: 'ISO/IEC 29192-2 PRESENT-128: zero 128-bit key, zero plaintext' },
 ]

@@ -1,9 +1,21 @@
- 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 
 describe("Worker Communication Suite", () => {
+  let workerListener: (event: any) => Promise<void>;
+  let postMessageSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeAll(async () => {
+    const addEventListenerSpy = vi.spyOn(globalThis as any, "addEventListener");
+    await import("@/lib/workers/cipher.worker");
+    const messageCall = addEventListenerSpy.mock.calls.find((call) => call[0] === "message");
+    workerListener = messageCall![1] as any;
+  });
+
   beforeEach(() => {
     vi.restoreAllMocks();
+    postMessageSpy = vi.spyOn(globalThis as any, "postMessage").mockImplementation((data) => {
+      structuredClone(data);
+    });
   });
 
   it("should format worker request payload correctly", () => {
@@ -47,15 +59,7 @@ describe("Worker Communication Suite", () => {
   });
 
   it("returns a structured error for malformed runtime messages", async () => {
-    const addEventListenerSpy = vi.spyOn(globalThis as any, "addEventListener");
-    const postMessageSpy = vi.spyOn(globalThis as any, "postMessage").mockImplementation((data) => { structuredClone(data); });
-
-    await import("@/lib/workers/cipher.worker");
-    const messageCall = addEventListenerSpy.mock.calls.find(call => call[0] === "message");
-    expect(messageCall).toBeDefined();
-    const listener = messageCall![1] as any;
-
-    await listener({
+    await workerListener({
       data: {
         type: "EXECUTE",
         requestId: "req-invalid",
@@ -75,20 +79,8 @@ describe("Worker Communication Suite", () => {
   });
 
   it("should throw CipherError with ALGORITHM_UNSUPPORTED for unknown cipher IDs", async () => {
-    // Setup global spies before importing the worker (which runs immediately)
-    const addEventListenerSpy = vi.spyOn(globalThis as any, "addEventListener");
-    const postMessageSpy = vi.spyOn(globalThis as any, "postMessage").mockImplementation((data) => { structuredClone(data); });
-
-    // Dynamically import the worker to execute its top-level event registration
-    await import("@/lib/workers/cipher.worker");
-
-    // Find the registered message listener
-    const messageCall = addEventListenerSpy.mock.calls.find(call => call[0] === "message");
-    expect(messageCall).toBeDefined();
-    const listener = messageCall![1] as any;
-
     // Trigger the listener with an unknown cipher ID
-    await listener({
+    await workerListener({
       data: {
         type: "EXECUTE",
         requestId: "req-unknown",
@@ -138,30 +130,13 @@ describe("Worker Communication Suite", () => {
 
     it("handles unsupported cipher ID gracefully", async () => {
       const unsupportedId = "unknown-cipher-xyz";
-      const loader = () => import(`../../lib/cipher/classical/${unsupportedId}`);
+      const loader = () => import(`../../lib/cipher/classical/${unsupportedId}.ts`);
       await expect(loader()).rejects.toThrow();
     });
   });
-});
+
   it("rejects invalid cryptographic parameters before execution", async () => {
-    const addEventListenerSpy = vi.spyOn(globalThis as any, "addEventListener");
-    const postMessageSpy = vi
-      .spyOn(globalThis as any, "postMessage")
-      .mockImplementation((data) => {
-        structuredClone(data);
-      });
-
-    await import("@/lib/workers/cipher.worker");
-
-    const messageCall = addEventListenerSpy.mock.calls.find(
-      (call) => call[0] === "message",
-    );
-
-    expect(messageCall).toBeDefined();
-
-    const listener = messageCall![1] as any;
-
-    await listener({
+    await workerListener({
       data: {
         type: "EXECUTE",
         requestId: "req-invalid-aes-key",
@@ -193,3 +168,4 @@ describe("Worker Communication Suite", () => {
       parameter: "key",
     });
   });
+});

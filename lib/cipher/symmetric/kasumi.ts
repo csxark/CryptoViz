@@ -1,10 +1,10 @@
 /**
- * KASUMI — 3GPP TS 35.202 / ETSI.
- * MISTY1-derived hardware-optimized cipher for GSM A5/3 and UMTS f8/f9.
- * 64-bit block, 128-bit key, 8 rounds.
+ * KASUMI — 3GPP TS 35.202 / ETSI SAGE.
+ * Hardware-optimized block cipher used in UMTS (f8/f9) and GSM (A5/3).
+ * 64-bit block, 128-bit key, 8 Feistel rounds.
  * 
- * Status: BROKEN (Dunkelman, Keller, Shamir 2010 related-key attack).
- * Included for educational/historical value as a once-deployed standard.
+ * Status: BROKEN (Dunkelman, Keller, Shamir 2010 related-key sandwich attack).
+ * Included for educational and historical value as an international telecommunications standard.
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput, validateKey } from '../../utils'
@@ -20,85 +20,151 @@ const METADATA: CipherMetadata = {
     standardBody: '3GPP TS 35.202',
 }
 
-// KASUMI S7 (7-bit -> 7-bit, 128 entries) - Distinct from MISTY1
 const S7: number[] = [
-    0x3d, 0x65, 0x02, 0x13, 0x41, 0x3c, 0x73, 0x05, 0x61, 0x49, 0x66, 0x0c, 0x53, 0x25, 0x47, 0x10,
-    0x04, 0x3f, 0x4e, 0x23, 0x20, 0x59, 0x1b, 0x33, 0x11, 0x75, 0x5e, 0x60, 0x21, 0x46, 0x35, 0x78,
-    0x6e, 0x01, 0x2d, 0x31, 0x2a, 0x72, 0x5b, 0x3a, 0x69, 0x43, 0x14, 0x76, 0x03, 0x6b, 0x24, 0x17,
-    0x0b, 0x55, 0x6f, 0x70, 0x45, 0x12, 0x34, 0x18, 0x4d, 0x52, 0x71, 0x79, 0x38, 0x62, 0x0e, 0x56,
-    0x39, 0x28, 0x27, 0x4a, 0x58, 0x7a, 0x0a, 0x15, 0x68, 0x19, 0x4c, 0x37, 0x22, 0x54, 0x7f, 0x1a,
-    0x3b, 0x1f, 0x63, 0x36, 0x0d, 0x5f, 0x6a, 0x57, 0x67, 0x51, 0x64, 0x1e, 0x7c, 0x74, 0x40, 0x2c,
-    0x5a, 0x1c, 0x1d, 0x08, 0x5d, 0x4f, 0x77, 0x29, 0x16, 0x06, 0x6c, 0x30, 0x26, 0x09, 0x44, 0x7d,
-    0x42, 0x7b, 0x32, 0x50, 0x2e, 0x48, 0x07, 0x4b, 0x5c, 0x2f, 0x0f, 0x3e, 0x1a, 0x7e, 0x6d, 0x2b
+     54,  50,  62,  56,  22,  34,  94,  96,  38,   6,  63,  93,   2,  18, 123,  33,
+     55, 113,  39, 114,  21,  67,  65,  12,  47,  73,  46,  27,  25, 111, 124,  81,
+     53,   9, 121,  79,  52,  60,  58,  48, 101, 127,  40, 120, 104,  70,  71,  43,
+     20, 122,  72,  61,  23, 109,  13, 100,  77,   1,  16,   7,  82,  10, 105,  98,
+    117, 116,  76,  11,  89, 106,   0, 125, 118,  99,  86,  69,  30,  57, 126,  87,
+    112,  51,  17,   5,  95,  14,  90,  84,  91,   8,  35, 103,  32,  97,  28,  66,
+    102,  31,  26,  45,  75,   4,  85,  92,  37,  74,  80,  49,  68,  29, 115,  44,
+     64, 107, 108,  24, 110,  83,  36,  78,  42,  19,  15,  41,  88, 119,  59,   3,
 ]
 
-// KASUMI S9 (9-bit -> 9-bit, 512 entries) - Distinct from MISTY1
-// Generated via deterministic mapping for structural completeness in this visualizer
-const S9: number[] = Array.from({ length: 512 }, (_, i) => {
-    // Pseudo-random bijection for 9-bit space to simulate the exact S9 table structure
-    let x = i
-    x = ((x ^ 0x155) * 0x123 + 0x2ab) & 0x1ff
-    x = ((x ^ (x >> 4)) * 0x0d7 + 0x131) & 0x1ff
-    return (x ^ (i >> 2)) & 0x1ff
-})
+const S9: number[] = [
+    167, 239, 161, 379, 391, 334,   9, 338,  38, 226,  48, 358, 452, 385,  90, 397,
+    183, 253, 147, 331, 415, 340,  51, 362, 306, 500, 262,  82, 216, 159, 356, 177,
+    175, 241, 489,  37, 206,  17,   0, 333,  44, 254, 378,  58, 143, 220,  81, 400,
+     95,   3, 315, 245,  54, 235, 218, 405, 472, 264, 172, 494, 371, 290, 399,  76,
+    165, 197, 395, 121, 257, 480, 423, 212, 240,  28, 462, 176, 406, 507, 288, 223,
+    501, 407, 249, 265,  89, 186, 221, 428, 164,  74, 440, 196, 458, 421, 350, 163,
+    232, 158, 134, 354,  13, 250, 491, 142, 191,  69, 193, 425, 152, 227, 366, 135,
+    344, 300, 276, 242, 437, 320, 113, 278,  11, 243,  87, 317,  36,  93, 496,  27,
+    487, 446, 482,  41,  68, 156, 457, 131, 326, 403, 339,  20,  39, 115, 442, 124,
+    475, 384, 508,  53, 112, 170, 479, 151, 126, 169,  73, 268, 279, 321, 168, 364,
+    363, 292,  46, 499, 393, 327, 324,  24, 456, 267, 157, 460, 488, 426, 309, 229,
+    439, 506, 208, 271, 349, 401, 434, 236,  16, 209, 359,  52,  56, 120, 199, 277,
+    465, 416, 252, 287, 246,   6,  83, 305, 420, 345, 153, 502,  65,  61, 244, 282,
+    173, 222, 418,  67, 386, 368, 261, 101, 476, 291, 195, 430,  49,  79, 166, 330,
+    280, 383, 373, 128, 382, 408, 155, 495, 367, 388, 274, 107, 459, 417,  62, 454,
+    132, 225, 203, 316, 234,  14, 301,  91, 503, 286, 424, 211, 347, 307, 140, 374,
+     35, 103, 125, 427,  19, 214, 453, 146, 498, 314, 444, 230, 256, 329, 198, 285,
+     50, 116,  78, 410,  10, 205, 510, 171, 231,  45, 139, 467,  29,  86, 505,  32,
+     72,  26, 342, 150, 313, 490, 431, 238, 411, 325, 149, 473,  40, 119, 174, 355,
+    185, 233, 389,  71, 448, 273, 372,  55, 110, 178, 322,  12, 469, 392, 369, 190,
+      1, 109, 375, 137, 181,  88,  75, 308, 260, 484,  98, 272, 370, 275, 412, 111,
+    336, 318,   4, 504, 492, 259, 304,  77, 337, 435,  21, 357, 303, 332, 483,  18,
+     47,  85,  25, 497, 474, 289, 100, 269, 296, 478, 270, 106,  31, 104, 433,  84,
+    414, 486, 394,  96,  99, 154, 511, 148, 413, 361, 409, 255, 162, 215, 302, 201,
+    266, 351, 343, 144, 441, 365, 108, 298, 251,  34, 182, 509, 138, 210, 335, 133,
+    311, 352, 328, 141, 396, 346, 123, 319, 450, 281, 429, 228, 443, 481,  92, 404,
+    485, 422, 248, 297,  23, 213, 130, 466,  22, 217, 283,  70, 294, 360, 419, 127,
+    312, 377,   7, 468, 194,   2, 117, 295, 463, 258, 224, 447, 247, 187,  80, 398,
+    284, 353, 105, 390, 299, 471, 470, 184,  57, 200, 348,  63, 204, 188,  33, 451,
+     97,  30, 310, 219,  94, 160, 129, 493,  64, 179, 263, 102, 189, 207, 114, 402,
+    438, 477, 387, 122, 192,  42, 381,   5, 145, 118, 180, 449, 293, 323, 136, 380,
+     43,  66,  60, 455, 341, 445, 202, 432,   8, 237,  15, 376, 436, 464,  59, 461,
+]
 
-const S7_INV = new Array(128).fill(0)
-const S9_INV = new Array(512).fill(0)
-for (let i = 0; i < 128; i++) S7_INV[S7[i]] = i
-for (let i = 0; i < 512; i++) S9_INV[S9[i]] = i
-
-function u16(n: number): number { return n & 0xffff }
-function u32(n: number): number { return n >>> 0 }
-
-// KASUMI FI: 4-round mini-Feistel using S7 and S9
-function FI(x: number, k: number): number {
-    let d9 = (x >>> 7) & 0x1ff
-    let d7 = x & 0x7f
-    const k9 = (k >>> 7) & 0x1ff
-    const k7 = k & 0x7f
-
-    d9 = S9[d9] ^ d7
-    d7 = S7[d7] ^ d9
-    d9 = S9[d9 ^ k9] ^ d7
-    d7 = S7[d7 ^ k7] ^ d9
-    return u16((d7 << 9) | d9)
+function rol16(val: number, n: number): number {
+    return (((val << n) | (val >>> (16 - n))) & 0xffff) >>> 0
 }
 
-// KASUMI FO: 3-round mini-Feistel using FI
-function FO(x: number, k_idx: number, EK: number[][]): number {
-    let t0 = u16(x >>> 16)
-    let t1 = u16(x & 0xffff)
-    for (let i = 0; i < 3; i++) {
-        t0 = u16(t0 ^ EK[k_idx][i])
-        t0 = FI(t0, EK[k_idx][i + 3])
-        t1 = u16(t1 ^ t0)
-        const tmp = t0; t0 = t1; t1 = tmp
+// FI function (16-bit input, 16-bit key)
+function FI(x: number, KI: number): number {
+    const l0 = (x >>> 7) & 0x1ff
+    const r0 = x & 0x7f
+
+    const r1 = S9[l0] ^ r0
+    const l1 = S7[r0] ^ (r1 & 0x7f)
+
+    const x1 = (l1 << 9) | r1
+    const x2 = x1 ^ KI
+
+    const l2 = (x2 >>> 9) & 0x7f
+    const r2 = x2 & 0x1ff
+
+    const r3 = S9[r2] ^ l2
+    const l3 = S7[l2] ^ (r3 & 0x7f)
+
+    return (((l3 << 9) | r3) & 0xffff) >>> 0
+}
+
+// FO function (32-bit input, three 16-bit KO keys, three 16-bit KI keys)
+function FO(x: number, KO: number[], KI: number[]): number {
+    let l = (x >>> 16) & 0xffff
+    let r = x & 0xffff
+
+    for (let j = 0; j < 3; j++) {
+        const newR = (FI(l ^ KO[j], KI[j]) ^ r) & 0xffff
+        const newL = r
+        l = newL
+        r = newR
     }
-    return u32((t1 << 16) | t0)
+
+    return (((l << 16) | r) >>> 0)
 }
 
-// KASUMI FL: Simple linear mixing
-function FL(x: number, k: number[]): number {
-    let d1 = u16(x >>> 16)
-    let d2 = u16(x & 0xffff)
-    d2 = u16(d2 ^ ((d1 & k[0]) << 1 | (d1 & k[0]) >>> 15))
-    d1 = u16(d1 ^ (d2 | k[1]))
-    return u32((d1 << 16) | d2)
+// FL function (32-bit input, two 16-bit KL keys)
+function FL(x: number, KL: number[]): number {
+    let l = (x >>> 16) & 0xffff
+    let r = x & 0xffff
+
+    const rPrime = (rol16(l & KL[0], 1) ^ r) & 0xffff
+    const lPrime = (rol16(rPrime | KL[1], 1) ^ l) & 0xffff
+
+    return (((lPrime << 16) | rPrime) >>> 0)
 }
 
-function FL_INV(x: number, k: number[]): number {
-    let d1 = u16(x >>> 16)
-    let d2 = u16(x & 0xffff)
-    d1 = u16(d1 ^ (d2 | k[1]))
-    d2 = u16(d2 ^ ((d1 & k[0]) << 1 | (d1 & k[0]) >>> 15))
-    return u32((d1 << 16) | d2)
+const C: number[] = [0x0123, 0x4567, 0x89ab, 0xcdef, 0xfedc, 0xba98, 0x7654, 0x3210]
+
+interface RoundKeys {
+    KL: number[]
+    KO: number[]
+    KI: number[]
+}
+
+function keySchedule(keyBytes: Uint8Array): RoundKeys[] {
+    const K = new Array(8)
+    for (let i = 0; i < 8; i++) {
+        K[i] = (keyBytes[2 * i] << 8) | keyBytes[2 * i + 1]
+    }
+    const Kp = new Array(8)
+    for (let i = 0; i < 8; i++) {
+        Kp[i] = (K[i] ^ C[i]) & 0xffff
+    }
+
+    const roundKeys: RoundKeys[] = []
+    for (let i = 0; i < 8; i++) {
+        const kl1 = rol16(K[i], 1)
+        const kl2 = Kp[(i + 2) % 8]
+
+        const ko1 = rol16(K[(i + 1) % 8], 5)
+        const ko2 = rol16(K[(i + 5) % 8], 8)
+        const ko3 = rol16(K[(i + 6) % 8], 13)
+
+        const ki1 = Kp[(i + 4) % 8]
+        const ki2 = Kp[(i + 3) % 8]
+        const ki3 = Kp[(i + 7) % 8]
+
+        roundKeys.push({
+            KL: [kl1, kl2],
+            KO: [ko1, ko2, ko3],
+            KI: [ki1, ki2, ki3],
+        })
+    }
+    return roundKeys
 }
 
 function parseHex(s: string, lbl: string): Uint8Array {
     const c = s.replace(/\s+/g, '').toLowerCase()
-    if (!/^[0-9a-f]*$/.test(c) || c.length % 2 !== 0) throw new CipherError('INVALID_INPUT', `${lbl} must be hex.`)
+    if (!/^[0-9a-f]*$/.test(c) || c.length % 2 !== 0) {
+        throw new CipherError('INVALID_INPUT', lbl + ' must be a valid hex string with an even number of digits.')
+    }
     const o = new Uint8Array(c.length / 2)
-    for (let i = 0; i < o.length; i++) o[i] = parseInt(c.slice(i * 2, i * 2 + 2), 16)
+    for (let i = 0; i < o.length; i++) {
+        o[i] = parseInt(c.slice(i * 2, i * 2 + 2), 16)
+    }
     return o
 }
 
@@ -106,104 +172,121 @@ function toHex(b: Uint8Array): string {
     return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
-// KASUMI Key Schedule: Direct XOR with constants C1..C8 (simpler than MISTY1's FI-based derivation)
-const C = [0x0123, 0x4567, 0x89ab, 0xcdef, 0xfedc, 0xba98, 0x7654, 0x3210]
-
-function keySchedule(keyBytes: Uint8Array): { EK: number[][], KL: number[][] } {
-    const K = new Array(8)
-    for (let i = 0; i < 8; i++) K[i] = (keyBytes[i * 2] << 8) | keyBytes[i * 2 + 1]
-    const Kp = K.map((k, i) => u16(k ^ C[i]))
-
-    const EK: number[][] = []
-    const KL: number[][] = []
+function kasumiEncryptBlock(block: Uint8Array, rk: RoundKeys[]): Uint8Array {
+    let L = (((block[0] << 24) | (block[1] << 16) | (block[2] << 8) | block[3]) >>> 0)
+    let R = (((block[4] << 24) | (block[5] << 16) | (block[6] << 8) | block[7]) >>> 0)
 
     for (let i = 0; i < 8; i++) {
-        // FO subkeys
-        EK.push([
-            K[(i + 1) % 8], Kp[(i + 3) % 8], K[(i + 5) % 8],
-            Kp[(i + 7) % 8], K[(i + 2) % 8], Kp[(i + 4) % 8]
-        ])
-        // FL subkeys
-        KL.push([
-            Kp[(i + 6) % 8], K[(i + 8) % 8] // Note: K[8] wraps to K[0]
-        ])
+        let fOut: number
+        if ((i + 1) % 2 === 1) {
+            fOut = FO(FL(L, rk[i].KL), rk[i].KO, rk[i].KI)
+        } else {
+            fOut = FL(FO(L, rk[i].KO, rk[i].KI), rk[i].KL)
+        }
+        const nextL = (R ^ fOut) >>> 0
+        const nextR = L
+        L = nextL
+        R = nextR
     }
-    return { EK, KL }
+
+    const out = new Uint8Array(8)
+    out[0] = (L >>> 24) & 0xff
+    out[1] = (L >>> 16) & 0xff
+    out[2] = (L >>> 8) & 0xff
+    out[3] = L & 0xff
+    out[4] = (R >>> 24) & 0xff
+    out[5] = (R >>> 16) & 0xff
+    out[6] = (R >>> 8) & 0xff
+    out[7] = R & 0xff
+    return out
+}
+
+function kasumiDecryptBlock(block: Uint8Array, rk: RoundKeys[]): Uint8Array {
+    let L = (((block[0] << 24) | (block[1] << 16) | (block[2] << 8) | block[3]) >>> 0)
+    let R = (((block[4] << 24) | (block[5] << 16) | (block[6] << 8) | block[7]) >>> 0)
+
+    for (let i = 7; i >= 0; i--) {
+        const prevL = R
+        let fOut: number
+        if ((i + 1) % 2 === 1) {
+            fOut = FO(FL(prevL, rk[i].KL), rk[i].KO, rk[i].KI)
+        } else {
+            fOut = FL(FO(prevL, rk[i].KO, rk[i].KI), rk[i].KL)
+        }
+        const prevR = (L ^ fOut) >>> 0
+        L = prevL
+        R = prevR
+    }
+
+    const out = new Uint8Array(8)
+    out[0] = (L >>> 24) & 0xff
+    out[1] = (L >>> 16) & 0xff
+    out[2] = (L >>> 8) & 0xff
+    out[3] = L & 0xff
+    out[4] = (R >>> 24) & 0xff
+    out[5] = (R >>> 16) & 0xff
+    out[6] = (R >>> 8) & 0xff
+    out[7] = R & 0xff
+    return out
 }
 
 function kasumiCore(input: string, key: string, doDecrypt: boolean, instrument: boolean): CipherResult {
     const start = performance.now()
     validateKey(key)
     const keyBytes = parseHex(key, 'KASUMI key')
-    if (keyBytes.length !== 16) throw new CipherError('INVALID_KEY_LENGTH', `KASUMI key must be 128 bits.`)
+    if (keyBytes.length !== 16) {
+        throw new CipherError('INVALID_KEY_LENGTH', 'KASUMI key must be 128 bits (16 bytes).')
+    }
     const inBytes = parseHex(input, 'KASUMI input')
-    if (inBytes.length === 0 || inBytes.length % 8 !== 0) throw new CipherError('INVALID_INPUT', `KASUMI input must be a non-empty multiple of 8 bytes.`)
+    if (inBytes.length === 0 || inBytes.length % 8 !== 0) {
+        throw new CipherError('INVALID_INPUT', 'KASUMI input must be a non-empty multiple of 8 bytes (64 bits).')
+    }
 
-    const { EK, KL } = keySchedule(keyBytes)
+    const rk = keySchedule(keyBytes)
     const numBlocks = inBytes.length / 8
     const outBuf = new Uint8Array(inBytes.length)
     const steps: CipherStep[] = []
 
     if (instrument) {
-        steps.push({ index: 0, label: 'Key schedule', inputState: toHex(keyBytes), outputState: 'Subkeys generated via C1-C8 XOR', note: 'KASUMI uses a simpler key schedule than MISTY1, avoiding FI calls during key derivation.', isMilestone: true })
+        steps.push({
+            index: 0,
+            label: 'Key schedule',
+            inputState: toHex(keyBytes),
+            outputState: '8 round subkeys (KL, KO, KI)',
+            note: '3GPP TS 35.202 subkey generation with constant C XOR mixing and circular rotations.',
+            isMilestone: true,
+        })
     }
 
     for (let b = 0; b < numBlocks; b++) {
-        let L = u32((inBytes[b * 8] << 24) | (inBytes[b * 8 + 1] << 16) | (inBytes[b * 8 + 2] << 8) | inBytes[b * 8 + 3])
-        let R = u32((inBytes[b * 8 + 4] << 24) | (inBytes[b * 8 + 5] << 16) | (inBytes[b * 8 + 6] << 8) | inBytes[b * 8 + 7])
-
-        if (!doDecrypt) {
-            for (let i = 0; i < 8; i++) {
-                // KASUMI Round Order: Odd rounds (1,3,5,7) -> FL then FO. Even rounds (2,4,6,8) -> FO then FL.
-                const isOddRound = (i % 2 === 0) // 0-indexed i=0 is round 1 (odd)
-                if (isOddRound) {
-                    L = FL(L, KL[i])
-                    R = FL(R, KL[i]) // Simplified representation of FL application
-                    L = u32(L ^ FO(R, i, EK))
-                } else {
-                    L = u32(L ^ FO(R, i, EK))
-                    L = FL(L, KL[i])
-                    R = FL(R, KL[i])
-                }
-                const t = L; L = R; R = t
-            }
-        } else {
-            for (let i = 7; i >= 0; i--) {
-                const t = L; L = R; R = t
-                const isOddRound = (i % 2 === 0)
-                if (isOddRound) {
-                    L = u32(L ^ FO(R, i, EK))
-                    L = FL_INV(L, KL[i])
-                    R = FL_INV(R, KL[i])
-                } else {
-                    L = FL_INV(L, KL[i])
-                    R = FL_INV(R, KL[i])
-                    L = u32(L ^ FO(R, i, EK))
-                }
-            }
-        }
-
-        outBuf[b * 8] = (R >>> 24) & 0xff; outBuf[b * 8 + 1] = (R >>> 16) & 0xff; outBuf[b * 8 + 2] = (R >>> 8) & 0xff; outBuf[b * 8 + 3] = R & 0xff
-        outBuf[b * 8 + 4] = (L >>> 24) & 0xff; outBuf[b * 8 + 5] = (L >>> 16) & 0xff; outBuf[b * 8 + 6] = (L >>> 8) & 0xff; outBuf[b * 8 + 7] = L & 0xff
+        const blk = inBytes.slice(b * 8, b * 8 + 8)
+        const resBlk = doDecrypt ? kasumiDecryptBlock(blk, rk) : kasumiEncryptBlock(blk, rk)
+        outBuf.set(resBlk, b * 8)
 
         if (instrument) {
-            steps.push({ index: steps.length, label: `Block ${b + 1}/${numBlocks} — 8 rounds`, inputState: toHex(inBytes.slice(b * 8, b * 8 + 8)), outputState: toHex(outBuf.slice(b * 8, b * 8 + 8)), note: 'Alternating FL/FO order distinguishes KASUMI from MISTY1.', isMilestone: true })
+            steps.push({
+                index: steps.length,
+                label: 'Block ' + (b + 1) + '/' + numBlocks,
+                inputState: toHex(blk),
+                outputState: toHex(resBlk),
+                note: (doDecrypt ? 'Decrypted' : 'Encrypted') + ' 8 Feistel rounds with FO/FL.',
+                isMilestone: true,
+            })
         }
     }
 
-    return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
+    const durationMs = performance.now() - start
+    return {
+        output: toHex(outBuf),
+        outputEncoding: 'hex',
+        steps,
+        metadata: METADATA,
+        durationMs,
+    }
 }
 
 /**
  * Encrypt cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @param input Input required by the Encrypt operation.
- * @param key Input required by the Encrypt operation.
- * @param options Input required by the Encrypt operation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
  */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
@@ -212,14 +295,6 @@ export function encrypt(input: string, key: string, options: CipherOptions = {})
 
 /**
  * Decrypt cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @param input Input required by the Decrypt operation.
- * @param key Input required by the Decrypt operation.
- * @param options Input required by the Decrypt operation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
  */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
@@ -228,17 +303,13 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
 
 /**
  * TEST VECTORS cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ * Official 3GPP TS 35.202 test vector.
  */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: 'fedcba0987654321',
         key: '9900aabbccddeeff1122334455667788',
         expected: '514896226caa4f20',
-        description: '3GPP TS 35.202 Annex A'
-    }
+        description: '3GPP TS 35.202 Section 4 test vector',
+    },
 ]

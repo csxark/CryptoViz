@@ -92,7 +92,7 @@ function regevCore(input: string, key: string, doDecrypt: boolean, instrument: b
 
                 // Encrypt single bit
                 const r = Array.from({ length: M }, () => BigInt(Math.random() > 0.5 ? 1 : 0))
-                const u = r.map((_, col) => A.reduce((sum, row, rowIdx) => mod(sum + row[col] * r[rowIdx], Q), 0n))
+                const u = Array.from({ length: N }, (_, col) => A.reduce((sum, row, rowIdx) => mod(sum + row[col] * r[rowIdx], Q), 0n))
 
                 let v = vecDot(r, b)
                 if (msgBit === 1) v = mod(v + HALF_Q, Q)

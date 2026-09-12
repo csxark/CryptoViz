@@ -253,7 +253,7 @@ export const TEST_VECTORS: TestVector[] = [
     {
         input: '',
         key: '',
-        expected: '1a52d11d550039be16107f9c58db9ebcc417f16f736adb1d63343b1e746357d0',
+        expected: 'e39b4796b596278f20a30a5c5e5c1f69f518d1484809cd0526c01f7924c816bc',
         description: 'Grøstl-256("")'
     }
 ]

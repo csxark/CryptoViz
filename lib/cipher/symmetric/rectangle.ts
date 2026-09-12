@@ -156,7 +156,7 @@ function rectangleCore(input: string, key: string, doDecrypt: boolean, options: 
     const start = performance.now()
     const keyBytes = parseHex(key, 'RECTANGLE key')
     if (keyBytes.length !== 10 && keyBytes.length !== 16) {
-        throw new CipherError('INVALID_KEY_LENGTH', 'RECTANGLE key must be 80 or 128 bits (10 or 16 bytes).')
+        throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: RECTANGLE key must be 80 or 128 bits (10 or 16 bytes).')
     }
     const inBytes = parseHex(input, 'RECTANGLE input')
     if (inBytes.length === 0) {

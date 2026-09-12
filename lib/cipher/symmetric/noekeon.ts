@@ -22,25 +22,25 @@ const METADATA: CipherMetadata = {
     standardBody: 'NESSIE Project Submission',
 }
 
-// NOEKEON Round Constants (generated via 8-bit LFSR)
-const RC = new Uint8Array([
-    0x80, 0x68, 0x50, 0x48, 0x44, 0x42, 0x41, 0x40,
-    0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40
-])
-
 function u32(n: number): number { return n >>> 0 }
 function rotl32(x: number, n: number): number { return u32((x << n) | (x >>> (32 - n))) }
-function rotr32(x: number, n: number): number { return u32((x >>> n) | (x << (32 - n))) }
 
-// Theta: Linear diffusion layer
+// Theta: Linear diffusion layer (involution)
 function theta(a: Uint32Array, k: Uint32Array) {
-    const temp = new Uint32Array(4)
-    for (let i = 0; i < 4; i++) temp[i] = a[i] ^ k[i]
+    let tmp = a[0] ^ a[2]
+    tmp = u32(tmp ^ (rotl32(tmp, 8) ^ rotl32(tmp, 24)))
+    a[1] = u32(a[1] ^ tmp)
+    a[3] = u32(a[3] ^ tmp)
 
-    let t = temp[0] ^ temp[1] ^ temp[2] ^ temp[3]
-    t = u32(rotl32(t, 8) ^ rotr32(t, 8))
+    a[0] = u32(a[0] ^ k[0])
+    a[1] = u32(a[1] ^ k[1])
+    a[2] = u32(a[2] ^ k[2])
+    a[3] = u32(a[3] ^ k[3])
 
-    for (let i = 0; i < 4; i++) a[i] = u32(temp[i] ^ t)
+    tmp = a[1] ^ a[3]
+    tmp = u32(tmp ^ (rotl32(tmp, 8) ^ rotl32(tmp, 24)))
+    a[0] = u32(a[0] ^ tmp)
+    a[2] = u32(a[2] ^ tmp)
 }
 
 // Pi1: Cyclic left rotations
@@ -52,20 +52,31 @@ function pi1(a: Uint32Array) {
 
 // Pi2: Cyclic right rotations (Inverse of Pi1)
 function pi2(a: Uint32Array) {
-    a[1] = rotr32(a[1], 1)
-    a[2] = rotr32(a[2], 5)
-    a[3] = rotr32(a[3], 2)
+    a[1] = rotl32(a[1], 31)
+    a[2] = rotl32(a[2], 27)
+    a[3] = rotl32(a[3], 30)
 }
 
-// Gamma: Non-linear layer (5 bitwise operations, NO lookup tables)
+// Gamma: Non-linear layer (involution, 5 bitwise operations, NO lookup tables)
 function gamma(a: Uint32Array) {
     a[1] = u32(a[1] ^ (~a[3] & ~a[2]))
     a[0] = u32(a[0] ^ (a[2] & a[1]))
 
-    const temp = a[3]
-    a[3] = u32(a[1] ^ a[0] ^ (a[2] | temp))
-    a[1] = temp
-    a[2] = u32(a[2] ^ (a[0] | a[1]))
+    const tmp = a[3]
+    a[3] = a[0]
+    a[0] = tmp
+    a[2] = u32(a[2] ^ a[0] ^ a[1] ^ a[3])
+
+    a[1] = u32(a[1] ^ (~a[3] & ~a[2]))
+    a[0] = u32(a[0] ^ (a[2] & a[1]))
+}
+
+function rcShiftRegFwd(rc: number): number {
+    return (rc & 0x80) ? (((rc << 1) ^ 0x1b) & 0xff) : ((rc << 1) & 0xff)
+}
+
+function rcShiftRegBwd(rc: number): number {
+    return (rc & 0x01) ? (((rc >> 1) ^ 0x8d) & 0xff) : ((rc >> 1) & 0xff)
 }
 
 function parseHex(s: string, lbl: string): Uint8Array {
@@ -96,13 +107,19 @@ function noekeonCore(input: string, key: string, dec: boolean, instrument: boole
         K[i] = u32((kb[i * 4] << 24) | (kb[i * 4 + 1] << 16) | (kb[i * 4 + 2] << 8) | kb[i * 4 + 3])
     }
 
+    const workingKey = new Uint32Array(K)
+    if (dec) {
+        const nullKey = new Uint32Array(4)
+        theta(workingKey, nullKey)
+    }
+
     const outBytes = new Uint8Array(ib.length)
     const steps: CipherStep[] = []
 
     if (instrument) {
         steps.push({
             index: 0, label: 'Key Load & Constants',
-            inputState: toHex(kb), outputState: Array.from(K).map(w => w.toString(16).padStart(8, '0')).join(' '),
+            inputState: toHex(kb), outputState: Array.from(workingKey).map(w => w.toString(16).padStart(8, '0')).join(' '),
             note: '128-bit key loaded as four 32-bit words. NOEKEON uses direct-key mode (Theta applies key directly).', isMilestone: true
         })
     }
@@ -115,25 +132,22 @@ function noekeonCore(input: string, key: string, dec: boolean, instrument: boole
             a[i] = u32((ib[off + i * 4] << 24) | (ib[off + i * 4 + 1] << 16) | (ib[off + i * 4 + 2] << 8) | ib[off + i * 4 + 3])
         }
 
-        if (!dec) {
-            for (let r = 0; r < 16; r++) {
-                a[0] = u32(a[0] ^ (RC[r] << 24)) // XOR RC into MSB of a[0]
-                theta(a, K)
-                pi1(a)
-                gamma(a)
-                pi2(a)
-            }
-            theta(a, K) // Final Theta
-        } else {
-            theta(a, K) // Inverse starts with Theta
-            for (let r = 15; r >= 0; r--) {
-                pi1(a) // Note: Pi1 and Pi2 are inverses, but NOEKEON decryption uses Pi1 then Gamma then Pi2
-                gamma(a)
-                pi2(a)
-                theta(a, K)
-                a[0] = u32(a[0] ^ (RC[r] << 24))
-            }
+        let rc1 = dec ? 0 : 0x80
+        let rc2 = dec ? 0xd4 : 0
+
+        for (let r = 0; r < 16; r++) {
+            a[0] = u32(a[0] ^ rc1)
+            theta(a, workingKey)
+            a[0] = u32(a[0] ^ rc2)
+            pi1(a)
+            gamma(a)
+            pi2(a)
+            rc1 = rcShiftRegFwd(rc1)
+            rc2 = rcShiftRegBwd(rc2)
         }
+        a[0] = u32(a[0] ^ rc1)
+        theta(a, workingKey)
+        a[0] = u32(a[0] ^ rc2)
 
         for (let i = 0; i < 4; i++) {
             outBytes[off + i * 4] = (a[i] >>> 24) & 0xFF
@@ -194,7 +208,12 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '00000000000000000000000000000000', key: '00000000000000000000000000000000',
-        expected: 'b16343208810d5841709b56814142142', // Known NOEKEON direct mode zero vector
+        expected: 'b1656851699e29fa24b70148503d2dfc', // Authoritative NESSIE direct mode zero vector
         description: 'NOEKEON Direct Mode zero key/PT test vector.'
+    },
+    {
+        input: 'ffffffffffffffffffffffffffffffff', key: 'ffffffffffffffffffffffffffffffff',
+        expected: '2a78421b87c7d0924f26113f1d1349b2',
+        description: 'NOEKEON Direct Mode all-ones key/PT test vector.'
     },
 ]

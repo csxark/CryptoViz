@@ -78,7 +78,7 @@ describe('MockMessageChannel Extreme Fuzzing', () => {
           expect(arr[0].id).toBe(1);
           expect(arr[1].id).toBe(2);
           
-          expect(map.get('k2')).toBeInstanceOf(Uint32Array);
+          expect(ArrayBuffer.isView(map.get('k2'))).toBe(true);
           expect(map.get('k2')[1]).toBe(20);
           resolve();
         } catch (e) {

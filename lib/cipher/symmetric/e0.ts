@@ -60,7 +60,7 @@ function toHex(b: Uint8Array): string { return Array.from(b).map(x => x.toString
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'E0 key+IV')
-    if (keyBytes.length !== 24) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 24 bytes (16-byte key + 8-byte IV).')
+    if (keyBytes.length !== 24) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 24 bytes (16-byte key + 8-byte IV).')
 
     const K_c = keyBytes.slice(0, 16)
     const IV = keyBytes.slice(16, 24)

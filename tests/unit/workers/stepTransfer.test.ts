@@ -28,7 +28,7 @@ describe('cipher step transfer protocol', () => {
     }))
 
     const encoded = encodeCipherSteps(steps)
-    expect(encoded).toBeInstanceOf(Uint8Array)
+    expect(ArrayBuffer.isView(encoded)).toBe(true)
     expect(encoded.byteLength).toBeGreaterThan(0)
 
     const decoded = decodeCipherSteps(encoded.buffer)

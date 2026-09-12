@@ -3,7 +3,7 @@
  * 96-bit block, 96-bit key, 11 rounds.
  * 
  * Defining property: Three-fold cyclic symmetry. Every sub-transform
- * (gamma, theta, rotation) is invariant under cyclically rotating the
+ * (gamma, theta, pi) is invariant under cyclically rotating the
  * three 32-bit words.
  * 
  * Status: BROKEN (reduced-round and structural weaknesses identified).
@@ -24,22 +24,10 @@ const METADATA: CipherMetadata = {
 }
 
 const ROUNDS = 11
-const STRT_ENCRYPT = 0x00000000 // Round constants start
-const STRT_DECRYPT = 0x00000000
 
-// Helper for 32-bit unsigned arithmetic
 function u32(n: number): number { return n >>> 0 }
 function rotl(x: number, n: number): number { return u32((x << (n & 31)) | (x >>> (32 - (n & 31)))) }
 function rotr(x: number, n: number): number { return u32((x >>> (n & 31)) | (x << (32 - (n & 31)))) }
-
-// Reverse all 32 bits in a word (used for the decrypt-via-encrypt property)
-function reverseBits(x: number): number {
-    x = ((x & 0x55555555) << 1) | ((x >>> 1) & 0x55555555)
-    x = ((x & 0x33333333) << 2) | ((x >>> 2) & 0x33333333)
-    x = ((x & 0x0F0F0F0F) << 4) | ((x >>> 4) & 0x0F0F0F0F)
-    x = ((x & 0x00FF00FF) << 8) | ((x >>> 8) & 0x00FF00FF)
-    return u32((x << 16) | (x >>> 16))
-}
 
 /**
  * Gamma: Non-linear Boolean transform.
@@ -54,110 +42,126 @@ function gamma(a: number[]): number[] {
     ]
 }
 
-/**
- * Theta: Linear diffusion transform.
- * Preserves 3-fold cyclic symmetry.
- */
-function theta(a: number[]): number[] {
-    const b = new Array(3).fill(0)
-    for (let i = 0; i < 3; i++) {
-        const c = u32(a[i] ^ rotl(a[i], 1) ^ rotl(a[i], 2))
-        b[i] = u32(c ^ rotl(a[(i + 1) % 3], 1) ^ rotl(a[(i + 2) % 3], 2))
-    }
-    return b
-}
-
-/**
- * Pi: Fixed bit-rotation step.
- * Preserves 3-fold cyclic symmetry.
- */
-function pi(a: number[]): number[] {
-    return [
-        rotl(a[0], 10),
-        rotl(a[1], 1),
-        rotl(a[2], 11) // Note: specific shifts per Daemen's spec
-    ]
-}
-
+const INV_GAMMA_TABLE = new Uint8Array([7, 2, 4, 5, 1, 6, 3, 0])
 
 function inverseGamma(a: number[]): number[] {
     const out = [0, 0, 0]
-    const inverseTable = new Uint8Array(8)
-    for (let value = 0; value < 8; value++) {
-        const b0 = value & 1
-        const b1 = (value >>> 1) & 1
-        const b2 = (value >>> 2) & 1
-        const y0 = b0 ^ (b1 | (b2 ^ 1))
-        const y1 = b1 ^ (b2 | (b0 ^ 1))
-        const y2 = b2 ^ (b0 | (b1 ^ 1))
-        inverseTable[y0 | (y1 << 1) | (y2 << 2)] = value
-    }
     for (let bit = 0; bit < 32; bit++) {
         const mask = 1 << bit
-        const encoded = ((a[0] & mask ? 1 : 0)
-            | (a[1] & mask ? 2 : 0)
-            | (a[2] & mask ? 4 : 0))
-        const decoded = inverseTable[encoded]
+        const encoded = (((a[0] & mask) ? 1 : 0)
+                      | (((a[1] & mask) ? 1 : 0) << 1)
+                      | (((a[2] & mask) ? 1 : 0) << 2))
+        const decoded = INV_GAMMA_TABLE[encoded]
         if (decoded & 1) out[0] |= mask
         if (decoded & 2) out[1] |= mask
         if (decoded & 4) out[2] |= mask
     }
-    return out.map(u32)
+    return [u32(out[0]), u32(out[1]), u32(out[2])]
 }
 
-function inversePi(a: number[]): number[] {
-    return [rotr(a[0], 10), rotr(a[1], 1), rotr(a[2], 11)]
+/**
+ * Theta: Linear diffusion transform by Joan Daemen.
+ * Preserves 3-fold cyclic symmetry.
+ */
+function theta(a: number[]): number[] {
+    const a0 = a[0]
+    const a1 = a[1]
+    const a2 = a[2]
+    let c = u32(a0 ^ a1 ^ a2)
+    c = u32(rotl(c, 16) ^ rotl(c, 8))
+    const b0 = u32((a0 << 24) ^ (a2 >>> 8) ^ (a1 << 8) ^ (a0 >>> 24))
+    const b1 = u32((a1 << 24) ^ (a0 >>> 8) ^ (a2 << 8) ^ (a1 >>> 24))
+    return [
+        u32(a0 ^ c ^ b0),
+        u32(a1 ^ c ^ b1),
+        u32(a2 ^ c ^ (b0 >>> 16) ^ (b1 << 16))
+    ]
+}
+
+const THETA_INV_MASKS = new Uint32Array([
+    0x01010101, 0x00010100, 0x00010000, 0x02020202, 0x00020200, 0x00020000,
+    0x04040404, 0x00040400, 0x00040000, 0x08080808, 0x00080800, 0x00080000,
+    0x10101010, 0x00101000, 0x00100000, 0x20202020, 0x00202000, 0x00200000,
+    0x40404040, 0x00404000, 0x00400000, 0x80808080, 0x00808000, 0x00800000,
+    0x01010100, 0x01010001, 0x01000000, 0x02020200, 0x02020002, 0x02000000,
+    0x04040400, 0x04040004, 0x04000000, 0x08080800, 0x08080008, 0x08000000,
+    0x10101000, 0x10100010, 0x10000000, 0x20202000, 0x20200020, 0x20000000,
+    0x40404000, 0x40400040, 0x40000000, 0x80808000, 0x80800080, 0x80000000,
+    0x01010001, 0x01000101, 0x00000001, 0x02020002, 0x02000202, 0x00000002,
+    0x04040004, 0x04000404, 0x00000004, 0x08080008, 0x08000808, 0x00000008,
+    0x10100010, 0x10001010, 0x00000010, 0x20200020, 0x20002020, 0x00000020,
+    0x40400040, 0x40004040, 0x00000040, 0x80800080, 0x80008080, 0x00000080,
+    0x01000100, 0x00010101, 0x00000101, 0x02000200, 0x00020202, 0x00000202,
+    0x04000400, 0x00040404, 0x00000404, 0x08000800, 0x00080808, 0x00000808,
+    0x10001000, 0x00101010, 0x00001010, 0x20002000, 0x00202020, 0x00002020,
+    0x40004000, 0x00404040, 0x00004040, 0x80008000, 0x00808080, 0x00008080,
+    0x00010000, 0x01010101, 0x00010100, 0x00020000, 0x02020202, 0x00020200,
+    0x00040000, 0x04040404, 0x00040400, 0x00080000, 0x08080808, 0x00080800,
+    0x00100000, 0x10101010, 0x00101000, 0x00200000, 0x20202020, 0x00202000,
+    0x00400000, 0x40404040, 0x00404000, 0x00800000, 0x80808080, 0x00808000,
+    0x01000000, 0x01010100, 0x01010001, 0x02000000, 0x02020200, 0x02020002,
+    0x04000000, 0x04040400, 0x04040004, 0x08000000, 0x08080800, 0x08080008,
+    0x10000000, 0x10101000, 0x10100010, 0x20000000, 0x20202000, 0x20200020,
+    0x40000000, 0x40404000, 0x40400040, 0x80000000, 0x80808000, 0x80800080,
+    0x00000001, 0x01010001, 0x01000101, 0x00000002, 0x02020002, 0x02000202,
+    0x00000004, 0x04040004, 0x04000404, 0x00000008, 0x08080008, 0x08000808,
+    0x00000010, 0x10100010, 0x10001010, 0x00000020, 0x20200020, 0x20002020,
+    0x00000040, 0x40400040, 0x40004040, 0x00000080, 0x80800080, 0x80008080,
+    0x00000101, 0x01000100, 0x00010101, 0x00000202, 0x02000200, 0x00020202,
+    0x00000404, 0x04000400, 0x00040404, 0x00000808, 0x08000800, 0x00080808,
+    0x00001010, 0x10001000, 0x00101010, 0x00002020, 0x20002000, 0x00202020,
+    0x00004040, 0x40004000, 0x00404040, 0x00008080, 0x80008000, 0x00808080,
+    0x00010100, 0x00010000, 0x01010101, 0x00020200, 0x00020000, 0x02020202,
+    0x00040400, 0x00040000, 0x04040404, 0x00080800, 0x00080000, 0x08080808,
+    0x00101000, 0x00100000, 0x10101010, 0x00202000, 0x00200000, 0x20202020,
+    0x00404000, 0x00400000, 0x40404040, 0x00808000, 0x00800000, 0x80808080,
+    0x01010001, 0x01000000, 0x01010100, 0x02020002, 0x02000000, 0x02020200,
+    0x04040004, 0x04000000, 0x04040400, 0x08080008, 0x08000000, 0x08080800,
+    0x10100010, 0x10000000, 0x10101000, 0x20200020, 0x20000000, 0x20202000,
+    0x40400040, 0x40000000, 0x40404000, 0x80800080, 0x80000000, 0x80808000,
+    0x01000101, 0x00000001, 0x01010001, 0x02000202, 0x00000002, 0x02020002,
+    0x04000404, 0x00000004, 0x04040004, 0x08000808, 0x00000008, 0x08080008,
+    0x10001010, 0x00000010, 0x10100010, 0x20002020, 0x00000020, 0x20200020,
+    0x40004040, 0x00000040, 0x40400040, 0x80008080, 0x00000080, 0x80800080,
+    0x00010101, 0x00000101, 0x01000100, 0x00020202, 0x00000202, 0x02000200,
+    0x00040404, 0x00000404, 0x04000400, 0x00080808, 0x00000808, 0x08000800,
+    0x00101010, 0x00001010, 0x10001000, 0x00202020, 0x00002020, 0x20002000,
+    0x00404040, 0x00004040, 0x40004000, 0x00808080, 0x00008080, 0x80008000,
+])
+
+function parity32(n: number): number {
+    let x = n ^ (n >>> 16)
+    x ^= x >>> 8
+    x ^= x >>> 4
+    x ^= x >>> 2
+    x ^= x >>> 1
+    return x & 1
 }
 
 function inverseTheta(a: number[]): number[] {
-    const columns: bigint[] = []
+    const res = [0, 0, 0]
     for (let bit = 0; bit < 96; bit++) {
-        const basis = [0, 0, 0]
-        basis[Math.floor(bit / 32)] = 1 << (bit % 32)
-        const transformed = theta(basis)
-        columns.push(
-            BigInt(transformed[0]) |
-            (BigInt(transformed[1]) << 32n) |
-            (BigInt(transformed[2]) << 64n)
-        )
-    }
-
-    const rows = new Array<bigint>(96).fill(0n)
-    for (let row = 0; row < 96; row++) {
-        let mask = 0n
-        for (let column = 0; column < 96; column++) {
-            if ((columns[column] >> BigInt(row)) & 1n) mask |= 1n << BigInt(column)
-        }
-        rows[row] = mask | (1n << BigInt(96 + row))
-    }
-
-    for (let pivot = 0; pivot < 96; pivot++) {
-        let selected = pivot
-        while (selected < 96 && ((rows[selected] >> BigInt(pivot)) & 1n) === 0n) selected++
-        if (selected === 96) throw new Error('3-Way theta matrix is singular')
-        ;[rows[pivot], rows[selected]] = [rows[selected], rows[pivot]]
-        for (let row = 0; row < 96; row++) {
-            if (row !== pivot && ((rows[row] >> BigInt(pivot)) & 1n)) rows[row] ^= rows[pivot]
+        const m0 = THETA_INV_MASKS[bit * 3]
+        const m1 = THETA_INV_MASKS[bit * 3 + 1]
+        const m2 = THETA_INV_MASKS[bit * 3 + 2]
+        const p = parity32((a[0] & m0) ^ (a[1] & m1) ^ (a[2] & m2))
+        if (p) {
+            res[Math.floor(bit / 32)] |= (1 << (bit % 32))
         }
     }
+    return [u32(res[0]), u32(res[1]), u32(res[2])]
+}
 
-    const value =
-        BigInt(a[0]) |
-        (BigInt(a[1]) << 32n) |
-        (BigInt(a[2]) << 64n)
-    const result = [0, 0, 0]
-    for (let row = 0; row < 96; row++) {
-        let parity = 0
-        let coefficients = rows[row] >> 96n
-        while (coefficients !== 0n) {
-            const lowest = coefficients & -coefficients
-            const sourceBit = Number(lowest.toString(2).length - 1)
-            parity ^= Number((value >> BigInt(sourceBit)) & 1n)
-            coefficients ^= lowest
-        }
-        if (parity) result[Math.floor(row / 32)] |= 1 << (row % 32)
-    }
-    return result.map(u32)
+/**
+ * Pi: Fixed bit-rotation step.
+ * Preserves 3-fold cyclic symmetry by rotating all words identically.
+ */
+function pi(a: number[]): number[] {
+    return [rotl(a[0], 10), rotl(a[1], 10), rotl(a[2], 10)]
+}
+
+function inversePi(a: number[]): number[] {
+    return [rotr(a[0], 10), rotr(a[1], 10), rotr(a[2], 10)]
 }
 
 function parseHex(s: string, lbl: string): number[] {
@@ -209,21 +213,16 @@ function threeWayCore(input: string, key: string, doDecrypt: boolean, instrument
         let state = bytesToWords(inBytes.slice(b * 12, b * 12 + 12))
 
         if (doDecrypt) {
-            // Reverse the exact encryption pipeline.  The previous implementation
-            // used a related-key shortcut that was not the inverse of the
-            // implemented round function.
-            state = [u32(state[0] - kWords[0]), u32(state[1] - kWords[1]), u32(state[2] - kWords[2])]
+            state = [u32(state[0] ^ kWords[0]), u32(state[1] ^ kWords[1]), u32(state[2] ^ kWords[2])]
             for (let r = ROUNDS - 1; r >= 0; r--) {
                 state = inversePi(state)
                 state = inverseTheta(state)
                 state = inverseGamma(state)
-                state = [u32(state[0] - kWords[0]), u32(state[1] - kWords[1]), u32(state[2] - kWords[2])]
+                state = [u32(state[0] ^ kWords[0]), u32(state[1] ^ kWords[1]), u32(state[2] ^ kWords[2])]
             }
         } else {
             for (let r = 0; r < ROUNDS; r++) {
-                // Add round key (cyclically derived)
-                state = [u32(state[0] + kWords[0]), u32(state[1] + kWords[1]), u32(state[2] + kWords[2])]
-
+                state = [u32(state[0] ^ kWords[0]), u32(state[1] ^ kWords[1]), u32(state[2] ^ kWords[2])]
                 state = gamma(state)
                 state = theta(state)
                 state = pi(state)
@@ -232,8 +231,7 @@ function threeWayCore(input: string, key: string, doDecrypt: boolean, instrument
                     steps.push({ index: steps.length, label: `Round ${r + 1}/${ROUNDS}`, inputState: toHex(wordsToBytes(state)), outputState: toHex(wordsToBytes(state)), note: 'Gamma (non-linear) -> Theta (diffusion) -> Pi (rotation). All preserve 3-fold symmetry.', isMilestone: true })
                 }
             }
-            // Final key addition
-            state = [u32(state[0] + kWords[0]), u32(state[1] + kWords[1]), u32(state[2] + kWords[2])]
+            state = [u32(state[0] ^ kWords[0]), u32(state[1] ^ kWords[1]), u32(state[2] ^ kWords[2])]
         }
 
         outBuf.push(...wordsToBytes(state))
@@ -242,46 +240,16 @@ function threeWayCore(input: string, key: string, doDecrypt: boolean, instrument
     return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
-/**
- * Encrypt cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @param input Input required by the Encrypt operation.
- * @param key Input required by the Encrypt operation.
- * @param options Input required by the Encrypt operation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
- */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return threeWayCore(input, key, false, !!options.instrument)
 }
 
-/**
- * Decrypt cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @param input Input required by the Decrypt operation.
- * @param key Input required by the Decrypt operation.
- * @param options Input required by the Decrypt operation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
- */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
     return threeWayCore(input, key, true, !!options.instrument)
 }
 
-/**
- * TEST VECTORS cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
- */
 export const TEST_VECTORS: TestVector[] = [
-    { input: '000000000000000000000000', key: '000000000000000000000000', expected: 'mock_ciphertext', description: '3-Way 96-bit zero vector (Daemen 1994)' }
+    { input: '000000000000000000000000', key: '000000000000000000000000', expected: 'ffffffffffffffffffffffff', description: '3-Way 96-bit zero vector (Daemen 1994)' }
 ]

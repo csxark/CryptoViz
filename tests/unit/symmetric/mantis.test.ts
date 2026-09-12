@@ -19,7 +19,7 @@ describe('MANTIS', () => {
         const tweak = '0000000000000000'
 
         const ct = encrypt(pt, key, { tweak })
-        const ctSwapped = encrypt(pt, keySwapped, { tweak })
+        const ctSwapped = encrypt(ct.output, keySwapped, { tweak })
         const dec = decrypt(ct.output, key, { tweak })
 
         expect(dec.output).toBe(pt)

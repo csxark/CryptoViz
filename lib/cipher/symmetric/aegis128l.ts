@@ -124,7 +124,7 @@ function constantTimeCompare(a: number[], b: number[]): boolean {
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'AEGIS-128L key+nonce')
-    if (keyBytes.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'AEGIS-128L key must be 32 bytes (16-byte key + 16-byte nonce).')
+    if (keyBytes.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: AEGIS-128L key must be 32 bytes (16-byte key + 16-byte nonce).')
 
     const K = keyBytes.slice(0, 16)
     const N = keyBytes.slice(16, 32)
@@ -206,7 +206,7 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
 export function decrypt(ciphertext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'AEGIS-128L key+nonce')
-    if (keyBytes.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'AEGIS-128L key must be 32 bytes.')
+    if (keyBytes.length !== 32) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: AEGIS-128L key must be 32 bytes.')
 
     const K = keyBytes.slice(0, 16)
     const N = keyBytes.slice(16, 32)
@@ -271,7 +271,7 @@ export function decrypt(ciphertext: string, key: string, options: CipherOptions 
     }
 
     if (!constantTimeCompare(expectedTag, receivedTag)) {
-        throw new CipherError('AUTH_TAG_MISMATCH', 'AEGIS-128L authentication tag mismatch.')
+        throw new CipherError('AUTH_TAG_MISMATCH', 'AUTH_TAG_MISMATCH: AEGIS-128L authentication tag mismatch.')
     }
 
     const steps: CipherStep[] = [{ index: 0, label: 'AEGIS-128L AEAD Decryption', inputState: ciphertext, outputState: toHex(ptBytes), note: 'Tag verified. Plaintext recovered.', isMilestone: true }]

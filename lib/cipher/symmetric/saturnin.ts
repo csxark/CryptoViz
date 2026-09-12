@@ -94,7 +94,7 @@ function toHex(b: number[]): string { return b.map(x => x.toString(16).padStart(
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'SATURNIN key+nonce')
-    if (keyBytes.length !== 64) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 64 bytes (32-byte key + 32-byte nonce).')
+    if (keyBytes.length !== 64) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 64 bytes (32-byte key + 32-byte nonce).')
 
     const K = keyBytes.slice(0, 32)
     const N = keyBytes.slice(32, 64)

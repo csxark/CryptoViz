@@ -80,7 +80,7 @@ function roundType3(D: number, Km: number, Kr: number): number {
 function cast128Core(input: string, key: string, doDecrypt: boolean, options: CipherOptions): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'CAST-128 key')
-    if (keyBytes.length < 5 || keyBytes.length > 16) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 5-16 bytes.')
+    if (keyBytes.length < 5 || keyBytes.length > 16) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 5-16 bytes.')
     const inBytes = parseHex(input, 'CAST-128 input')
     if (inBytes.length % 8 !== 0) throw new CipherError('INVALID_INPUT', 'Input must be multiple of 8 bytes.')
 
@@ -119,11 +119,10 @@ function cast128Core(input: string, key: string, doDecrypt: boolean, options: Ci
             }
         }
 
-        // The Feistel swap is part of the round state, not an extra
-        // serialization swap.  Decryption has already restored L || R.
+        // Standard Feistel output swap: (R, L)
         let resBlock = [
-            (L >>> 24) & 0xFF, (L >>> 16) & 0xFF, (L >>> 8) & 0xFF, L & 0xFF,
-            (R >>> 24) & 0xFF, (R >>> 16) & 0xFF, (R >>> 8) & 0xFF, R & 0xFF
+            (R >>> 24) & 0xFF, (R >>> 16) & 0xFF, (R >>> 8) & 0xFF, R & 0xFF,
+            (L >>> 24) & 0xFF, (L >>> 16) & 0xFF, (L >>> 8) & 0xFF, L & 0xFF
         ]
 
         if (mode === 'cbc' && doDecrypt) {

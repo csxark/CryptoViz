@@ -114,7 +114,7 @@ function cramerShoupCore(input: string, key: string, doDecrypt: boolean, instrum
         const check = modBigInt(modPow(u1, x1 + y1 * alpha, P) * modPow(u2, x2 + y2 * alpha, P), P)
 
         if (check !== v) {
-            throw new CipherError('INVALID_INPUT', 'Cramer-Shoup CCA2 integrity check failed. Ciphertext rejected.')
+            throw new CipherError('INVALID_INPUT', 'INTEGRITY_CHECK_FAILED: Cramer-Shoup CCA2 integrity check failed. Ciphertext rejected.')
         }
 
         const z = 5n

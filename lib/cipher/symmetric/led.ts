@@ -84,24 +84,37 @@ function shiftRows(state: number[], inv: boolean) {
   }
 }
 
+function gfMul(a: number, b: number): number {
+  let p = 0
+  for (let i = 0; i < 4; i++) {
+    if ((b >> i) & 1) p ^= (a << i)
+  }
+  for (let i = 7; i > 3; i--) {
+    if ((p >> i) & 1) p ^= (0x13 << (i - 4))
+  }
+  return p & 0xF
+}
+
 function mixColumnsSerial(state: number[], inv: boolean) {
-  // 4x4 MDS matrix multiplication over GF(2^4)
-  // Matrix: [[1, 1, 9, 13], [13, 1, 1, 9], [9, 13, 1, 1], [1, 9, 13, 1]] (simplified representation)
-  // For visualizer, we use a representative binary/GF mixing
   for (let c = 0; c < 4; c++) {
-    const col = [state[c], state[4+c], state[8+c], state[12+c]]
+    let col = [state[c], state[4 + c], state[8 + c], state[12 + c]]
     if (!inv) {
-      state[c]    = u4(col[0] ^ col[1] ^ xtime(col[2]) ^ xtime(col[3]))
-      state[4+c]  = u4(col[0] ^ xtime(col[1]) ^ col[2] ^ col[3])
-      state[8+c]  = u4(xtime(col[0]) ^ col[1] ^ col[2] ^ col[3])
-      state[12+c] = u4(col[0] ^ col[1] ^ xtime(col[2]) ^ col[3])
+      for (let i = 0; i < 4; i++) {
+        const nextC3 = gfMul(4, col[0]) ^ col[1] ^ gfMul(2, col[2]) ^ gfMul(2, col[3])
+        col = [col[1], col[2], col[3], nextC3]
+      }
     } else {
-      // Inverse MixColumns (simplified for visualizer structure)
-      state[c]    = u4(col[0] ^ col[1] ^ xtime(col[2]) ^ xtime(col[3]))
-      state[4+c]  = u4(col[0] ^ xtime(col[1]) ^ col[2] ^ col[3])
-      state[8+c]  = u4(xtime(col[0]) ^ col[1] ^ col[2] ^ col[3])
-      state[12+c] = u4(col[0] ^ col[1] ^ xtime(col[2]) ^ col[3])
+      for (let i = 0; i < 4; i++) {
+        const [c0P, c1P, c2P, c3P] = col
+        const rhs = c3P ^ c0P ^ gfMul(2, c1P) ^ gfMul(2, c2P)
+        const c0 = gfMul(0xD, rhs)
+        col = [c0, c0P, c1P, c2P]
+      }
     }
+    state[c] = col[0]
+    state[4 + c] = col[1]
+    state[8 + c] = col[2]
+    state[12 + c] = col[3]
   }
 }
 
@@ -109,7 +122,7 @@ function ledCore(input: string, key: string, doDecrypt: boolean, options: Cipher
   const start = performance.now()
   const keySize = parseInt((options.keySize as string) || '64')
   const keyBytes = parseHex(key, 'LED key')
-  if (keyBytes.length !== keySize / 8) throw new CipherError('INVALID_KEY_LENGTH', `Key must be ${keySize/8} bytes.`)
+  if (keyBytes.length !== keySize / 8) throw new CipherError('INVALID_KEY_LENGTH', `INVALID_KEY_LENGTH: Key must be ${keySize/8} bytes.`)
   const inBytes = parseHex(input, 'LED input')
   if (inBytes.length !== 8) throw new CipherError('INVALID_INPUT', 'Input must be 8 bytes.')
 
@@ -121,46 +134,57 @@ function ledCore(input: string, key: string, doDecrypt: boolean, options: Cipher
   const k1 = keySize === 128 ? kNibbles.slice(16, 32) : k0
   
   const steps = keySize === 128 ? 12 : 8
-  const rounds = steps * 4
-  
-  const stepSeq = doDecrypt ? Array.from({length: steps}, (_, i) => steps - 1 - i) : Array.from({length: steps}, (_, i) => i)
-  
   const cipherSteps: CipherStep[] = []
 
-  // Initial Key Addition
-  const initKey = doDecrypt ? (stepSeq[0] % 2 === 0 ? k1 : k0) : k0 // Simplified alternation logic
-  for (let i = 0; i < 16; i++) state[i] = u4(state[i] ^ initKey[i])
+  if (!doDecrypt) {
+    // Initial Key Addition
+    for (let i = 0; i < 16; i++) state[i] = u4(state[i] ^ k0[i])
 
-  let rcIdx = doDecrypt ? rounds - 1 : 0
-
-  for (const s of stepSeq) {
-    const currentKey = s % 2 === 0 ? k0 : k1
-    
-    for (let r = 0; r < 4; r++) {
-      if (!doDecrypt) {
+    let rcIdx = 0
+    for (let s = 0; s < steps; s++) {
+      for (let r = 0; r < 4; r++) {
         addConstants(state, RC[rcIdx++])
         subCells(state, false)
         shiftRows(state, false)
-        if (r < 3 || s < steps - 1) mixColumnsSerial(state, false) // Omit in final round of final step
-      } else {
-        if (r > 0 || s > 0) mixColumnsSerial(state, true)
+        mixColumnsSerial(state, false)
+      }
+      // Key addition after step s
+      const currK = (s % 2 === 0) ? k1 : k0
+      for (let i = 0; i < 16; i++) state[i] = u4(state[i] ^ currK[i])
+
+      cipherSteps.push({
+        index: cipherSteps.length,
+        label: `Step ${s + 1}/${steps} — 4 Rounds + Key Injection`,
+        inputState: toHex(inBytes),
+        outputState: toHex(nibblesToBytes(state)),
+        note: `No key schedule. Raw key half ${s % 2 === 0 ? 'K1' : 'K0'} XOR'd into state.`,
+        isMilestone: true
+      })
+    }
+  } else {
+    let rcIdx = steps * 4 - 1
+    for (let s = steps - 1; s >= 0; s--) {
+      const currK = (s % 2 === 0) ? k1 : k0
+      for (let i = 0; i < 16; i++) state[i] = u4(state[i] ^ currK[i])
+
+      for (let r = 3; r >= 0; r--) {
+        mixColumnsSerial(state, true)
         shiftRows(state, true)
         subCells(state, true)
         addConstants(state, RC[rcIdx--])
       }
+
+      cipherSteps.push({
+        index: cipherSteps.length,
+        label: `Step ${s + 1}/${steps} (inv) — 4 Rounds + Key Injection`,
+        inputState: toHex(inBytes),
+        outputState: toHex(nibblesToBytes(state)),
+        note: `Inverse step. Raw key half ${s % 2 === 0 ? 'K1' : 'K0'} un-XOR'd.`,
+        isMilestone: true
+      })
     }
-    
-    // Key Injection (every 4 rounds)
-    for (let i = 0; i < 16; i++) state[i] = u4(state[i] ^ currentKey[i])
-    
-    cipherSteps.push({
-      index: cipherSteps.length,
-      label: `Step ${s+1}/${steps} — 4 Rounds + Key Injection`,
-      inputState: toHex(inBytes),
-      outputState: toHex(nibblesToBytes(state)),
-      note: `No key schedule. Raw key half ${s%2 === 0 ? 'K0' : 'K1'} XOR'd into state.`,
-      isMilestone: true
-    })
+    // Post-whitening key removal
+    for (let i = 0; i < 16; i++) state[i] = u4(state[i] ^ k0[i])
   }
 
   return { output: toHex(nibblesToBytes(state)), outputEncoding: 'hex', steps: cipherSteps, metadata: METADATA, durationMs: performance.now() - start }

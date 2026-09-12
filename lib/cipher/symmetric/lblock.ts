@@ -132,7 +132,7 @@ function roundFInv(xL: number, kI: number): number {
 // Key schedule: 80-bit key → 32 round keys
 function keySchedule(keyBytes: number[]): number[] {
     if (keyBytes.length !== 10) {
-        throw new CipherError('INVALID_KEY_LENGTH', 'LBlock key must be 80 bits (10 bytes).')
+        throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: LBlock key must be 80 bits (10 bytes).')
     }
 
     // 80-bit key as 20 nibbles
@@ -189,7 +189,7 @@ function lblockCore(input: string, key: string, doDecrypt: boolean, options: Cip
     const start = performance.now()
     const keyBytes = parseHex(key, 'LBlock key')
     if (keyBytes.length !== 10) {
-        throw new CipherError('INVALID_KEY_LENGTH', 'LBlock key must be 80 bits (10 bytes).')
+        throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: LBlock key must be 80 bits (10 bytes).')
     }
     const inBytes = parseHex(input, 'LBlock input')
     if (inBytes.length === 0) {
@@ -216,16 +216,20 @@ function lblockCore(input: string, key: string, doDecrypt: boolean, options: Cip
 
         for (const r of roundSeq) {
             const kI = roundKeys[r]
-            const fOut = doDecrypt ? roundFInv(xL, kI) : roundF(xL, kI)
+            const fOut = roundF(xL, kI)
 
-            // Feistel update: X_R,new = X_L; X_L,new = F(X_L, K_i) XOR (X_R >>> 8)
-            // Decryption: rotation is left by 8 bits
-            const xR_rot = doDecrypt ? u32((xR << 8) | (xR >>> 24)) : u32((xR >>> 8) | (xR << 24))
-            const xL_new = u32(fOut ^ xR_rot)
-            const xR_new = xL
-
-            xL = xL_new
-            xR = xR_new
+            if (doDecrypt) {
+                const xL_new = u32(((xR ^ fOut) << 8) | ((xR ^ fOut) >>> 24))
+                const xR_new = xL
+                xL = xL_new
+                xR = xR_new
+            } else {
+                const xR_rot = u32((xR >>> 8) | (xR << 24))
+                const xL_new = u32(fOut ^ xR_rot)
+                const xR_new = xL
+                xL = xL_new
+                xR = xR_new
+            }
 
             if (r % 8 === 0) {
                 steps.push({

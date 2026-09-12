@@ -30,420 +30,116 @@ interface CipherDispatcher {
 
 type WorkerRequestMessage = WorkerRequest | Uint8Array;
 
+const w = async (p: Promise<any>): Promise<CipherDispatcher> => {
+  const m = await p;
+  return { encrypt: m.encrypt, decrypt: m.decrypt };
+};
+
 async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
   switch (cipherId) {
-    case "caesar": {
-      const mod = await import("../cipher/classical/caesar");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "rot13": {
-      const mod = await import("../cipher/classical/rot13");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "vigenere": {
-      const mod = await import("../cipher/classical/vigenere");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "atbash": {
-      const mod = await import("../cipher/classical/atbash");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "playfair": {
-      const mod = await import("../cipher/classical/playfair");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "railfence": {
-      const mod = await import("../cipher/classical/railfence");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "beaufort": {
-      const mod = await import("../cipher/classical/beaufort");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "hill": {
-      const mod = await import("../cipher/classical/hill");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "columnar-transposition": {
-      const mod = await import("../cipher/classical/columnar-transposition");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "autokey": {
-      const mod = await import("../cipher/classical/autokey");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "porta": {
-      const mod = await import("../cipher/classical/porta");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "adfgvx": {
-      const mod = await import("../cipher/classical/adfgvx");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "bifid": {
-      const mod = await import("../cipher/classical/bifid");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "four-square": {
-      const mod = await import("../cipher/classical/four-square");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "nihilist": {
-      const mod = await import("../cipher/classical/nihilist");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "polybius": {
-      const mod = await import("../cipher/classical/polybius");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "xor": {
-      const mod = await import("../cipher/symmetric/xor");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "otp": {
-      const mod = await import("../cipher/symmetric/otp");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "des": {
-      const mod = await import("../cipher/symmetric/des");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "3des": {
-      const mod = await import("../cipher/symmetric/3des");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "aes-xts": {
-      const mod = await import("../cipher/symmetric/aes-xts");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "aes": {
-      const mod = await import("../cipher/symmetric/aes");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "aes-gcm": {
-      const mod = await import("../cipher/symmetric/aes-gcm");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "serpent": {
-      const mod = await import("../cipher/symmetric/serpent");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "chacha20-poly1305": {
-      const mod = await import("../cipher/symmetric/chacha20-poly1305");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "speck": {
-      const mod = await import("../cipher/symmetric/speck");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "aes-ccm": {
-      const mod = await import("../cipher/symmetric/aes-ccm");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "threefish": {
-      const mod = await import("../cipher/symmetric/threefish");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "twofish": {
-      const mod = await import("../cipher/symmetric/twofish");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "gost": {
-      const mod = await import("../cipher/symmetric/gost");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "rc2": {
-      const mod = await import("../cipher/symmetric/rc2");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "enigma": {
-      const mod = await import("../cipher/symmetric/enigma");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "xchacha20": {
-      const mod = await import("../cipher/symmetric/xchacha20");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "xsalsa20": {
-      const mod = await import("../cipher/symmetric/xsalsa20");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "trivium": {
-      const mod = await import("../cipher/symmetric/trivium");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ascon": {
-      const mod = await import("../cipher/symmetric/ascon");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "sm4": {
-      const mod = await import("../cipher/symmetric/sm4");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "present": {
-      const mod = await import("../cipher/symmetric/present");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "simon32": {
-      const mod = await import("../cipher/symmetric/simon32");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "tea": {
-      const mod = await import("../cipher/symmetric/tea");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "noekeon": {
-      const mod = await import("../cipher/symmetric/noekeon");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "lea": {
-      const mod = await import("../cipher/symmetric/lea");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "gift": {
-      const mod = await import("../cipher/symmetric/gift");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "blowfish": {
-      const mod = await import("../cipher/symmetric/blowfish");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "streebog": {
-      const mod = await import("../cipher/hash/streebog");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "seed": {
-      const mod = await import("../cipher/symmetric/seed");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "kuznyechik": {
-      const mod = await import("../cipher/symmetric/kuznyechik");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "simon": {
-      const mod = await import("../cipher/symmetric/simon");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "rabbit": {
-      const mod = await import("../cipher/symmetric/rabbit");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "hc128": {
-      const mod = await import("../cipher/symmetric/hc128");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "anubis": {
-      const mod = await import("../cipher/symmetric/anubis");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "mars": {
-      const mod = await import("../cipher/symmetric/mars");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "clefia": {
-      const mod = await import("../cipher/symmetric/clefia");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "misty1": {
-      const mod = await import("../cipher/symmetric/misty1");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "square": {
-      const mod = await import("../cipher/symmetric/square");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "feal": {
-      const mod = await import("../cipher/symmetric/feal");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "safer-plus": {
-      const mod = await import("../cipher/symmetric/safer-plus");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "aria": {
-      const mod = await import("../cipher/symmetric/aria");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "kasumi": {
-      const mod = await import("../cipher/symmetric/kasumi");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "3way": {
-      const mod = await import("../cipher/symmetric/3way");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "rsa": {
-      const mod = await import("../cipher/asymmetric/rsa");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "dsa": {
-      const mod = await import("../cipher/asymmetric/dsa");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "dh": {
-      const mod = await import("../cipher/asymmetric/dh");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "x448": {
-      const mod = await import("../cipher/asymmetric/x448");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ecc": {
-      const mod = await import("../cipher/asymmetric/ecc");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "schnorr": {
-      const mod = await import("../cipher/asymmetric/schnorr");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "elgamal-signature": {
-      const mod = await import("../cipher/asymmetric/elgamal-signature");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ml-dsa": {
-      const mod = await import("../cipher/asymmetric/ml-dsa");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ecies": {
-      const mod = await import("../cipher/asymmetric/ecies");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ml-kem": {
-      const mod = await import("../cipher/asymmetric/ml-kem");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "frodokem": {
-      const mod = await import("../cipher/asymmetric/frodokem");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ecdsa": {
-      const mod = await import("../cipher/asymmetric/ecdsa");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ed448": {
-      const mod = await import("../cipher/asymmetric/ed448");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "shamir-secret-sharing": {
-      const mod = await import("../cipher/asymmetric/shamir-secret-sharing");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "sidh": {
-      const mod = await import("../cipher/asymmetric/sidh");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ntru": {
-      const mod = await import("../cipher/asymmetric/ntru");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "gost-r34-10": {
-      const mod = await import("../cipher/asymmetric/gost-r34-10");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "mceliece": {
-      const mod = await import("../cipher/asymmetric/mceliece");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "cramer-shoup": {
-      const mod = await import("../cipher/asymmetric/cramer-shoup");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "sm2": {
-      const mod = await import("../cipher/asymmetric/sm2");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "kcdsa": {
-      const mod = await import("../cipher/asymmetric/kcdsa");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ed25519": {
-      const mod = await import("../cipher/asymmetric/ed25519");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "elgamal": {
-      const mod = await import("../cipher/asymmetric/elgamal");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "merkle-hellman": {
-      const mod = await import("../cipher/asymmetric/merkle-hellman");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "paillier": {
-      const mod = await import("../cipher/asymmetric/paillier");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "rabin": {
-      const mod = await import("../cipher/asymmetric/rabin");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "x25519": {
-      const mod = await import("../cipher/asymmetric/x25519");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "sha256": {
-      const mod = await import("../cipher/hash/sha256");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "sm3": {
-      const mod = await import("../cipher/hash/sm3");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "sha512": {
-      const mod = await import("../cipher/hash/sha512");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "md5": {
-      const mod = await import("../cipher/hash/md5");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "hmac": {
-      const mod = await import("../cipher/hash/hmac");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "cmac": {
-      const mod = await import("../cipher/hash/cmac");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "bcrypt": {
-      const mod = await import("../cipher/hash/bcrypt");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "xxhash": {
-      const mod = await import("../cipher/hash/xxhash");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "sha3": {
-      const mod = await import("../cipher/hash/sha3");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "ripemd160": {
-      const mod = await import("../cipher/hash/ripemd160");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "blake2b": {
-      const mod = await import("../cipher/hash/blake2b");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "blake3": {
-      const mod = await import("../cipher/hash/blake3");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "poly1305": {
-      const mod = await import("../cipher/hash/poly1305");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "sha1": {
-      const mod = await import("../cipher/hash/sha1");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "hkdf": {
-      const mod = await import("../cipher/hash/hkdf");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "blake2s": {
-      const mod = await import("../cipher/hash/blake2s");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
+    case "caesar": return w(import("../cipher/classical/caesar"));
+    case "rot13": return w(import("../cipher/classical/rot13"));
+    case "vigenere": return w(import("../cipher/classical/vigenere"));
+    case "atbash": return w(import("../cipher/classical/atbash"));
+    case "playfair": return w(import("../cipher/classical/playfair"));
+    case "railfence": return w(import("../cipher/classical/railfence"));
+    case "beaufort": return w(import("../cipher/classical/beaufort"));
+    case "hill": return w(import("../cipher/classical/hill"));
+    case "columnar-transposition": return w(import("../cipher/classical/columnar-transposition"));
+    case "autokey": return w(import("../cipher/classical/autokey"));
+    case "porta": return w(import("../cipher/classical/porta"));
+    case "adfgvx": return w(import("../cipher/classical/adfgvx"));
+    case "bifid": return w(import("../cipher/classical/bifid"));
+    case "four-square": return w(import("../cipher/classical/four-square"));
+    case "nihilist": return w(import("../cipher/classical/nihilist"));
+    case "polybius": return w(import("../cipher/classical/polybius"));
+    case "xor": return w(import("../cipher/symmetric/xor"));
+    case "otp": return w(import("../cipher/symmetric/otp"));
+    case "des": return w(import("../cipher/symmetric/des"));
+    case "3des": return w(import("../cipher/symmetric/3des"));
+    case "aes-xts": return w(import("../cipher/symmetric/aes-xts"));
+    case "aes": return w(import("../cipher/symmetric/aes"));
+    case "aes-gcm": return w(import("../cipher/symmetric/aes-gcm"));
+    case "serpent": return w(import("../cipher/symmetric/serpent"));
+    case "chacha20-poly1305": return w(import("../cipher/symmetric/chacha20-poly1305"));
+    case "speck": return w(import("../cipher/symmetric/speck"));
+    case "aes-ccm": return w(import("../cipher/symmetric/aes-ccm"));
+    case "threefish": return w(import("../cipher/symmetric/threefish"));
+    case "twofish": return w(import("../cipher/symmetric/twofish"));
+    case "gost": return w(import("../cipher/symmetric/gost"));
+    case "rc2": return w(import("../cipher/symmetric/rc2"));
+    case "enigma": return w(import("../cipher/symmetric/enigma"));
+    case "xchacha20": return w(import("../cipher/symmetric/xchacha20"));
+    case "xsalsa20": return w(import("../cipher/symmetric/xsalsa20"));
+    case "trivium": return w(import("../cipher/symmetric/trivium"));
+    case "ascon": return w(import("../cipher/symmetric/ascon"));
+    case "sm4": return w(import("../cipher/symmetric/sm4"));
+    case "present": return w(import("../cipher/symmetric/present"));
+    case "simon32": return w(import("../cipher/symmetric/simon32"));
+    case "tea": return w(import("../cipher/symmetric/tea"));
+    case "noekeon": return w(import("../cipher/symmetric/noekeon"));
+    case "lea": return w(import("../cipher/symmetric/lea"));
+    case "gift": return w(import("../cipher/symmetric/gift"));
+    case "blowfish": return w(import("../cipher/symmetric/blowfish"));
+    case "streebog": return w(import("../cipher/hash/streebog"));
+    case "seed": return w(import("../cipher/symmetric/seed"));
+    case "kuznyechik": return w(import("../cipher/symmetric/kuznyechik"));
+    case "simon": return w(import("../cipher/symmetric/simon"));
+    case "rabbit": return w(import("../cipher/symmetric/rabbit"));
+    case "hc128": return w(import("../cipher/symmetric/hc128"));
+    case "anubis": return w(import("../cipher/symmetric/anubis"));
+    case "mars": return w(import("../cipher/symmetric/mars"));
+    case "clefia": return w(import("../cipher/symmetric/clefia"));
+    case "misty1": return w(import("../cipher/symmetric/misty1"));
+    case "square": return w(import("../cipher/symmetric/square"));
+    case "feal": return w(import("../cipher/symmetric/feal"));
+    case "safer-plus": return w(import("../cipher/symmetric/safer-plus"));
+    case "aria": return w(import("../cipher/symmetric/aria"));
+    case "kasumi": return w(import("../cipher/symmetric/kasumi"));
+    case "3way": return w(import("../cipher/symmetric/3way"));
+    case "rsa": return w(import("../cipher/asymmetric/rsa"));
+    case "dsa": return w(import("../cipher/asymmetric/dsa"));
+    case "dh": return w(import("../cipher/asymmetric/dh"));
+    case "x448": return w(import("../cipher/asymmetric/x448"));
+    case "ecc": return w(import("../cipher/asymmetric/ecc"));
+    case "schnorr": return w(import("../cipher/asymmetric/schnorr"));
+    case "elgamal-signature": return w(import("../cipher/asymmetric/elgamal-signature"));
+    case "ml-dsa": return w(import("../cipher/asymmetric/ml-dsa"));
+    case "ecies": return w(import("../cipher/asymmetric/ecies"));
+    case "ml-kem": return w(import("../cipher/asymmetric/ml-kem"));
+    case "frodokem": return w(import("../cipher/asymmetric/frodokem"));
+    case "ecdsa": return w(import("../cipher/asymmetric/ecdsa"));
+    case "ed448": return w(import("../cipher/asymmetric/ed448"));
+    case "shamir-secret-sharing": return w(import("../cipher/asymmetric/shamir-secret-sharing"));
+    case "sidh": return w(import("../cipher/asymmetric/sidh"));
+    case "ntru": return w(import("../cipher/asymmetric/ntru"));
+    case "gost-r34-10": return w(import("../cipher/asymmetric/gost-r34-10"));
+    case "mceliece": return w(import("../cipher/asymmetric/mceliece"));
+    case "cramer-shoup": return w(import("../cipher/asymmetric/cramer-shoup"));
+    case "sm2": return w(import("../cipher/asymmetric/sm2"));
+    case "kcdsa": return w(import("../cipher/asymmetric/kcdsa"));
+    case "ed25519": return w(import("../cipher/asymmetric/ed25519"));
+    case "elgamal": return w(import("../cipher/asymmetric/elgamal"));
+    case "merkle-hellman": return w(import("../cipher/asymmetric/merkle-hellman"));
+    case "paillier": return w(import("../cipher/asymmetric/paillier"));
+    case "rabin": return w(import("../cipher/asymmetric/rabin"));
+    case "x25519": return w(import("../cipher/asymmetric/x25519"));
+    case "sha256": return w(import("../cipher/hash/sha256"));
+    case "sm3": return w(import("../cipher/hash/sm3"));
+    case "sha512": return w(import("../cipher/hash/sha512"));
+    case "md5": return w(import("../cipher/hash/md5"));
+    case "hmac": return w(import("../cipher/hash/hmac"));
+    case "cmac": return w(import("../cipher/hash/cmac"));
+    case "bcrypt": return w(import("../cipher/hash/bcrypt"));
+    case "xxhash": return w(import("../cipher/hash/xxhash"));
+    case "sha3": return w(import("../cipher/hash/sha3"));
+    case "ripemd160": return w(import("../cipher/hash/ripemd160"));
+    case "blake2b": return w(import("../cipher/hash/blake2b"));
+    case "blake3": return w(import("../cipher/hash/blake3"));
+    case "poly1305": return w(import("../cipher/hash/poly1305"));
+    case "sha1": return w(import("../cipher/hash/sha1"));
+    case "hkdf": return w(import("../cipher/hash/hkdf"));
+    case "blake2s": return w(import("../cipher/hash/blake2s"));
     case "sha224": {
       const mod = await import("../cipher/hash/sha2-truncated");
       return { encrypt: mod.encryptSha224, decrypt: mod.decrypt };
@@ -478,42 +174,18 @@ async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
         }),
       };
     }
-    case "rc4": {
-      const mod = await import("../cipher/symmetric/rc4");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "salsa20": {
-      const mod = await import("../cipher/symmetric/salsa20");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "skipjack": {
-      const mod = await import("../cipher/symmetric/skipjack");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "chacha20": {
-      const mod = await import("../cipher/symmetric/chacha20");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "rc5": {
-      const mod = await import("../cipher/symmetric/rc5");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "xtea": {
-      const mod = await import("../cipher/symmetric/xtea");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
+    case "rc4": return w(import("../cipher/symmetric/rc4"));
+    case "salsa20": return w(import("../cipher/symmetric/salsa20"));
+    case "skipjack": return w(import("../cipher/symmetric/skipjack"));
+    case "chacha20": return w(import("../cipher/symmetric/chacha20"));
+    case "rc5": return w(import("../cipher/symmetric/rc5"));
+    case "xtea": return w(import("../cipher/symmetric/xtea"));
     case "rc6": {
       const mod = await import("../cipher/symmetric/rc6");
       return { encrypt: mod.encryptRc6Block, decrypt: mod.decryptRc6Block };
     }
-    case "camellia": {
-      const mod = await import("../cipher/symmetric/camellia");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
-    case "idea": {
-      const mod = await import("../cipher/symmetric/idea");
-      return { encrypt: mod.encrypt, decrypt: mod.decrypt };
-    }
+    case "camellia": return w(import("../cipher/symmetric/camellia"));
+    case "idea": return w(import("../cipher/symmetric/idea"));
     default:
       throw new CipherError(
         "ALGORITHM_UNSUPPORTED",
@@ -617,7 +289,7 @@ if (request.jobId && isJobCancelled(request.jobId)) {
 }
       if (!isWorkerRequest(request)) {
         throw new CipherError(
-          "INVALID_INPUT",
+          "INVALID_WORKER_MESSAGE" as any,
           "Invalid cipher worker request.",
         );
       }

@@ -83,7 +83,7 @@ function toHex(b: number[]): string {
     return b.map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
-function wakeCore(input: string, key: string, instrument: boolean): CipherResult {
+function wakeCore(input: string, key: string, dec: boolean, instrument: boolean): CipherResult {
     const start = performance.now()
     validateKey(key)
     const keyBytes = parseHex(key, 'WAKE key')
@@ -116,40 +116,41 @@ function wakeCore(input: string, key: string, instrument: boolean): CipherResult
 
     // Process input in 32-bit words
     for (let i = 0; i < inBytes.length; i += 4) {
-        // Read plaintext word (or 0 if padding)
-        let pWord = 0
-        for (let j = 0; j < 4 && (i + j) < inBytes.length; j++) {
-            pWord |= inBytes[i + j] << (24 - j * 8)
+        let inWord = 0
+        const chunkLen = Math.min(4, inBytes.length - i)
+        for (let j = 0; j < chunkLen; j++) {
+            inWord |= inBytes[i + j] << (24 - j * 8)
         }
-        pWord = u32(pWord)
+        inWord = u32(inWord)
 
         // Generate keystream word via table lookup and combining function
         const tableIdx = (r6 >>> 24) & 0xFF
-        const ksWord = u32(M(r3, T[tableIdx]) ^ pWord)
+        const ks = M(r3, T[tableIdx])
+        const outWord = u32(ks ^ inWord)
+        const feedback = dec ? inWord : outWord
 
-        // AUTO KEY UPDATE: Feed the output back into the table
-        // This is WAKE's defining "self-updating" property
-        T[tableIdx] = u32(T[tableIdx] + ksWord)
+        // AUTO KEY UPDATE: Feed ciphertext back into the table
+        T[tableIdx] = u32(T[tableIdx] + feedback)
 
         // Update state registers
         r3 = r4
         r4 = r5
         r5 = r6
-        r6 = ksWord
+        r6 = feedback
 
-        // Write ciphertext word
-        for (let j = 0; j < 4 && (i + j) < inBytes.length; j++) {
-            outBuf.push((ksWord >>> (24 - j * 8)) & 0xFF)
+        // Write output word
+        for (let j = 0; j < chunkLen; j++) {
+            outBuf.push((outWord >>> (24 - j * 8)) & 0xFF)
         }
     }
 
     if (instrument) {
         steps.push({
             index: 1,
-            label: 'Keystream Generation (Auto Key)',
+            label: dec ? 'Decryption (Auto Key)' : 'Keystream Generation (Auto Key)',
             inputState: toHex(inBytes),
             outputState: toHex(outBuf),
-            note: 'Each output word overwrites T[(r6>>>24)&0xFF]. The table evolves differently depending on the actual plaintext/ciphertext processed.',
+            note: 'Each ciphertext word overwrites T[(r6>>>24)&0xFF]. The table evolves identically in encryption and decryption.',
             isMilestone: true
         })
     }
@@ -170,7 +171,7 @@ function wakeCore(input: string, key: string, instrument: boolean): CipherResult
  */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
-    return wakeCore(input, key, !!options.instrument)
+    return wakeCore(input, key, false, !!options.instrument)
 }
 
 /**
@@ -186,7 +187,7 @@ export function encrypt(input: string, key: string, options: CipherOptions = {})
  */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
-    return wakeCore(input, key, !!options.instrument)
+    return wakeCore(input, key, true, !!options.instrument)
 }
 
 /**

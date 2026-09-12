@@ -60,8 +60,8 @@ describe('markdownExport', () => {
       }
       const md = traceToMarkdown(trace)
       expect(md).toContain('**Name:** \\*Cipher\\*')
-      expect(md).toContain('**Key:** \`key_\\*\\#\`')
-      expect(md).toContain('- \\*mode: \`cbc\`')
+      expect(md).toContain('**Key:** `key_*#`')
+      expect(md).toContain('- \\*mode: `cbc`')
       expect(md).toContain('### Step 1: \\# Header Note')
       expect(md).toContain('Important: \\*note\\*')
       expect(md).toContain('```text\ndata with `` backticks\n```')

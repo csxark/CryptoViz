@@ -23,8 +23,8 @@ const SBOX_64 = [0xC, 0xA, 0xD, 0x3, 0xE, 0xB, 0xF, 0x7, 0x8, 0x9, 0x1, 0x5, 0x0
 const SBOX_64_INV = new Array(16).fill(0)
 SBOX_64.forEach((v, i) => SBOX_64_INV[v] = i)
 
-// MIDORI-128 8-bit S-box (representative bijection)
-const SBOX_128 = new Array(256).fill(0).map((_, i) => (i * 0x9E + 0x63) & 0xFF)
+// MIDORI-128 8-bit S-box (representative bijection, gcd(0x9D, 256) = 1)
+const SBOX_128 = new Array(256).fill(0).map((_, i) => (i * 0x9D + 0x63) & 0xFF)
 const SBOX_128_INV = new Array(256).fill(0)
 SBOX_128.forEach((v, i) => SBOX_128_INV[v] = i)
 
@@ -98,7 +98,7 @@ function midoriCore(input: string, key: string, doDecrypt: boolean, options: Cip
     const is64 = variant === '64'
 
     const keyBytes = parseHex(key, 'MIDORI key')
-    if (keyBytes.length !== 16) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 128 bits (16 bytes).')
+    if (keyBytes.length !== 16) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 128 bits (16 bytes).')
 
     const inBytes = parseHex(input, 'MIDORI input')
     const expectedLen = is64 ? 8 : 16
@@ -107,13 +107,10 @@ function midoriCore(input: string, key: string, doDecrypt: boolean, options: Cip
     const state = is64 ? bytesToNibbles(inBytes) : [...inBytes]
     const kBytes = is64 ? bytesToNibbles(keyBytes) : keyBytes
 
-    // Bundle key: split into two halves k0, k1
-    const halfLen = kBytes.length / 2
-    const k0 = kBytes.slice(0, halfLen)
-    const k1 = kBytes.slice(halfLen)
-
-    // Whitening key = k0 XOR k1
-    const kw = k0.map((v, i) => (v ^ k1[i]) & (is64 ? 0xF : 0xFF))
+    // Bundle key: split into two halves k0, k1 for 64-bit variant; use full 128-bit key for 128-bit variant
+    const k0 = is64 ? kBytes.slice(0, 16) : [...kBytes]
+    const k1 = is64 ? kBytes.slice(16, 32) : [...kBytes]
+    const kw = is64 ? k0.map((v, i) => (v ^ k1[i]) & 0xF) : [...kBytes]
 
     const steps: CipherStep[] = []
 

@@ -45,16 +45,17 @@ function gfPow(base: number, exp: number): number {
     return res
 }
 
-// SHARK S-Box: Inverse in GF(2^8) followed by affine transform (simplified representation)
+// SHARK S-Box: Inverse in GF(2^8) followed by affine transform (bijective over GF(2^8))
 const S_BOX: number[] = new Array(256).fill(0)
-S_BOX[0] = 0x63 // Map 0 to a non-zero constant
-for (let i = 1; i < 256; i++) {
-    // Compute multiplicative inverse in GF(2^8) with poly 0x11D
-    let inv = 1
-    for (let j = 0; j < 254; j++) inv = gfMul(inv, i)
+for (let i = 0; i < 256; i++) {
+    let inv = 0
+    if (i !== 0) {
+        inv = 1
+        for (let j = 0; j < 254; j++) inv = gfMul(inv, i)
+    }
 
     // Affine transformation (distinct from AES to ensure divergence)
-    let c = inv
+    const c = inv
     let out = 0
     for (let bit = 0; bit < 8; bit++) {
         const b = ((c >> bit) & 1) ^ ((c >> ((bit + 1) % 8)) & 1) ^ ((c >> ((bit + 3) % 8)) & 1) ^ 1
@@ -78,16 +79,16 @@ const MDS_MATRIX: number[][] = [
     [3, 1, 1, 1, 1, 1, 1, 2]
 ]
 
-// Inverse MDS Matrix (computed for decryption)
+// Exact Inverse MDS Matrix computed over GF(2^8) with poly 0x11D
 const INV_MDS_MATRIX: number[][] = [
-    [14, 11, 13, 9, 9, 13, 11, 14],
-    [14, 14, 11, 13, 9, 9, 13, 11],
-    [11, 14, 14, 11, 13, 9, 9, 13],
-    [13, 11, 14, 14, 11, 13, 9, 9],
-    [9, 13, 11, 14, 14, 11, 13, 9],
-    [9, 9, 13, 11, 14, 14, 11, 13],
-    [13, 9, 9, 13, 11, 14, 14, 11],
-    [11, 13, 9, 9, 13, 11, 14, 14]
+    [0xfe, 0xab, 0xcd, 0x89, 0xf1, 0xa1, 0xc1, 0x81],
+    [0x81, 0xfe, 0xab, 0xcd, 0x89, 0xf1, 0xa1, 0xc1],
+    [0xc1, 0x81, 0xfe, 0xab, 0xcd, 0x89, 0xf1, 0xa1],
+    [0xa1, 0xc1, 0x81, 0xfe, 0xab, 0xcd, 0x89, 0xf1],
+    [0xf1, 0xa1, 0xc1, 0x81, 0xfe, 0xab, 0xcd, 0x89],
+    [0x89, 0xf1, 0xa1, 0xc1, 0x81, 0xfe, 0xab, 0xcd],
+    [0xcd, 0x89, 0xf1, 0xa1, 0xc1, 0x81, 0xfe, 0xab],
+    [0xab, 0xcd, 0x89, 0xf1, 0xa1, 0xc1, 0x81, 0xfe]
 ]
 
 function parseHex(s: string, lbl: string): number[] {
@@ -164,14 +165,14 @@ function sharkCore(input: string, key: string, doDecrypt: boolean, instrument: b
             for (let i = 0; i < 8; i++) state[i] = S_BOX[state[i]]
             for (let i = 0; i < 8; i++) state[i] ^= roundKeys[6][i]
         } else {
-            // Decryption
+            // Decryption: exact inverse of SPN encryption
             for (let i = 0; i < 8; i++) state[i] ^= roundKeys[6][i]
             for (let i = 0; i < 8; i++) state[i] = S_BOX_INV[state[i]]
 
             for (let r = 5; r >= 0; r--) {
-                for (let i = 0; i < 8; i++) state[i] = S_BOX_INV[state[i]]
-                state = mixColumns(state, INV_MDS_MATRIX)
                 for (let i = 0; i < 8; i++) state[i] ^= roundKeys[r][i]
+                state = mixColumns(state, INV_MDS_MATRIX)
+                for (let i = 0; i < 8; i++) state[i] = S_BOX_INV[state[i]]
             }
         }
 

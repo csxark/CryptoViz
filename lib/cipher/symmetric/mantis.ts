@@ -97,7 +97,7 @@ function nibblesToBytes(nibbles: number[]): number[] {
 function mantisCore(input: string, key: string, tweak: string, variant: number, doDecrypt: boolean): CipherResult {
     const start = performance.now()
     const keyBytes = parseHex(key, 'MANTIS key')
-    if (keyBytes.length !== 16) throw new CipherError('INVALID_KEY_LENGTH', 'Key must be 128 bits (16 bytes).')
+    if (keyBytes.length !== 16) throw new CipherError('INVALID_KEY_LENGTH', 'INVALID_KEY_LENGTH: Key must be 128 bits (16 bytes).')
 
     const tweakBytes = parseHex(tweak || '0000000000000000', 'MANTIS tweak')
     if (tweakBytes.length !== 8) throw new CipherError('INVALID_INPUT', 'Tweak must be 64 bits (8 bytes).')
@@ -131,17 +131,9 @@ function mantisCore(input: string, key: string, tweak: string, variant: number, 
         mixColumn(state)
     }
 
-    // Middle layer
+    // Middle layer (involutive)
     subCells(state, false)
-    addConstants(state, RC[0])
-    // Middle key addition: k1 ^ alpha(k0)
-    const alphaK0 = [...k0]
-    // 1-bit right rotation of 64-bit k0 (simplified nibble shift for visualizer)
-    const carry = alphaK0[15] & 1
-    for (let i = 15; i > 0; i--) alphaK0[i] = u4((alphaK0[i] >> 1) | ((alphaK0[i - 1] & 1) << 3))
-    alphaK0[0] = u4((alphaK0[0] >> 1) | (carry << 3))
-
-    for (let i = 0; i < 16; i++) state[i] = u4(state[i] ^ useK1[i] ^ alphaK0[i])
+    mixColumn(state)
     subCells(state, true)
 
     // Backward pass

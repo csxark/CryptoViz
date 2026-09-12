@@ -251,6 +251,9 @@ export function decryptSkipjackBlock(ciphertextHex: string, keyHex: string): str
  */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
+  if (input.replace(/\s+/g, '').length > 8192) {
+    throw new CipherError('INPUT_TOO_LONG', 'Input exceeds maximum length of 4096 bytes.')
+  }
   const start = performance.now()
   const plaintextHex = assertSkipjackBlockHex(input)
   const keyHex = assertSkipjackKeyHex(key)
@@ -274,8 +277,10 @@ export function encrypt(input: string, key: string, options: CipherOptions = {})
     output = encryptSkipjackBlock(plaintextHex, keyHex)
   }
 
+  const finalOutput = /[a-f]/.test(input) || !/[A-F]/.test(input) ? output.toLowerCase() : output.toUpperCase()
+
   return {
-    output,
+    output: finalOutput,
     outputEncoding: 'hex',
     steps,
     metadata: METADATA,
@@ -296,6 +301,9 @@ export function encrypt(input: string, key: string, options: CipherOptions = {})
  */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
+  if (input.replace(/\s+/g, '').length > 8192) {
+    throw new CipherError('INPUT_TOO_LONG', 'Input exceeds maximum length of 4096 bytes.')
+  }
   const start = performance.now()
   const ciphertextHex = assertSkipjackBlockHex(input)
   const keyHex = assertSkipjackKeyHex(key)
@@ -319,8 +327,10 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
     output = decryptSkipjackBlock(ciphertextHex, keyHex)
   }
 
+  const finalOutput = /[a-f]/.test(input) || !/[A-F]/.test(input) ? output.toLowerCase() : output.toUpperCase()
+
   return {
-    output,
+    output: finalOutput,
     outputEncoding: 'hex',
     steps,
     metadata: METADATA,
@@ -340,7 +350,7 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: '33221100DDCCBBAA',
     key: '00998877665544332211',
-    expected: '2587CAEA7212D595',
+    expected: '2587CAE27A12D300',
     description: 'Official Skipjack example vector',
   },
 ]

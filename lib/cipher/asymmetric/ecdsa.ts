@@ -111,7 +111,7 @@ function signCore(message: string, privateKeyHex: string, instrument: boolean): 
 
   const pubKey = secp256k1.getPublicKey(privKey)
   const msgHash = sha256(toByteArray(message, 'utf8'))
-  const sigHex = normalizeSignature(secp256k1.sign(msgHash, privKey))
+  const sigHex = normalizeSignature(secp256k1.sign(msgHash, privKey, { prehash: false }))
 
   if (instrument) {
     steps.push({
@@ -162,7 +162,7 @@ function verifyCore(message: string, publicKeyAndSig: string, instrument: boolea
   const msgHash = sha256(toByteArray(message, 'utf8'))
 
   const steps: CipherStep[] = []
-  const valid = secp256k1.verify(toByteArray(sigHex, 'hex'), msgHash, pubKey)
+  const valid = secp256k1.verify(toByteArray(sigHex, 'hex'), msgHash, pubKey, { prehash: false })
 
   if (instrument) {
     steps.push({
@@ -230,7 +230,7 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'hello ECSoC26',
     key: '0101010101010101010101010101010101010101010101010101010101010101',
-    expected: 'cdcbfa9166f2127202fa48135bd05cd906d200ce8fcbc16aef7fc5b7eb9a0ea62dfedae620efbd43aa3f47e30d170a4efc8c104443ee9e5595cce2ef0ddce707',
+    expected: 'e7df51be0ee1b23cf905de493e8c25277e62cef794a4bd65823d884110c193704868300eadfd29ecfa830df4f99b4640a81c3d66db5c74ffeaf4ebd76d9faab0',
     description: 'Deterministic ECDSA (secp256k1) signature of "hello ECSoC26"',
   },
 ]

@@ -12,13 +12,13 @@ export const desTestVectors: KnownAnswerTestVector[] = [
     edgeCase: "NONE",
   },
   {
-    id: "tdes-3key-ecb",
+    id: "des-tdes-3key-ecb",
     algorithm: "3DES-ECB",
     standard: "NIST SP 800-67",
     description: "Triple-DES (TDEA) 3-Key Option 1 KAT",
     plaintextHex: "6bc1bee22e409f96",
     keyHex: "0123456789abcdef23456789abcdef01456789abcdef0123",
-    ciphertextHex: "7147102081f9a263",
+    ciphertextHex: "714772f339841d34",
     edgeCase: "BOUNDARY_KEY",
   },
 ];

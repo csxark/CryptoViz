@@ -262,7 +262,8 @@ export default function CipherSandbox() {
             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Rounds:</span>
             <input
               type="number"
-              min={1}
+              aria-label="Number of rounds"
+                 min={1}
               max={10}
               value={rounds}
               onChange={(e) => setRounds(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
@@ -272,6 +273,7 @@ export default function CipherSandbox() {
 
           <button
             onClick={() => setDirection(direction === 'encrypt' ? 'decrypt' : 'encrypt')}
+            aria-label={`Switch to ${direction === 'encrypt' ? 'decryption' : 'encryption'} mode`}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
               direction === 'encrypt'
                 ? 'bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600'
@@ -301,6 +303,7 @@ export default function CipherSandbox() {
                 {/* Add Stage Dropdown Menu */}
                 <div className="relative inline-block text-left">
                   <select
+                    aria-label="Add stage"
                     onChange={(e) => {
                       if (e.target.value) {
                         const [cat, sub] = e.target.value.split(':')
@@ -359,6 +362,7 @@ export default function CipherSandbox() {
                       <div className="flex items-center gap-3">
                         <input
                           type="checkbox"
+                          aria-label={`Enable stage ${idx + 1}`}
                           checked={stage.enabled}
                           onChange={() => handleToggleStage(idx)}
                           className="h-4 w-4 rounded border-zinc-300 text-teal-600 focus:ring-teal-500"
@@ -377,6 +381,7 @@ export default function CipherSandbox() {
                         <button
                           onClick={() => handleMoveStage(idx, 'up')}
                           disabled={idx === 0}
+                          aria-label="Move stage up"
                           className="rounded p-1 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                           title="Move stage up"
                         >
@@ -385,6 +390,7 @@ export default function CipherSandbox() {
                         <button
                           onClick={() => handleMoveStage(idx, 'down')}
                           disabled={idx === stages.length - 1}
+                          aria-label="Move stage down"
                           className="rounded p-1 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                           title="Move stage down"
                         >
@@ -392,6 +398,7 @@ export default function CipherSandbox() {
                         </button>
                         <button
                           onClick={() => handleRemoveStage(idx)}
+                          aria-label={`Remove stage ${idx + 1}`}
                           className="rounded p-1 text-red-500 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950/50"
                           title="Delete stage"
                         >
@@ -613,7 +620,8 @@ export default function CipherSandbox() {
                     setCopied(true)
                     setTimeout(() => setCopied(false), 2000)
                   }}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-300"
+                  aria-label="Copy output"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-300"
                 >
                   <Copy className="h-3.5 w-3.5" />
                   {copied ? 'Copied!' : 'Copy Result'}
@@ -649,6 +657,7 @@ export default function CipherSandbox() {
             <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
               <button
                 onClick={() => setActiveTab('trace')}
+                aria-label="Show step trace"
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
                   activeTab === 'trace'
                     ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400'
@@ -661,6 +670,7 @@ export default function CipherSandbox() {
 
               <button
                 onClick={() => setActiveTab('metrics')}
+                aria-label="Show security metrics"
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
                   activeTab === 'metrics'
                     ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400'
@@ -673,6 +683,7 @@ export default function CipherSandbox() {
 
               <button
                 onClick={() => setActiveTab('export')}
+                aria-label="Show export and import"
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
                   activeTab === 'export'
                     ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400'
@@ -802,6 +813,7 @@ export default function CipherSandbox() {
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     onClick={handleExportJson}
+                    aria-label="Copy pipeline JSON"
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-teal-700 transition-all"
                   >
                     <Copy className="h-4 w-4" />

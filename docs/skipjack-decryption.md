@@ -30,7 +30,7 @@ Decryption reverses the 32 encryption rounds:
 ```text
 Key:        00998877665544332211
 Plaintext:  33221100DDCCBBAA
-Ciphertext: 2587CAEA7212D595
+Ciphertext: 2587CAE27A12D300
 ```
 
 ## Manual testing

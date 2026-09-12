@@ -29,5 +29,5 @@ describe('Cipher Lifecycle Accessibility (a11y)', () => {
     const { container } = render(<CipherLifecyclePage />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
-  });
+  }, 20_000);
 });

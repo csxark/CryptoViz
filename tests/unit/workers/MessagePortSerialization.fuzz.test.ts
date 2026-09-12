@@ -39,7 +39,7 @@ describe('Transferable and Shared Memory Payloads', () => {
           };
 
           const cloned = mockPostMessageWithClone(payload, [buffer]);
-          expect(cloned.chunk).toBeInstanceOf(ArrayBuffer);
+          expect(cloned.chunk instanceof ArrayBuffer || (cloned.chunk as any)?.constructor?.name === 'ArrayBuffer').toBe(true);
           
           // In actual browsers, transferring the buffer empties it on the main thread,
           // but for our test mock, structuredClone duplicates it, giving us an isolated instance

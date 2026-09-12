@@ -1,13 +1,8 @@
 /**
- * ARIA — Korean National Security Research Institute, 2003.
- * KS X 1213, RFC 5794. 128-bit block, 128/192/256-bit key.
- * AES-like SPN but with alternating involutional S-box pairs (SB1/SB2)
- * and a pure GF(2) involutional diffusion matrix A.
- *
- * Test vector (RFC 5794 Section 3, 128-bit key):
- * key = 000102030405060708090a0b0c0d0e0f
- * pt  = 00112233445566778899aabbccddeeff
- * ct  = d718fbd6ab644c739da95f3be6451778
+ * ARIA — Korean National Standard Block Cipher (KS X 1213, RFC 5794).
+ * 128-bit block size with 128-, 192-, or 256-bit key size.
+ * Uses alternating substitution layers (SL1 and SL2), involutional diffusion matrix A over GF(2),
+ * and 3-round Feistel-based key expansion.
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput, validateKey } from '../../utils'
@@ -23,7 +18,7 @@ const METADATA: CipherMetadata = {
     standardBody: 'KS X 1213; RFC 5794',
 }
 
-// SB1: Standard AES S-box
+// S-box SB1 (RFC 5794 Section 2.4.2)
 const SB1: number[] = [
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -40,79 +35,110 @@ const SB1: number[] = [
     0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a,
     0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
     0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
-    0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+    0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16,
 ]
 
-// SB2: ARIA-specific involutional S-box
+// S-box SB2 (RFC 5794 Section 2.4.2)
 const SB2: number[] = [
-    0xe2, 0x4e, 0x54, 0xfc, 0x3c, 0x8a, 0xa2, 0x1a, 0xd6, 0xc0, 0x5b, 0x9d, 0x7a, 0x8d, 0x40, 0x9b,
-    0x6c, 0x12, 0x23, 0xb4, 0xe5, 0xa4, 0x0b, 0x33, 0x15, 0x72, 0xf8, 0x95, 0x58, 0x39, 0x6d, 0x04,
-    0x5a, 0x9e, 0x7b, 0x2d, 0x8e, 0xf2, 0x0a, 0xc5, 0x8b, 0x9f, 0xb7, 0x22, 0x06, 0x3b, 0x5e, 0x1d,
-    0xd4, 0x45, 0x6a, 0x8c, 0xc1, 0x76, 0x2e, 0x9a, 0x4b, 0x1f, 0x05, 0x8f, 0xb2, 0x7c, 0x5f, 0x6e,
-    0x4f, 0x94, 0x3a, 0x67, 0xc6, 0x73, 0x87, 0x01, 0x51, 0x9c, 0x2a, 0x62, 0xe6, 0x21, 0x46, 0xb5,
-    0xa6, 0x30, 0x07, 0x18, 0xd8, 0x53, 0x37, 0x49, 0xa8, 0x2b, 0xa5, 0x09, 0x26, 0x97, 0x31, 0x89,
-    0x10, 0xc4, 0xd0, 0x11, 0x80, 0xe3, 0x00, 0x2f, 0x83, 0x63, 0x59, 0xe8, 0x74, 0x20, 0x66, 0x56,
-    0x91, 0x3e, 0x43, 0xd1, 0x16, 0x60, 0x85, 0x50, 0x81, 0xf7, 0x6b, 0x42, 0x92, 0x0c, 0x79, 0x5c,
-    0x29, 0xf4, 0x99, 0xda, 0x6f, 0x2c, 0x47, 0x1b, 0x14, 0x96, 0x68, 0x41, 0x57, 0x38, 0x6e, 0xc7,
-    0xa7, 0xc8, 0xb6, 0x0f, 0xf1, 0x4d, 0x35, 0x13, 0x82, 0x69, 0x84, 0x70, 0xc9, 0xba, 0x28, 0x93,
-    0x86, 0x71, 0xf0, 0xdd, 0x36, 0xab, 0x27, 0x98, 0x7f, 0x03, 0xa1, 0xa9, 0xb9, 0xc2, 0xb8, 0x52,
-    0x75, 0x34, 0x78, 0x48, 0x55, 0xad, 0x02, 0x4a, 0x64, 0x0e, 0x19, 0x88, 0x90, 0xbf, 0xb0, 0x3d,
-    0xa3, 0xc3, 0x24, 0xed, 0xcb, 0x4c, 0x32, 0xf9, 0xdc, 0x1c, 0xbe, 0x17, 0x77, 0xbc, 0xef, 0x08,
-    0xa0, 0x7e, 0x5d, 0x61, 0xfa, 0xe0, 0xfd, 0xaf, 0xfe, 0xd5, 0x1e, 0x3f, 0xd3, 0x65, 0x44, 0x25,
-    0x8a, 0x1a, 0xce, 0xf6, 0xb3, 0xec, 0xf3, 0xbd, 0x9e, 0x23, 0xd9, 0xe9, 0xc8, 0x5b, 0xa5, 0x46, // Note: minor overlap in spec representation, using verified table
-    0xe1, 0xb1, 0xe4, 0xcd, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2
+    0xe2, 0x4e, 0x54, 0xfc, 0x94, 0xc2, 0x4a, 0xcc, 0x62, 0x0d, 0x6a, 0x46, 0x3c, 0x4d, 0x8b, 0xd1,
+    0x5e, 0xfa, 0x64, 0xcb, 0xb4, 0x97, 0xbe, 0x2b, 0xbc, 0x77, 0x2e, 0x03, 0xd3, 0x19, 0x59, 0xc1,
+    0x1d, 0x06, 0x41, 0x6b, 0x55, 0xf0, 0x99, 0x69, 0xea, 0x9c, 0x18, 0xae, 0x63, 0xdf, 0xe7, 0xbb,
+    0x00, 0x73, 0x66, 0xfb, 0x96, 0x4c, 0x85, 0xe4, 0x3a, 0x09, 0x45, 0xaa, 0x0f, 0xee, 0x10, 0xeb,
+    0x2d, 0x7f, 0xf4, 0x29, 0xac, 0xcf, 0xad, 0x91, 0x8d, 0x78, 0xc8, 0x95, 0xf9, 0x2f, 0xce, 0xcd,
+    0x08, 0x7a, 0x88, 0x38, 0x5c, 0x83, 0x2a, 0x28, 0x47, 0xdb, 0xb8, 0xc7, 0x93, 0xa4, 0x12, 0x53,
+    0xff, 0x87, 0x0e, 0x31, 0x36, 0x21, 0x58, 0x48, 0x01, 0x8e, 0x37, 0x74, 0x32, 0xca, 0xe9, 0xb1,
+    0xb7, 0xab, 0x0c, 0xd7, 0xc4, 0x56, 0x42, 0x26, 0x07, 0x98, 0x60, 0xd9, 0xb6, 0xb9, 0x11, 0x40,
+    0xec, 0x20, 0x8c, 0xbd, 0xa0, 0xc9, 0x84, 0x04, 0x49, 0x23, 0xf1, 0x4f, 0x50, 0x1f, 0x13, 0xdc,
+    0xd8, 0xc0, 0x9e, 0x57, 0xe3, 0xc3, 0x7b, 0x65, 0x3b, 0x02, 0x8f, 0x3e, 0xe8, 0x25, 0x92, 0xe5,
+    0x15, 0xdd, 0xfd, 0x17, 0xa9, 0xbf, 0xd4, 0x9a, 0x7e, 0xc5, 0x39, 0x67, 0xfe, 0x76, 0x9d, 0x43,
+    0xa7, 0xe1, 0xd0, 0xf5, 0x68, 0xf2, 0x1b, 0x34, 0x70, 0x05, 0xa3, 0x8a, 0xd5, 0x79, 0x86, 0xa8,
+    0x30, 0xc6, 0x51, 0x4b, 0x1e, 0xa6, 0x27, 0xf6, 0x35, 0xd2, 0x6e, 0x24, 0x16, 0x82, 0x5f, 0xda,
+    0xe6, 0x75, 0xa2, 0xef, 0x2c, 0xb2, 0x1c, 0x9f, 0x5d, 0x6f, 0x80, 0x0a, 0x72, 0x44, 0x9b, 0x6c,
+    0x90, 0x0b, 0x5b, 0x33, 0x7d, 0x5a, 0x52, 0xf3, 0x61, 0xa1, 0xf7, 0xb0, 0xd6, 0x3f, 0x7c, 0x6d,
+    0xed, 0x14, 0xe0, 0xa5, 0x3d, 0x22, 0xb3, 0xf8, 0x89, 0xde, 0x71, 0x1a, 0xaf, 0xba, 0xb5, 0x81,
 ]
-// Note: In a full production implementation, the exact 256 bytes of SB2 from RFC 5794 Appendix A 
-// must be pasted here. The above is a representative structure.
 
-// Inverse tables generated at runtime or hardcoded. For LoC and performance, we hardcode them.
-const SB1_INV = new Array(256).fill(0)
-const SB2_INV = new Array(256).fill(0)
-for (let i = 0; i < 256; i++) {
-    SB1_INV[SB1[i]] = i
-    SB2_INV[SB2[i]] = i
+// S-box SB3 (RFC 5794 Section 2.4.2 — inverse of SB1)
+const SB3: number[] = [
+    0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
+    0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
+    0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
+    0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25,
+    0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92,
+    0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84,
+    0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06,
+    0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b,
+    0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73,
+    0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e,
+    0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b,
+    0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4,
+    0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f,
+    0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
+    0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
+    0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d,
+]
+
+// S-box SB4 (RFC 5794 Section 2.4.2 — inverse of SB2)
+const SB4: number[] = [
+    0x30, 0x68, 0x99, 0x1b, 0x87, 0xb9, 0x21, 0x78, 0x50, 0x39, 0xdb, 0xe1, 0x72, 0x09, 0x62, 0x3c,
+    0x3e, 0x7e, 0x5e, 0x8e, 0xf1, 0xa0, 0xcc, 0xa3, 0x2a, 0x1d, 0xfb, 0xb6, 0xd6, 0x20, 0xc4, 0x8d,
+    0x81, 0x65, 0xf5, 0x89, 0xcb, 0x9d, 0x77, 0xc6, 0x57, 0x43, 0x56, 0x17, 0xd4, 0x40, 0x1a, 0x4d,
+    0xc0, 0x63, 0x6c, 0xe3, 0xb7, 0xc8, 0x64, 0x6a, 0x53, 0xaa, 0x38, 0x98, 0x0c, 0xf4, 0x9b, 0xed,
+    0x7f, 0x22, 0x76, 0xaf, 0xdd, 0x3a, 0x0b, 0x58, 0x67, 0x88, 0x06, 0xc3, 0x35, 0x0d, 0x01, 0x8b,
+    0x8c, 0xc2, 0xe6, 0x5f, 0x02, 0x24, 0x75, 0x93, 0x66, 0x1e, 0xe5, 0xe2, 0x54, 0xd8, 0x10, 0xce,
+    0x7a, 0xe8, 0x08, 0x2c, 0x12, 0x97, 0x32, 0xab, 0xb4, 0x27, 0x0a, 0x23, 0xdf, 0xef, 0xca, 0xd9,
+    0xb8, 0xfa, 0xdc, 0x31, 0x6b, 0xd1, 0xad, 0x19, 0x49, 0xbd, 0x51, 0x96, 0xee, 0xe4, 0xa8, 0x41,
+    0xda, 0xff, 0xcd, 0x55, 0x86, 0x36, 0xbe, 0x61, 0x52, 0xf8, 0xbb, 0x0e, 0x82, 0x48, 0x69, 0x9a,
+    0xe0, 0x47, 0x9e, 0x5c, 0x04, 0x4b, 0x34, 0x15, 0x79, 0x26, 0xa7, 0xde, 0x29, 0xae, 0x92, 0xd7,
+    0x84, 0xe9, 0xd2, 0xba, 0x5d, 0xf3, 0xc5, 0xb0, 0xbf, 0xa4, 0x3b, 0x71, 0x44, 0x46, 0x2b, 0xfc,
+    0xeb, 0x6f, 0xd5, 0xf6, 0x14, 0xfe, 0x7c, 0x70, 0x5a, 0x7d, 0xfd, 0x2f, 0x18, 0x83, 0x16, 0xa5,
+    0x91, 0x1f, 0x05, 0x95, 0x74, 0xa9, 0xc1, 0x5b, 0x4a, 0x85, 0x6d, 0x13, 0x07, 0x4f, 0x4e, 0x45,
+    0xb2, 0x0f, 0xc9, 0x1c, 0xa6, 0xbc, 0xec, 0x73, 0x90, 0x7b, 0xcf, 0x59, 0x8f, 0xa1, 0xf9, 0x2d,
+    0xf2, 0xb1, 0x00, 0x94, 0x37, 0x9f, 0xd0, 0x2e, 0x9c, 0x6e, 0x28, 0x3f, 0x80, 0xf0, 0x3d, 0xd3,
+    0x25, 0x8a, 0xb5, 0xe7, 0x42, 0xb3, 0xc7, 0xea, 0xf7, 0x4c, 0x11, 0x33, 0x03, 0xa2, 0xac, 0x60,
+]
+
+// Diffusion Layer A (RFC 5794 Section 2.4.3 - Involutional GF(2) matrix)
+function diffusionA(x: Uint8Array): Uint8Array {
+    const y = new Uint8Array(16)
+    y[0]  = x[3] ^ x[4] ^ x[6] ^ x[8]  ^ x[9]  ^ x[13] ^ x[14]
+    y[1]  = x[2] ^ x[5] ^ x[7] ^ x[8]  ^ x[9]  ^ x[12] ^ x[15]
+    y[2]  = x[1] ^ x[4] ^ x[6] ^ x[10] ^ x[11] ^ x[12] ^ x[15]
+    y[3]  = x[0] ^ x[5] ^ x[7] ^ x[10] ^ x[11] ^ x[13] ^ x[14]
+    y[4]  = x[0] ^ x[2] ^ x[5] ^ x[8]  ^ x[11] ^ x[14] ^ x[15]
+    y[5]  = x[1] ^ x[3] ^ x[4] ^ x[9]  ^ x[10] ^ x[14] ^ x[15]
+    y[6]  = x[0] ^ x[2] ^ x[7] ^ x[9]  ^ x[10] ^ x[12] ^ x[13]
+    y[7]  = x[1] ^ x[3] ^ x[6] ^ x[8]  ^ x[11] ^ x[12] ^ x[13]
+    y[8]  = x[0] ^ x[1] ^ x[4] ^ x[7]  ^ x[10] ^ x[13] ^ x[15]
+    y[9]  = x[0] ^ x[1] ^ x[5] ^ x[6]  ^ x[11] ^ x[12] ^ x[14]
+    y[10] = x[2] ^ x[3] ^ x[5] ^ x[6]  ^ x[8]  ^ x[13] ^ x[15]
+    y[11] = x[2] ^ x[3] ^ x[4] ^ x[7]  ^ x[9]  ^ x[12] ^ x[14]
+    y[12] = x[1] ^ x[2] ^ x[6] ^ x[7]  ^ x[9]  ^ x[11] ^ x[12]
+    y[13] = x[0] ^ x[3] ^ x[6] ^ x[7]  ^ x[8]  ^ x[10] ^ x[13]
+    y[14] = x[0] ^ x[3] ^ x[4] ^ x[5]  ^ x[9]  ^ x[11] ^ x[14]
+    y[15] = x[1] ^ x[2] ^ x[4] ^ x[5]  ^ x[8]  ^ x[10] ^ x[15]
+    return y
 }
 
-// Diffusion Layer A (Involutional GF(2) matrix)
-// A(A(x)) = x. Implemented as specific XOR combinations of bytes.
-function diffusionA(s: Uint8Array): Uint8Array {
-    const out = new Uint8Array(16)
-    out[0] = s[3] ^ s[4] ^ s[6] ^ s[8] ^ s[9] ^ s[13] ^ s[14]
-    out[1] = s[2] ^ s[5] ^ s[7] ^ s[8] ^ s[9] ^ s[12] ^ s[15]
-    out[2] = s[1] ^ s[4] ^ s[6] ^ s[10] ^ s[11] ^ s[12] ^ s[15]
-    out[3] = s[0] ^ s[5] ^ s[7] ^ s[10] ^ s[11] ^ s[13] ^ s[14]
-    out[4] = s[0] ^ s[2] ^ s[5] ^ s[8] ^ s[11] ^ s[14] ^ s[15]
-    out[5] = s[1] ^ s[3] ^ s[4] ^ s[9] ^ s[10] ^ s[14] ^ s[15]
-    out[6] = s[0] ^ s[2] ^ s[7] ^ s[9] ^ s[10] ^ s[12] ^ s[13]
-    out[7] = s[1] ^ s[3] ^ s[6] ^ s[8] ^ s[11] ^ s[12] ^ s[13]
-    out[8] = s[0] ^ s[1] ^ s[4] ^ s[7] ^ s[10] ^ s[13] ^ s[15]
-    out[9] = s[0] ^ s[1] ^ s[5] ^ s[6] ^ s[11] ^ s[12] ^ s[14]
-    out[10] = s[2] ^ s[3] ^ s[5] ^ s[6] ^ s[8] ^ s[13] ^ s[15]
-    out[11] = s[2] ^ s[3] ^ s[4] ^ s[7] ^ s[9] ^ s[12] ^ s[14]
-    out[12] = s[1] ^ s[2] ^ s[6] ^ s[11] ^ s[12] ^ s[14] ^ s[15]
-    out[13] = s[0] ^ s[3] ^ s[7] ^ s[10] ^ s[13] ^ s[14] ^ s[15]
-    out[14] = s[0] ^ s[3] ^ s[4] ^ s[9] ^ s[12] ^ s[14] ^ s[15] // Simplified representation
-    out[15] = s[1] ^ s[2] ^ s[5] ^ s[8] ^ s[13] ^ s[14] ^ s[15] // of the exact RFC matrix
-    return out
+// Substitution Layer SL1 (RFC 5794 Section 2.4.2)
+function SL1(x: Uint8Array): Uint8Array {
+    const y = new Uint8Array(16)
+    y[0] = SB1[x[0]]; y[1] = SB2[x[1]]; y[2] = SB3[x[2]]; y[3] = SB4[x[3]]
+    y[4] = SB1[x[4]]; y[5] = SB2[x[5]]; y[6] = SB3[x[6]]; y[7] = SB4[x[7]]
+    y[8] = SB1[x[8]]; y[9] = SB2[x[9]]; y[10] = SB3[x[10]]; y[11] = SB4[x[11]]
+    y[12] = SB1[x[12]]; y[13] = SB2[x[13]]; y[14] = SB3[x[14]]; y[15] = SB4[x[15]]
+    return y
 }
 
-function parseHex(s: string, lbl: string): Uint8Array {
-    const c = s.replace(/\s+/g, '').toLowerCase()
-    if (!/^[0-9a-f]*$/.test(c) || c.length % 2 !== 0) throw new CipherError('INVALID_INPUT', `${lbl} must be hex.`)
-    const o = new Uint8Array(c.length / 2)
-    for (let i = 0; i < o.length; i++) o[i] = parseInt(c.slice(i * 2, i * 2 + 2), 16)
-    return o
+// Substitution Layer SL2 (RFC 5794 Section 2.4.2)
+function SL2(x: Uint8Array): Uint8Array {
+    const y = new Uint8Array(16)
+    y[0] = SB3[x[0]]; y[1] = SB4[x[1]]; y[2] = SB1[x[2]]; y[3] = SB2[x[3]]
+    y[4] = SB3[x[4]]; y[5] = SB4[x[5]]; y[6] = SB1[x[6]]; y[7] = SB2[x[7]]
+    y[8] = SB3[x[8]]; y[9] = SB4[x[9]]; y[10] = SB1[x[10]]; y[11] = SB2[x[11]]
+    y[12] = SB3[x[12]]; y[13] = SB4[x[13]]; y[14] = SB1[x[14]]; y[15] = SB2[x[15]]
+    return y
 }
-
-function toHex(b: Uint8Array): string {
-    return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('')
-}
-
-// Key Schedule Constants C1, C2, C3, C4 (128-bit each)
-const C1 = parseHex('517cc1b727220a94fe13abe8fa9a6ee0', 'C1')
-const C2 = parseHex('6db14acc9e21c820ff28b1d5af5de0d5', 'C2')
-const C3 = parseHex('70421d0c0d0fa1e89c6c0b0d0d0a0b0c', 'C3') // Simplified
-const C4 = parseHex('80000000000000000000000000000000', 'C4')
 
 function xor128(a: Uint8Array, b: Uint8Array): Uint8Array {
     const out = new Uint8Array(16)
@@ -120,108 +146,203 @@ function xor128(a: Uint8Array, b: Uint8Array): Uint8Array {
     return out
 }
 
-function rot128(a: Uint8Array, n: number): Uint8Array {
-    const out = new Uint8Array(16)
-    const byteShift = Math.floor(n / 8)
-    const bitShift = n % 8
+function roundFO(d: Uint8Array, rk: Uint8Array): Uint8Array {
+    return diffusionA(SL1(xor128(d, rk)))
+}
+
+function roundFE(d: Uint8Array, rk: Uint8Array): Uint8Array {
+    return diffusionA(SL2(xor128(d, rk)))
+}
+
+function rotRight128(bytes: Uint8Array, n: number): Uint8Array {
+    let val = 0n
     for (let i = 0; i < 16; i++) {
-        const idx1 = (i + byteShift) % 16
-        const idx2 = (i + byteShift + 1) % 16
-        out[i] = ((a[idx1] << bitShift) | (a[idx2] >>> (8 - bitShift))) & 0xff
+        val = (val << 8n) | BigInt(bytes[i])
+    }
+    const bn = BigInt(n)
+    const mask = (1n << 128n) - 1n
+    const rot = ((val >> bn) | (val << (128n - bn))) & mask
+    const out = new Uint8Array(16)
+    for (let i = 15; i >= 0; i--) {
+        out[i] = Number((rot >> BigInt((15 - i) * 8)) & 0xffn)
     }
     return out
 }
 
-function keySchedule(keyBytes: Uint8Array): Uint8Array[] {
-    const KL = keyBytes.slice(0, 16)
-    const KR = keyBytes.length > 16 ? keyBytes.slice(16, 32) : new Uint8Array(16)
-
-    // W0, W1, W2, W3 derivation
-    const W0 = KL
-    const W1 = xor128(KL, rot128(xor128(KR, C1), 19))
-    const W2 = xor128(KR, rot128(xor128(W1, C2), 19))
-    const W3 = xor128(W1, rot128(xor128(W2, C3), 19))
-
-    const rounds = keyBytes.length === 16 ? 12 : keyBytes.length === 24 ? 14 : 16
-    const ek: Uint8Array[] = []
-
-    for (let i = 0; i <= rounds; i++) {
-        const kr = rot128(W0, 19 * ((i + 0) % 4))
-        const kl = rot128(W1, 19 * ((i + 1) % 4))
-        // Simplified round key extraction for demonstration
-        ek.push(xor128(kr, kl))
+function rotLeft128(bytes: Uint8Array, n: number): Uint8Array {
+    let val = 0n
+    for (let i = 0; i < 16; i++) {
+        val = (val << 8n) | BigInt(bytes[i])
     }
-    return ek
+    const bn = BigInt(n)
+    const mask = (1n << 128n) - 1n
+    const rot = ((val << bn) | (val >> (128n - bn))) & mask
+    const out = new Uint8Array(16)
+    for (let i = 15; i >= 0; i--) {
+        out[i] = Number((rot >> BigInt((15 - i) * 8)) & 0xffn)
+    }
+    return out
+}
+
+// 128-bit constants (RFC 5794 Section 2.2)
+const C1 = parseHex('517cc1b727220a94fe13abe8fa9a6ee0', 'C1')
+const C2 = parseHex('6db14acc9e21c820ff28b1d5ef5de2b0', 'C2')
+const C3 = parseHex('db92371d2126e9700324977504e8c90e', 'C3')
+
+function keySchedule(keyBytes: Uint8Array): { ek: Uint8Array[]; dk: Uint8Array[]; rounds: number } {
+    const klen = keyBytes.length
+    const KL = keyBytes.slice(0, 16)
+    let KR: Uint8Array
+    let CK1: Uint8Array, CK2: Uint8Array, CK3: Uint8Array
+    let rounds: number
+
+    if (klen === 16) {
+        KR = new Uint8Array(16)
+        CK1 = C1; CK2 = C2; CK3 = C3
+        rounds = 12
+    } else if (klen === 24) {
+        KR = new Uint8Array(16)
+        KR.set(keyBytes.slice(16, 24), 0)
+        CK1 = C2; CK2 = C3; CK3 = C1
+        rounds = 14
+    } else if (klen === 32) {
+        KR = keyBytes.slice(16, 32)
+        CK1 = C3; CK2 = C1; CK3 = C2
+        rounds = 16
+    } else {
+        throw new CipherError('INVALID_KEY_LENGTH', `ARIA key must be 128, 192, or 256 bits (${klen * 8} bits provided).`)
+    }
+
+    const W0 = KL
+    const W1 = xor128(roundFO(W0, CK1), KR)
+    const W2 = xor128(roundFE(W1, CK2), W0)
+    const W3 = xor128(roundFO(W2, CK3), W1)
+
+    const fullEk: Uint8Array[] = [
+        xor128(W0, rotRight128(W1, 19)),
+        xor128(W1, rotRight128(W2, 19)),
+        xor128(W2, rotRight128(W3, 19)),
+        xor128(rotRight128(W0, 19), W3),
+        xor128(W0, rotRight128(W1, 31)),
+        xor128(W1, rotRight128(W2, 31)),
+        xor128(W2, rotRight128(W3, 31)),
+        xor128(rotRight128(W0, 31), W3),
+        xor128(W0, rotLeft128(W1, 61)),
+        xor128(W1, rotLeft128(W2, 61)),
+        xor128(W2, rotLeft128(W3, 61)),
+        xor128(rotLeft128(W0, 61), W3),
+        xor128(W0, rotLeft128(W1, 31)),
+        xor128(W1, rotLeft128(W2, 31)),
+        xor128(W2, rotLeft128(W3, 31)),
+        xor128(rotLeft128(W0, 31), W3),
+        xor128(W0, rotLeft128(W1, 19)),
+    ]
+
+    const ek = fullEk.slice(0, rounds + 1)
+
+    // Decryption round keys (RFC 5794 Section 2.2):
+    // dk1 = ek{n+1}
+    // dk2 = A(ek{n}) ... dk{n} = A(ek2)
+    // dk{n+1} = ek1
+    const dk: Uint8Array[] = new Array(rounds + 1)
+    dk[0] = ek[rounds]
+    for (let i = 1; i < rounds; i++) {
+        dk[i] = diffusionA(ek[rounds - i])
+    }
+    dk[rounds] = ek[0]
+
+    return { ek, dk, rounds }
+}
+
+function parseHex(s: string, lbl: string): Uint8Array {
+    const c = s.replace(/\s+/g, '').toLowerCase()
+    if (!/^[0-9a-f]*$/.test(c) || c.length % 2 !== 0) {
+        throw new CipherError('INVALID_INPUT', `${lbl} must be a valid hex string with an even number of digits.`)
+    }
+    const o = new Uint8Array(c.length / 2)
+    for (let i = 0; i < o.length; i++) {
+        o[i] = parseInt(c.slice(i * 2, i * 2 + 2), 16)
+    }
+    return o
+}
+
+function toHex(b: Uint8Array): string {
+    return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
 function ariaCore(input: string, key: string, doDecrypt: boolean, instrument: boolean): CipherResult {
     const start = performance.now()
     validateKey(key)
     const keyBytes = parseHex(key, 'ARIA key')
-    if (![16, 24, 32].includes(keyBytes.length)) throw new CipherError('INVALID_KEY_LENGTH', `ARIA key must be 128, 192, or 256 bits.`)
+    if (![16, 24, 32].includes(keyBytes.length)) {
+        throw new CipherError('INVALID_KEY_LENGTH', `ARIA key must be 128, 192, or 256 bits (${keyBytes.length * 8} bits provided).`)
+    }
     const inBytes = parseHex(input, 'ARIA input')
-    if (inBytes.length === 0 || inBytes.length % 16 !== 0) throw new CipherError('INVALID_INPUT', `ARIA input must be a non-empty multiple of 16 bytes.`)
+    if (inBytes.length === 0 || inBytes.length % 16 !== 0) {
+        throw new CipherError('INVALID_INPUT', `ARIA input must be a non-empty multiple of 16 bytes.`)
+    }
 
-    const roundKeys = keySchedule(keyBytes)
-    const rounds = roundKeys.length - 1
+    const { ek, dk, rounds } = keySchedule(keyBytes)
+    const rk = doDecrypt ? dk : ek
     const numBlocks = inBytes.length / 16
     const outBuf = new Uint8Array(inBytes.length)
     const steps: CipherStep[] = []
 
     if (instrument) {
-        steps.push({ index: 0, label: 'Key schedule', inputState: toHex(keyBytes), outputState: `${rounds + 1} round keys`, note: 'ARIA key schedule uses 3-round Feistel-like mixing with constants C1-C4.', isMilestone: true })
+        steps.push({
+            index: 0,
+            label: 'Key schedule',
+            inputState: toHex(keyBytes),
+            outputState: `${rounds + 1} round keys`,
+            note: `ARIA key schedule (${rounds} rounds) using 3-round Feistel expansion with C1-C3 constants.`,
+            isMilestone: true,
+        })
     }
 
     for (let b = 0; b < numBlocks; b++) {
-        let state: Uint8Array = new Uint8Array(inBytes.slice(b * 16, b * 16 + 16))
+        let state: Uint8Array = inBytes.slice(b * 16, b * 16 + 16)
 
-        for (let r = 0; r < rounds; r++) {
-            // Add Round Key
-            state = xor128(state, roundKeys[r]) as Uint8Array
-
-            // Substitution Layer (Odd/Even alternation)
-            const sub = new Uint8Array(16)
-            const isOdd = (r + 1) % 2 !== 0 // 1-indexed round parity
-            for (let i = 0; i < 16; i++) {
-                if (isOdd) {
-                    if (i < 4 || (i >= 8 && i < 12)) sub[i] = SB1[state[i]]
-                    else sub[i] = SB2[state[i]]
-                } else {
-                    if (i < 4 || (i >= 8 && i < 12)) sub[i] = SB1_INV[state[i]]
-                    else sub[i] = SB2_INV[state[i]]
-                }
-            }
-            state = sub
-
-            // Diffusion Layer (Involutional GF(2) matrix A)
-            if (r < rounds - 1) {
-                state = diffusionA(state) as Uint8Array
+        for (let r = 1; r < rounds; r++) {
+            if (r % 2 === 1) {
+                state = roundFO(state, rk[r - 1])
+            } else {
+                state = roundFE(state, rk[r - 1])
             }
 
-            if (instrument && r % 4 === 0) {
-                steps.push({ index: steps.length, label: `Round ${r + 1}/${rounds}`, inputState: toHex(inBytes.slice(b * 16, b * 16 + 16)), outputState: toHex(state), note: 'Alternating S-box pairs + GF(2) involutional diffusion.', isMilestone: true })
+            if (instrument && (r === 1 || r === Math.floor(rounds / 2) || r === rounds - 1)) {
+                steps.push({
+                    index: steps.length,
+                    label: `Round ${r}/${rounds}`,
+                    inputState: toHex(inBytes.slice(b * 16, b * 16 + 16)),
+                    outputState: toHex(state),
+                    note: `${r % 2 === 1 ? 'Odd round (FO: SL1 + A)' : 'Even round (FE: SL2 + A)'}`,
+                    isMilestone: true,
+                })
             }
         }
 
-        // Final Round (No diffusion, just AddRoundKey)
-        state = xor128(state, roundKeys[rounds]) as Uint8Array
+        // Final round (no diffusion): SL2(state ^ rk[rounds - 1]) ^ rk[rounds]
+        state = xor128(SL2(xor128(state, rk[rounds - 1])), rk[rounds])
 
         outBuf.set(state, b * 16)
     }
 
-    return { output: toHex(outBuf), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
+    const durationMs = performance.now() - start
+    return {
+        output: toHex(outBuf),
+        outputEncoding: 'hex',
+        steps,
+        metadata: {
+            ...METADATA,
+            rounds,
+            keySize: keyBytes.length * 8,
+        },
+        durationMs,
+    }
 }
 
 /**
  * Encrypt cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @param input Input required by the Encrypt operation.
- * @param key Input required by the Encrypt operation.
- * @param options Input required by the Encrypt operation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
  */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
@@ -230,36 +351,33 @@ export function encrypt(input: string, key: string, options: CipherOptions = {})
 
 /**
  * Decrypt cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @param input Input required by the Decrypt operation.
- * @param key Input required by the Decrypt operation.
- * @param options Input required by the Decrypt operation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
  */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
-    // ARIA decryption uses a different key schedule derivation (decryption round keys)
-    // For brevity in this artifact, we reuse the core with a flag, but in production
-    // the decryption round keys must be derived via the inverse key schedule transform.
     return ariaCore(input, key, true, !!options.instrument)
 }
 
 /**
  * TEST VECTORS cipher-engine utility export.
- *
- * This API is intentionally documented at the engine boundary so callers
- * can understand the input contract without opening the implementation.
- * @returns The operation result produced by the cipher engine.
- * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ * Verified against RFC 5794 Appendix A.1, A.2, and A.3.
  */
 export const TEST_VECTORS: TestVector[] = [
     {
         input: '00112233445566778899aabbccddeeff',
         key: '000102030405060708090a0b0c0d0e0f',
         expected: 'd718fbd6ab644c739da95f3be6451778',
-        description: 'RFC 5794 Section 3 (128-bit key)'
-    }
+        description: 'RFC 5794 Appendix A.1 (128-bit key)',
+    },
+    {
+        input: '00112233445566778899aabbccddeeff',
+        key: '000102030405060708090a0b0c0d0e0f1011121314151617',
+        expected: '26449c1805dbe7aa25a468ce263a9e79',
+        description: 'RFC 5794 Appendix A.2 (192-bit key)',
+    },
+    {
+        input: '00112233445566778899aabbccddeeff',
+        key: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f',
+        expected: 'f92bd7c79fb72e2f2b8f80c1972d24fc',
+        description: 'RFC 5794 Appendix A.3 (256-bit key)',
+    },
 ]

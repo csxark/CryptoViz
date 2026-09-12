@@ -39,8 +39,6 @@
     "tests",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "lib/random/testRandom.ts",
-    "lib/testVectors/index.ts",
     "playwright.config.ts"
   ]
 }

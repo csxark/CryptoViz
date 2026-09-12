@@ -4,6 +4,11 @@ import {
   resolveWorkloadLimits,
   validateTraceStepCount,
   validateWorkload,
+  clampArgon2idParameters,
+  clampScryptParameters,
+  auditWorkloadLimits,
+  getWorkloadLimitSummary,
+  validateHighMemoryWorkload,
 } from "../../../lib/security/workloadLimits";
 
 describe("cryptographic workload limits", () => {
@@ -173,7 +178,6 @@ describe("cryptographic workload limits", () => {
   });
 
   it("clamps oversized Argon2id parameters to safe client limits", () => {
-    const { clampArgon2idParameters } = require("../../../lib/security/workloadLimits");
     const res = clampArgon2idParameters({
       memoryBlocks: 128,
       iterations: 20,
@@ -185,7 +189,6 @@ describe("cryptographic workload limits", () => {
   });
 
   it("clamps oversized Scrypt parameters to safe client limits", () => {
-    const { clampScryptParameters } = require("../../../lib/security/workloadLimits");
     const res = clampScryptParameters({
       N: 131072,
       p: 16,
@@ -197,7 +200,6 @@ describe("cryptographic workload limits", () => {
   });
 
   it("audits workload limit parameters and generates audit reports", () => {
-    const { auditWorkloadLimits } = require("../../../lib/security/workloadLimits");
     const reportPass = auditWorkloadLimits({
       operation: "cipher",
       cipherId: "argon2id",
@@ -215,7 +217,6 @@ describe("cryptographic workload limits", () => {
   });
 
   it("provides human readable workload limit summaries", () => {
-    const { getWorkloadLimitSummary } = require("../../../lib/security/workloadLimits");
     const summaryArgon = getWorkloadLimitSummary("argon2id");
     expect(summaryArgon).toContain("Argon2id Workload Limits");
     expect(summaryArgon).toContain("Max Memory 64 MB");
@@ -225,7 +226,6 @@ describe("cryptographic workload limits", () => {
   });
 
   it("validates high memory workloads before worker dispatch", () => {
-    const { validateHighMemoryWorkload } = require("../../../lib/security/workloadLimits");
     const validRes = validateHighMemoryWorkload("argon2id", { memoryBlocks: 16, iterations: 2 });
     expect(validRes.valid).toBe(true);
 

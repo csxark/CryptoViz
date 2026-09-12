@@ -558,7 +558,7 @@ export function getUuidExplanation(): string[] {
     "1. A UUID (RFC 9562) is a 128-bit identifier formatted as 8-4-4-4-12 hex digits.",
     "2. The version (4 bits) in the 3rd group indicates the generation method.",
     "3. The variant (2 bits) in the 4th group identifies the UUID layout standard.",
-    "4. Version 4 uses 122 bits of cryptographic randomness (128 - 6 reserved bits).",
+    "4. Version 4 uses 122 bits of cryptographic randomness (128 - 6 reserved bits) for high entropy.",
     "5. UUID v4 collision probability: ~1 in 2^61 for 1 billion UUIDs (birthday bound).",
     "6. Use crypto.getRandomValues() for generation — never Math.random().",
     "7. UUIDs are not secrets — they are identifiers. Do not rely on them for security.",

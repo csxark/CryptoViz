@@ -13,7 +13,6 @@ export default [
       "next-env.d.ts",
       "scratch/**",
       "scripts/**",
-      "fetch_all_issues.ts",
     ],
   },
   {

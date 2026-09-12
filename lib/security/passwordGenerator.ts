@@ -297,21 +297,41 @@ function generateWithGuarantees(
   alphabet: string,
   opts: PasswordGeneratorOptions,
 ): string[] {
-  const chars: string[] = [];
   const requiredChars: string[] = [];
 
+  let lower = LOWERCASE;
+  let upper = UPPERCASE;
+  let digits = DIGITS;
+  let symbols = SYMBOLS;
+
+  if (opts.excludeAmbiguous) {
+    lower = removeChars(lower, AMBIGUOUS);
+    upper = removeChars(upper, AMBIGUOUS);
+    digits = removeChars(digits, AMBIGUOUS);
+  }
+  if (opts.excludeChars) {
+    lower = removeChars(lower, opts.excludeChars);
+    upper = removeChars(upper, opts.excludeChars);
+    digits = removeChars(digits, opts.excludeChars);
+    symbols = removeChars(symbols, opts.excludeChars);
+  }
+
   // Pick one from each required pool
-  if (opts.includeLowercase) {
-    requiredChars.push(pickRandom(LOWERCASE));
+  if (opts.includeLowercase && lower.length > 0) {
+    requiredChars.push(pickRandom(lower));
   }
-  if (opts.includeUppercase) {
-    requiredChars.push(pickRandom(UPPERCASE));
+  if (opts.includeUppercase && upper.length > 0) {
+    requiredChars.push(pickRandom(upper));
   }
-  if (opts.includeDigits) {
-    requiredChars.push(pickRandom(DIGITS));
+  if (opts.includeDigits && digits.length > 0) {
+    requiredChars.push(pickRandom(digits));
   }
-  if (opts.includeSymbols) {
-    requiredChars.push(pickRandom(SYMBOLS));
+  if (opts.includeSymbols && symbols.length > 0) {
+    requiredChars.push(pickRandom(symbols));
+  }
+
+  if (requiredChars.length >= opts.length) {
+    return shuffleArray(requiredChars).slice(0, opts.length);
   }
 
   // Fill remaining slots from full alphabet
@@ -320,7 +340,7 @@ function generateWithGuarantees(
   const fillers = indices.map((idx) => alphabet[idx]);
 
   // Combine and shuffle
-  chars.push(...requiredChars, ...fillers);
+  const chars: string[] = [...requiredChars, ...fillers];
   return shuffleArray(chars);
 }
 

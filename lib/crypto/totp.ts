@@ -13,8 +13,7 @@
  */
 
 import { hmac } from "@noble/hashes/hmac.js";
-// @ts-expect-error
-import { sha1 } from "@noble/hashes/sha1.js";
+import { sha1 } from "@noble/hashes/legacy.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

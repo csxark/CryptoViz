@@ -229,7 +229,8 @@ export function encrypt(
   validateInput(input)
   validateKey(key)
 
-  const inEnc = options.encoding || 'utf8'
+  const useHex = options.hexInput !== undefined ? options.hexInput : (options.encoding === 'hex')
+  const inEnc = useHex ? 'hex' : (options.encoding || 'utf8')
   const inputBytes = toByteArray(input, inEnc)
 
   let keyBytes = toByteArray(key, 'utf8')
@@ -242,7 +243,16 @@ export function encrypt(
     throw new CipherError('INVALID_KEY_LENGTH', `3DES key must be exactly 16 or 24 bytes (got ${keyBytes.length} bytes).`)
   }
 
-  const paddedInput = padPKCS7(inputBytes, 8)
+  const usePadding = options.padding !== 'None' && options.padding !== 'none' && options.padding !== false
+  let paddedInput: Uint8Array
+  if (usePadding) {
+    paddedInput = padPKCS7(inputBytes, 8)
+  } else {
+    if (inputBytes.length % 8 !== 0) {
+      throw new CipherError('INVALID_PADDING', '3DES input must be a multiple of 8 bytes when padding is disabled.')
+    }
+    paddedInput = inputBytes
+  }
 
   if (options.instrument) {
     return tdesInstrumented(paddedInput, keyBytes, false)
@@ -288,14 +298,16 @@ export function decrypt(
     result = tdesFast(inputBytes, keyBytes, true)
   }
 
+  const usePadding = options.padding !== 'None' && options.padding !== 'none' && options.padding !== false
   const rawBytes = toByteArray(result.output, 'hex')
-  const unpaddedBytes = unpadPKCS7(rawBytes)
+  const finalBytes = usePadding ? unpadPKCS7(rawBytes) : rawBytes
 
-  const outEnc = options.encoding || 'utf8'
+  const useHex = options.hexInput !== undefined ? options.hexInput : (options.encoding === 'hex')
+  const outEnc = options.encoding || (useHex ? 'hex' : 'utf8')
 
   return {
     ...result,
-    output: fromByteArray(unpaddedBytes, outEnc),
+    output: fromByteArray(finalBytes, outEnc),
     outputEncoding: outEnc,
   }
 }

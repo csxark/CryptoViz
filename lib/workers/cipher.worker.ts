@@ -157,21 +157,24 @@ async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
       return { encrypt: mod.encryptShake256, decrypt: mod.decrypt };
     }
     case "scrypt": {
+      const runScrypt = async (input: string, _key: string, options?: any) => {
+        const res = await deriveScryptKey(input, {
+          N: typeof options?.N === "number" ? options.N : 16384,
+          r: typeof options?.r === "number" ? options.r : 8,
+          p: typeof options?.p === "number" ? options.p : 1,
+          dkLen: typeof options?.dkLen === "number" ? options.dkLen : 32,
+          salt: typeof options?.salt === "string" ? options.salt : undefined,
+        });
+        return {
+          output: res.derivedKeyHex,
+          outputEncoding: "hex",
+          steps: [],
+          params: res.params,
+        };
+      };
       return {
-        encrypt: (input, _key, options) => deriveScryptKey(input, {
-          N: typeof options?.N === "number" ? options.N : 16384,
-          r: typeof options?.r === "number" ? options.r : 8,
-          p: typeof options?.p === "number" ? options.p : 1,
-          dkLen: typeof options?.dkLen === "number" ? options.dkLen : 32,
-          salt: typeof options?.salt === "string" ? options.salt : undefined,
-        }),
-        decrypt: (input, _key, options) => deriveScryptKey(input, {
-          N: typeof options?.N === "number" ? options.N : 16384,
-          r: typeof options?.r === "number" ? options.r : 8,
-          p: typeof options?.p === "number" ? options.p : 1,
-          dkLen: typeof options?.dkLen === "number" ? options.dkLen : 32,
-          salt: typeof options?.salt === "string" ? options.salt : undefined,
-        }),
+        encrypt: runScrypt,
+        decrypt: runScrypt,
       };
     }
     case "rc4": return w(import("../cipher/symmetric/rc4"));
@@ -186,6 +189,106 @@ async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
     }
     case "camellia": return w(import("../cipher/symmetric/camellia"));
     case "idea": return w(import("../cipher/symmetric/idea"));
+    case "trithemius": return w(import("../cipher/classical/trithemius"));
+    case "bacon": return w(import("../cipher/classical/bacon"));
+    case "affine": return w(import("../cipher/classical/affine"));
+    case "xxtea": return w(import("../cipher/symmetric/xxtea"));
+    case "grain128": return w(import("../cipher/symmetric/grain128"));
+    case "a5-1": return w(import("../cipher/symmetric/a5-1"));
+    case "lucifer": return w(import("../cipher/symmetric/lucifer"));
+    case "deal": return w(import("../cipher/symmetric/deal"));
+    case "des-x": return w(import("../cipher/symmetric/des-x"));
+    case "khufu": return w(import("../cipher/symmetric/khufu"));
+    case "mickey": return w(import("../cipher/symmetric/mickey"));
+    case "kalyna": return w(import("../cipher/symmetric/kalyna"));
+    case "zuc": return w(import("../cipher/symmetric/zuc"));
+    case "sosemanuk": return w(import("../cipher/symmetric/sosemanuk"));
+    case "loki97": return w(import("../cipher/symmetric/loki97"));
+    case "seal": return w(import("../cipher/symmetric/seal"));
+    case "shark": return w(import("../cipher/symmetric/shark"));
+    case "turing": return w(import("../cipher/symmetric/turing"));
+    case "crypton": return w(import("../cipher/symmetric/crypton"));
+    case "wake": return w(import("../cipher/symmetric/wake"));
+    case "hierocrypt3": return w(import("../cipher/symmetric/hierocrypt3"));
+    case "prince": return w(import("../cipher/symmetric/prince"));
+    case "e2": return w(import("../cipher/symmetric/e2"));
+    case "twine": return w(import("../cipher/symmetric/twine"));
+    case "cast128": return w(import("../cipher/symmetric/cast128"));
+    case "midori": return w(import("../cipher/symmetric/midori"));
+    case "skinny": return w(import("../cipher/symmetric/skinny"));
+    case "lblock": return w(import("../cipher/symmetric/lblock"));
+    case "mantis": return w(import("../cipher/symmetric/mantis"));
+    case "led": return w(import("../cipher/symmetric/led"));
+    case "aegis128l": return w(import("../cipher/symmetric/aegis128l"));
+    case "saturnin": return w(import("../cipher/symmetric/saturnin"));
+    case "rectangle": return w(import("../cipher/symmetric/rectangle"));
+    case "deoxys": return w(import("../cipher/symmetric/deoxys"));
+    case "e0": return w(import("../cipher/symmetric/e0"));
+    case "piccolo": return w(import("../cipher/symmetric/piccolo"));
+    case "craft": return w(import("../cipher/symmetric/craft"));
+    case "schwaemm": return w(import("../cipher/symmetric/schwaemm"));
+    case "romulus": return w(import("../cipher/symmetric/romulus"));
+    case "esch": return w(import("../cipher/hash/esch"));
+    case "simd": return w(import("../cipher/hash/simd"));
+    case "shavite3": return w(import("../cipher/hash/shavite3"));
+    case "echo": return w(import("../cipher/hash/echo"));
+    case "hamsi": return w(import("../cipher/hash/hamsi"));
+    case "bmw": return w(import("../cipher/hash/bmw"));
+    case "cubehash": return w(import("../cipher/hash/cubehash"));
+    case "haraka": return w(import("../cipher/hash/haraka"));
+    case "shabal": return w(import("../cipher/hash/shabal"));
+    case "luffa": return w(import("../cipher/hash/luffa"));
+    case "pbkdf2": return w(import("../cipher/hash/pbkdf2"));
+    case "md4": return w(import("../cipher/hash/md4"));
+    case "argon2": return w(import("../cipher/hash/argon2"));
+    case "skein": return w(import("../cipher/hash/skein"));
+    case "lsh256": return w(import("../cipher/hash/lsh256"));
+    case "tiger": return w(import("../cipher/hash/tiger"));
+    case "grostl": return w(import("../cipher/hash/grostl"));
+    case "jh": return w(import("../cipher/hash/jh"));
+    case "ripemd128": return w(import("../cipher/hash/ripemd128"));
+    case "haval": return w(import("../cipher/hash/haval"));
+    case "md2": return w(import("../cipher/hash/md2"));
+    case "gost-r34-11-94": return w(import("../cipher/hash/gost-r34-11-94"));
+    case "n-hash": return w(import("../cipher/hash/n-hash"));
+    case "snefru": return w(import("../cipher/hash/snefru"));
+    case "has160": return w(import("../cipher/hash/has160"));
+    case "panama": return w(import("../cipher/hash/panama"));
+    case "blake": return w(import("../cipher/hash/blake"));
+    case "kupyna": return w(import("../cipher/hash/kupyna"));
+    case "radiogatun": return w(import("../cipher/hash/radiogatun"));
+    case "ascon-hash": return w(import("../cipher/hash/ascon-hash"));
+    case "kangarootwelve": return w(import("../cipher/hash/kangarootwelve"));
+    case "fugue": return w(import("../cipher/hash/fugue"));
+    case "edon-r": return w(import("../cipher/hash/edon-r"));
+    case "goldwasser-micali": return w(import("../cipher/asymmetric/goldwasser-micali"));
+    case "ggh": return w(import("../cipher/asymmetric/ggh"));
+    case "bls": return w(import("../cipher/asymmetric/bls"));
+    case "boneh-franklin-ibe": return w(import("../cipher/asymmetric/boneh-franklin-ibe"));
+    case "regev-lwe": return w(import("../cipher/asymmetric/regev-lwe"));
+    case "okamoto-uchiyama": return w(import("../cipher/asymmetric/okamoto-uchiyama"));
+    case "sqisign": return w(import("../cipher/asymmetric/sqisign"));
+    case "chor-rivest": return w(import("../cipher/asymmetric/chor-rivest"));
+    case "rainbow": return w(import("../cipher/asymmetric/rainbow"));
+    case "mqv": return w(import("../cipher/asymmetric/mqv"));
+    case "falcon": return w(import("../cipher/asymmetric/falcon"));
+    case "niederreiter": return w(import("../cipher/asymmetric/niederreiter"));
+    case "xmss": return w(import("../cipher/asymmetric/xmss"));
+    case "lms": return w(import("../cipher/asymmetric/lms"));
+    case "ntruprime": return w(import("../cipher/asymmetric/ntruprime"));
+    case "keyword-substitution": return w(import("../cipher/classical/keyword-substitution"));
+    case "gronsfeld": return w(import("../cipher/classical/gronsfeld"));
+    case "csidh": return w(import("../cipher/asymmetric/csidh"));
+    case "bike": return w(import("../cipher/asymmetric/bike"));
+    case "hqc": return w(import("../cipher/asymmetric/hqc"));
+    case "saber": return w(import("../cipher/asymmetric/saber"));
+    case "opaque": return w(import("../cipher/asymmetric/opaque"));
+    case "blind-rsa": return w(import("../cipher/asymmetric/blind-rsa"));
+    case "sphincs-plus": return w(import("../cipher/asymmetric/sphincs-plus"));
+    case "lamport": { const mod = await import("../cipher/asymmetric/lamport-wots"); return { encrypt: mod.encryptLamport, decrypt: mod.decrypt }; }
+    case "wots": { const mod = await import("../cipher/asymmetric/lamport-wots"); return { encrypt: mod.encryptWots, decrypt: mod.decrypt }; }
+    case "ripemd256": { const mod = await import("../cipher/hash/ripemd256-320"); return { encrypt: mod.encryptRipemd256, decrypt: mod.decrypt }; }
+    case "ripemd320": { const mod = await import("../cipher/hash/ripemd256-320"); return { encrypt: mod.encryptRipemd320, decrypt: mod.decrypt }; }
     default:
       throw new CipherError(
         "ALGORITHM_UNSUPPORTED",

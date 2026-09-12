@@ -468,13 +468,17 @@ export async function encrypt(
   key: string,
   options: CipherOptions = {}
 ): Promise<CipherResult> {
-  validateInput(input)
+  if (typeof input !== 'string') {
+    throw new CipherError('INPUT_REQUIRED', 'Input must be a string.')
+  }
   const start = performance.now()
 
   const keyBytes = getKeyBytes(key)
   const { iv } = resolveIv(options)
   const aad = resolveAad(options)
-  const plaintext = toByteArray(input, options.encoding || 'utf8')
+  const useHex = options.hexInput !== undefined ? options.hexInput : (options.encoding === 'hex')
+  const inEnc = useHex ? 'hex' : (options.encoding || 'utf8')
+  const plaintext = toByteArray(input, inEnc)
 
   // Authoritative output comes from WebCrypto (real mode).
   const { ciphertext, tag } = await subtleGcmEncrypt(keyBytes, iv, plaintext, aad)
@@ -536,7 +540,8 @@ export async function decrypt(
     ? buildDecryptSteps(keyBytes, iv, ciphertext, tag, aad, plaintext)
     : []
 
-  const outEnc = options.encoding || 'utf8'
+  const useHex = options.hexInput !== undefined ? options.hexInput : (options.encoding === 'hex')
+  const outEnc = options.encoding || (useHex ? 'hex' : 'utf8')
   return {
     output: fromByteArray(plaintext, outEnc),
     outputEncoding: outEnc,

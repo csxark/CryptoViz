@@ -592,7 +592,8 @@ export function encrypt(
   validateRequiredInput(input)
   validateKey(key)
 
-  const inEnc = options.encoding || 'utf8'
+  const useHex = options.hexInput !== undefined ? options.hexInput : (options.encoding === 'hex')
+  const inEnc = useHex ? 'hex' : (options.encoding || 'utf8')
   const inputBytes = toByteArray(input, inEnc)
   // Key must be exactly 8 bytes (64 bits) for DES
   const normalizedKeyLength = key.replace(/\s+/g, '').length
@@ -606,8 +607,16 @@ export function encrypt(
     throw new CipherError('WEAK_KEY', 'DES weak key detected. Do not use this key.')
   }
 
-  // DES blocks must be multiple of 8 bytes. Apply PKCS7 padding.
-  const paddedInput = padPKCS7(inputBytes, 8)
+  const usePadding = options.padding !== 'None' && options.padding !== 'none' && options.padding !== false
+  let paddedInput: Uint8Array
+  if (usePadding) {
+    paddedInput = padPKCS7(inputBytes, 8)
+  } else {
+    if (inputBytes.length % 8 !== 0) {
+      throw new CipherError('INVALID_PADDING', 'DES input must be a multiple of 8 bytes when padding is disabled.')
+    }
+    paddedInput = inputBytes
+  }
 
   if (options.instrument) {
     return desInstrumented(paddedInput, keyBytes, false)
@@ -655,15 +664,16 @@ export function decrypt(
     result = desFast(inputBytes, keyBytes, true)
   }
 
-  // DES output needs to be unpadded
+  const usePadding = options.padding !== 'None' && options.padding !== 'none' && options.padding !== false
   const rawBytes = toByteArray(result.output, 'hex')
-  const unpaddedBytes = unpadPKCS7(rawBytes)
+  const finalBytes = usePadding ? unpadPKCS7(rawBytes) : rawBytes
   
-  const outEnc = options.encoding || 'utf8'
+  const useHex = options.hexInput !== undefined ? options.hexInput : (options.encoding === 'hex')
+  const outEnc = options.encoding || (useHex ? 'hex' : 'utf8')
 
   return {
     ...result,
-    output: fromByteArray(unpaddedBytes, outEnc),
+    output: fromByteArray(finalBytes, outEnc),
     outputEncoding: outEnc,
   }
 }

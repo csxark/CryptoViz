@@ -968,7 +968,8 @@ export function encrypt(
   validateRequiredInput(input)
   validateKey(key)
 
-  const inEnc = options.encoding || 'utf8'
+  const useHex = options.hexInput !== undefined ? options.hexInput : (options.encoding === 'hex')
+  const inEnc = useHex ? 'hex' : (options.encoding || 'utf8')
   const inputBytes = toByteArray(input, inEnc)
 
   const keyBytes = getKeyBytes(key)
@@ -976,8 +977,19 @@ export function encrypt(
 
   const mode = parseMode(options.mode)
 
-  // Stream modes (CTR/CFB/OFB) are unpadded; block modes (ECB/CBC) use PKCS7.
-  const processedInput = isStreamMode(mode) ? inputBytes : padPKCS7(inputBytes, 16)
+  // Stream modes (CTR/CFB/OFB) are unpadded; block modes (ECB/CBC) use PKCS7 unless padding is explicitly disabled.
+  const usePadding = !isStreamMode(mode) && options.padding !== 'None' && options.padding !== 'none' && options.padding !== false
+  let processedInput: Uint8Array
+  if (isStreamMode(mode)) {
+    processedInput = inputBytes
+  } else if (usePadding) {
+    processedInput = padPKCS7(inputBytes, 16)
+  } else {
+    if (inputBytes.length % 16 !== 0) {
+      throw new CipherError('INVALID_PADDING', 'AES input must be a multiple of 16 bytes when padding is disabled.')
+    }
+    processedInput = inputBytes
+  }
 
   let iv: Uint8Array | null = null
   if (needsIv(mode)) {
@@ -1051,10 +1063,11 @@ export function decrypt(
     result = aesFast(inputBytes, keyBytes, true, mode, iv)
   }
   const rawBytes = toByteArray(result.output, 'hex')
-  // Stream modes are unpadded; only strip PKCS7 for block modes.
-  const finalBytes = isStreamMode(mode) ? rawBytes : unpadPKCS7(rawBytes)
+  const usePadding = !isStreamMode(mode) && options.padding !== 'None' && options.padding !== 'none' && options.padding !== false
+  const finalBytes = isStreamMode(mode) || !usePadding ? rawBytes : unpadPKCS7(rawBytes)
 
-  const outEnc = options.encoding || 'utf8'
+  const useHex = options.hexInput !== undefined ? options.hexInput : (options.encoding === 'hex')
+  const outEnc = options.encoding || (useHex ? 'hex' : 'utf8')
 
   return {
     ...result,

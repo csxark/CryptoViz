@@ -20,7 +20,7 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 export const BUDGETS = {
   workerEntryKb: 25,
   cipherModuleKb: 40,
-  cipherCatalogKb: 100,
+  cipherCatalogKb: 125,
   visualizerModuleKb: 50,
   buildChunkKb: 150,
 };

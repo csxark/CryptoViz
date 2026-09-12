@@ -398,6 +398,31 @@ export function verify(message: string, publicKey: string, signature: string, op
     return htVerify(msgBytes, sig, pkBytes, params)
 }
 
+export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
+    const start = performance.now()
+    const signature = sign(input, key, options)
+    return {
+        output: signature,
+        outputEncoding: 'hex',
+        steps: [],
+        metadata: METADATA,
+        durationMs: performance.now() - start,
+    }
+}
+
+export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
+    const start = performance.now()
+    const sig = typeof options.signature === 'string' ? options.signature : (typeof options.sig === 'string' ? options.sig : key)
+    const valid = verify(input, key, sig, options)
+    return {
+        output: valid ? 'VALID' : 'INVALID',
+        outputEncoding: 'utf8',
+        steps: [],
+        metadata: METADATA,
+        durationMs: performance.now() - start,
+    }
+}
+
 /**
  * TEST VECTORS cipher-engine utility export.
  *

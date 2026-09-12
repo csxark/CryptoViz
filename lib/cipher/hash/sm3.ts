@@ -22,19 +22,19 @@ export const TEST_VECTORS: TestVector[] = [
   {
     input: 'abc',
     key: '',
-    expected: '026dd6bd8ac0cfd792e4b71ecf1a05c9250ddd7b136d45ab344ac1a71de2f838',
+    expected: '66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0',
     description: 'OSCCA / GB/T 32905-2016 standard vector 1',
   },
   {
     input: '',
     key: '',
-    expected: 'f61e4bed816a6723ff04e2dff1a0cace791dcf4f95e3450c1a4862bf7354fa87',
+    expected: '1ab21d8355cfa17f8e61194831e81a8f22bec8c728fefb747ed035eb5082aa2b',
     description: 'OSCCA / GB/T 32905-2016 standard vector for empty input',
   },
   {
     input: 'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd',
     key: '',
-    expected: 'a30faf0f1bde8b671d29d55c6e1d2dfb8fb4c4ab2f1f2ae76f58f81f99d6acfa',
+    expected: 'debe9ff92275b8a138604889c18e5a4d6fdb70e5387e5765293dcba39c0c5732',
     description: 'OSCCA / GB/T 32905-2016 standard vector 2 (64-byte repeated pattern)',
   },
 ]
@@ -71,7 +71,7 @@ function GG(j: number, x: number, y: number, z: number): number {
 }
 
 function T(j: number): number {
-  return j >= 0 && j <= 15 ? 0x79cc4519 : 0x7a6d76e9
+  return j >= 0 && j <= 15 ? 0x79cc4519 : 0x7a879d8a
 }
 
 /**

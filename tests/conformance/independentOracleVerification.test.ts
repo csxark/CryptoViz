@@ -40,6 +40,7 @@ import * as blake2bEngine from '@/lib/cipher/hash/blake2b';
 import * as blake2sEngine from '@/lib/cipher/hash/blake2s';
 import * as blake3Engine from '@/lib/cipher/hash/blake3';
 import * as poly1305Engine from '@/lib/cipher/hash/poly1305';
+import * as sm3Engine from '@/lib/cipher/hash/sm3';
 
 import * as ed25519Engine from '@/lib/cipher/asymmetric/ed25519';
 import * as x25519Engine from '@/lib/cipher/asymmetric/x25519';
@@ -264,6 +265,22 @@ describe('Independent Cryptographic Oracle & Standards KAT Gate (Phase 8)', () =
 
       const cvResult = poly1305Engine.encrypt(hexInput, key, { encoding: 'hex' } as any);
       expect(cvResult.output.toLowerCase()).toBe(expectedTag);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 9b. SM3 (GB/T 32905-2016 / ISO/IEC 10118-3:2018)
+  // -------------------------------------------------------------------------
+  describe('SM3 (GB/T 32905-2016 / ISO/IEC 10118-3:2018)', () => {
+    it('matches GB/T 32905-2016 standard vector and node:crypto sm3 oracle', () => {
+      const msg = 'abc';
+      const expected = '66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0';
+
+      const oracle = nodeCrypto.createHash('sm3').update(msg).digest('hex');
+      expect(oracle).toBe(expected);
+
+      const cvResult = sm3Engine.encrypt(msg, '');
+      expect(cvResult.output.toLowerCase()).toBe(expected);
     });
   });
 

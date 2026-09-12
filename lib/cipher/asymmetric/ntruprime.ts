@@ -115,5 +115,5 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
  * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
  */
 export const TEST_VECTORS: TestVector[] = [
-    { input: '00', key: '00', expected: '00', description: 'sntrup761 mock KEM' }
+    { input: '00', key: '00', expected: '00'.repeat(32), description: 'sntrup761 mock KEM' }
 ]

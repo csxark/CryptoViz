@@ -16,6 +16,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput } from '../../utils'
+import { cryptoRandomInt } from '../../random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
     name: 'MQV',
@@ -63,7 +64,7 @@ interface MQVKeyPair {
 }
 
 function generateKeyPair(): MQVKeyPair {
-    const priv = mod(BigInt(Math.floor(Math.random() * Number(N - 1n))) + 1n, N)
+    const priv = mod(BigInt(cryptoRandomInt(Number(N - 1n))) + 1n, N)
     const pub = modPow(G, priv, P)
     return { private: priv, public: pub }
 }

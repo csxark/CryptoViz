@@ -13,6 +13,14 @@ export interface CipherProvenance {
 
 const WIKI = "https://en.wikipedia.org/wiki/";
 
+/**
+ * CIPHER PROVENANCE cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export const CIPHER_PROVENANCE: Record<string, CipherProvenance> = {
   caesar: { yearDesigned: -58, standardBody: "Historical specification", standardUrl: WIKI + "Caesar_cipher", securityStatus: "broken" },
   rot13: { yearDesigned: 1980, standardBody: "Historical specification", standardUrl: WIKI + "ROT13", securityStatus: "broken" },
@@ -50,6 +58,14 @@ export const CIPHER_PROVENANCE: Record<string, CipherProvenance> = {
   "n-hash": { yearDesigned: 1989, standardBody: "Primary literature / broken construction", standardUrl: WIKI + "N-Hash", securityStatus: "broken" },
 };
 
+/**
+ * Enrich Cipher Registry cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function enrichCipherRegistry<T extends {
   id: string;
   description: string;

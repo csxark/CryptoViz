@@ -101,14 +101,14 @@ describe("UniversalCipherDebugger Component", () => {
 
     render(<UniversalCipherDebugger steps={stepsWithMilestones} />);
 
-    const nextPhaseBtn = screen.getByRole("button", { name: /Next milestone/i });
+    const nextPhaseBtn = screen.getByRole("button", { name: /Next (phase|milestone)/i });
     fireEvent.click(nextPhaseBtn);
     expect(screen.getByText("Step 21 / 100")).toBeInTheDocument();
 
     fireEvent.click(nextPhaseBtn);
     expect(screen.getByText("Step 51 / 100")).toBeInTheDocument();
 
-    const prevPhaseBtn = screen.getByRole("button", { name: /Previous milestone/i });
+    const prevPhaseBtn = screen.getByRole("button", { name: /Previous (phase|milestone)/i });
     fireEvent.click(prevPhaseBtn);
     expect(screen.getByText("Step 21 / 100")).toBeInTheDocument();
   });
@@ -227,7 +227,7 @@ describe("UniversalCipherDebugger Component", () => {
     }));
 
     render(<UniversalCipherDebugger steps={stepsWithMilestones} />);
-    const select = screen.getByRole("combobox", { name: /Jump to milestone/i });
+    const select = screen.getByRole("combobox", { name: /Jump to (phase|milestone)/i });
     fireEvent.change(select, { target: { value: "25" } });
     expect(screen.getByText("Step 26 / 100")).toBeInTheDocument();
   });

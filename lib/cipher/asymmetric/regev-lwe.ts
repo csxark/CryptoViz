@@ -10,6 +10,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput } from '../../utils'
+import { cryptoRandomInt } from '../../random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
     name: 'Regev-LWE',
@@ -39,11 +40,11 @@ function vecDot(a: Vector, b: Vector): bigint {
 }
 
 function sampleSmallVec(len: number): Vector {
-    return Array.from({ length: len }, () => BigInt(Math.floor(Math.random() * 5) - 2))
+    return Array.from({ length: len }, () => BigInt(cryptoRandomInt(5) - 2))
 }
 
 function sampleMatrix(rows: number, cols: number): Matrix {
-    return Array.from({ length: rows }, () => Array.from({ length: cols }, () => BigInt(Math.floor(Math.random() * Number(Q)))))
+    return Array.from({ length: rows }, () => Array.from({ length: cols }, () => BigInt(cryptoRandomInt(Number(Q)))))
 }
 
 function parseHex(s: string): number[] {
@@ -91,7 +92,7 @@ function regevCore(input: string, key: string, doDecrypt: boolean, instrument: b
                 const msgBit = (inBytes[i] >> bit) & 1
 
                 // Encrypt single bit
-                const r = Array.from({ length: M }, () => BigInt(Math.random() > 0.5 ? 1 : 0))
+                const r = Array.from({ length: M }, () => BigInt(cryptoRandomInt(2)))
                 const u = Array.from({ length: N }, (_, col) => A.reduce((sum, row, rowIdx) => mod(sum + row[col] * r[rowIdx], Q), 0n))
 
                 let v = vecDot(r, b)

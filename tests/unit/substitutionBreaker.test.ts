@@ -107,7 +107,8 @@ describe("swapKey", () => {
 
 describe("scoreKey", () => {
   it("scores identity key higher on plaintext", () => {
-    const plaintext = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG";
+    const plaintext =
+      "THAT IS WITH THIS AND THAT FROM HERE WITH THIS STATEMENT THAT CAN BE TESTED";
     const identityScore = scoreKey(plaintext, identityKey());
     const randomScore = scoreKey(plaintext, randomKey());
     expect(identityScore).toBeGreaterThan(randomScore);

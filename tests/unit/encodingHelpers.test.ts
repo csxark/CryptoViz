@@ -47,7 +47,7 @@ describe('shared encoding helpers', () => {
       '12xz',
       '12 34',
       '12-34',
-      '0b1010',
+      '0g1010',
       'hello',
     ])('rejects invalid hex: %s', (input) => {
       expect(() => parseHex(input, { allowWhitespace: false })).toThrow();
@@ -55,7 +55,7 @@ describe('shared encoding helpers', () => {
 
     it('supports whitespace by default', () => {
       expect(Array.from(parseHex('de ad be ef'))).toEqual([222, 173, 190, 239]);
-      expect(Array.from(parseHex('DE\\nAD\\tBE\\rEF'))).toEqual([222, 173, 190, 239]);
+      expect(Array.from(parseHex("DE\nAD\tBE\rEF"))).toEqual([222, 173, 190, 239]);
     });
 
     it('can reject whitespace explicitly', () => {
@@ -186,7 +186,7 @@ describe('shared encoding helpers', () => {
 
     it('accepts whitespace by default', () => {
       expect(Array.from(parseBinary('00000000 11111111'))).toEqual([0, 255]);
-      expect(Array.from(parseBinary('00000000\\n11111111'))).toEqual([0, 255]);
+      expect(Array.from(parseBinary("00000000\n11111111"))).toEqual([0, 255]);
     });
 
     it('checks expected bit length', () => {
@@ -282,7 +282,7 @@ describe('shared encoding helpers', () => {
 
     it.each([
       ['', ''],
-      ['AA==', ''],
+      ['AA==', '00'],
       ['AQ==', '01'],
       ['/w==', 'ff'],
       ['3q2+7w==', 'deadbeef'],
@@ -550,8 +550,8 @@ describe('shared encoding helpers', () => {
       { hex: '010203', binary: '000000010000001000000011', base64: 'AQID' },
       { hex: '102030', binary: '000100000010000000110000', base64: 'ECAw' },
       { hex: '405060', binary: '010000000101000001100000', base64: 'QFBg' },
-      { hex: '708090', binary: '011100001000000010010000', base64: 'cICA' },
-      { hex: 'a0b0c0', binary: '101000001011000010110000', base64: 'oLDA' },
+      { hex: '708090', binary: '011100001000000010010000', base64: 'cICQ' },
+      { hex: 'a0b0c0', binary: '101000001011000011000000', base64: 'oLDA' },
       { hex: 'd0e0f0', binary: '110100001110000011110000', base64: '0ODw' },
       { hex: '1122334455', binary: '0001000100100010001100110100010001010101', base64: 'ESIzRFU=' },
       { hex: 'abcdef', binary: '101010111100110111101111', base64: 'q83v' },

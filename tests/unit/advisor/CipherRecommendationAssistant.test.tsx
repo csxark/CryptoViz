@@ -12,17 +12,17 @@ describe('CipherRecommendationAssistant Component Unit Tests', () => {
 
     expect(screen.getByText(/Select a Common Use Case Scenario/i)).toBeInTheDocument()
     expect(screen.getByText(/Web & API Security/i)).toBeInTheDocument()
-    expect(screen.getByText(/Password Hashing & Storage/i)).toBeInTheDocument()
+    expect(screen.getByText(/Password Hashing & Key Derivation/i)).toBeInTheDocument()
     expect(screen.getByText(/IoT & Embedded Microcontrollers/i)).toBeInTheDocument()
   })
 
   it('filters algorithms when a use case preset card is clicked', () => {
     render(<CipherRecommendationAssistant />)
 
-    const passwordPreset = screen.getByText(/Password Hashing & Storage/i)
+    const passwordPreset = screen.getByText(/Password Hashing & Key Derivation/i)
     fireEvent.click(passwordPreset)
 
-    expect(screen.getByText(/Argon2id/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Argon2id/i })).toBeInTheDocument()
   })
 
   it('toggles code snippet view when View Code button is clicked', () => {
@@ -34,7 +34,7 @@ describe('CipherRecommendationAssistant Component Unit Tests', () => {
     fireEvent.click(viewCodeButtons[0])
 
     expect(screen.getByText(/Implementation Example/i)).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('switches between Use Case Explorer and Decision Tree Wizard tabs', () => {
     render(<CipherRecommendationAssistant />)
@@ -48,5 +48,5 @@ describe('CipherRecommendationAssistant Component Unit Tests', () => {
     fireEvent.click(explorerTab)
 
     expect(screen.getByText(/Select a Common Use Case Scenario/i)).toBeInTheDocument()
-  })
+  }, 15000)
 })

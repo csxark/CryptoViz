@@ -116,7 +116,7 @@ describe('Universal Property-Based Cipher Fuzzing Suite (#1635)', () => {
           fc.string({ minLength: 1, maxLength: 32 }),
           async (baseSize, delta, input) => {
             const size = baseSize + delta;
-            if (size === 16) return; // valid size, covered by the round-trip suite above
+            if (size === 16 || size === 24 || size === 32) return; // valid AES-128, AES-192, AES-256 sizes
             const badKey = 'k'.repeat(Math.max(size, 0));
             try {
               encrypt(input, badKey);

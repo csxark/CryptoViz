@@ -95,6 +95,17 @@ function constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
     return diff === 0
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param plaintext Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(plaintext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyNonce = parseHex(key, 'Romulus key+nonce')
@@ -160,6 +171,17 @@ export function encrypt(plaintext: string, key: string, options: CipherOptions =
     return { output: toHex(new Uint8Array([...ctBytes, ...tag])), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param ciphertext Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(ciphertext: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const keyNonce = parseHex(key, 'Romulus key+nonce')
@@ -223,6 +245,14 @@ export function decrypt(ciphertext: string, key: string, options: CipherOptions 
     return { output: toHex(new Uint8Array(ptBytes)), outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '00000000000000000000000000000000', key: '00'.repeat(32), expected: 'mock_ct_tag', description: 'Romulus-N empty AD, 16-byte zero plaintext' }
 ]

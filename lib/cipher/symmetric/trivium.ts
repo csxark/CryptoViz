@@ -17,6 +17,7 @@
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput, validateKey } from '../../utils'
+import { cryptoRandomBytes } from '@/lib/random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
     name: 'Trivium',
@@ -64,10 +65,7 @@ function triviumKeystream(s: Uint8Array, n: number): Uint8Array {
 }
 
 function randomBytes(n: number): Uint8Array {
-    const buf = new Uint8Array(n)
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(buf)
-    else for (let i = 0; i < n; i++) buf[i] = Math.floor(Math.random() * 256)
-    return buf
+    return cryptoRandomBytes(n)
 }
 
 function parseHex(s: string, lbl: string): Uint8Array {
@@ -146,7 +144,7 @@ function triviumCore(input: string, key: string, dec: boolean, instrument: boole
  */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
-    const iv = (options as Record<string, unknown>).nonce as string | undefined
+    const iv = ((options as Record<string, unknown>).nonce ?? (options as Record<string, unknown>).iv) as string | undefined
     return triviumCore(input, key, false, !!options.instrument, iv)
 }
 /**

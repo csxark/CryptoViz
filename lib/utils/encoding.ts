@@ -171,13 +171,19 @@ export function parseBase64(value: string, options: Base64Options = {}): Uint8Ar
   let normalized = normalizeWhitespace(value, options.allowWhitespace ?? true, label);
   if (options.urlSafe) {
     normalized = normalized.replace(/-/g, '+').replace(/_/g, '/');
+    const remainder = normalized.length % 4;
+    if (remainder === 1) {
+      throw new Error(`${label} is not valid base64.`);
+    }
+    if (remainder > 0) {
+      normalized = normalized.padEnd(normalized.length + (4 - remainder), '=');
+    }
   }
 
   if (!BASE64_RE.test(normalized)) {
     throw new Error(`${label} is not valid base64.`);
   }
-
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+  const padded = normalized;
   const decoded = typeof globalThis.atob === 'function'
     ? globalThis.atob(padded)
     : decodeBase64Fallback(padded);

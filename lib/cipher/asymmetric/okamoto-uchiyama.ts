@@ -16,6 +16,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput } from '../../utils'
+import { cryptoRandomBytes } from '../../random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
     name: 'Okamoto-Uchiyama',
@@ -43,15 +44,8 @@ const H = modPow(G, N, N)  // h = g^n mod n
  */
 function getRandomBigIntBytes(max: bigint): bigint {
     const byteLength = Math.ceil(max.toString(2).length / 8)
-    const bytes = new Uint8Array(byteLength)
     while (true) {
-        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-            crypto.getRandomValues(bytes)
-        } else {
-            for (let i = 0; i < bytes.length; i++) {
-                bytes[i] = Math.floor(Math.random() * 256)
-            }
-        }
+        const bytes = cryptoRandomBytes(byteLength)
         let hex = ''
         bytes.forEach(b => hex += b.toString(16).padStart(2, '0'))
         const r = BigInt('0x' + hex)

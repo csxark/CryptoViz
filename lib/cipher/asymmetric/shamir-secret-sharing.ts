@@ -21,6 +21,7 @@
 
 import { CipherError } from '../../utils/errors'
 import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVector } from '../types'
+import { cryptoRandomInt } from '../../random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
   name: "Shamir's Secret Sharing",
@@ -71,7 +72,7 @@ function bytesToHex(b: Uint8Array): string {
 
 function splitByte(secretByte: number, n: number, k: number): [number, number][] {
   const coeffs = [secretByte]
-  for (let i = 1; i < k; i++) coeffs.push(Math.floor(Math.random() * 255) + 1)
+  for (let i = 1; i < k; i++) coeffs.push(cryptoRandomInt(255) + 1)
   const shares: [number, number][] = []
   for (let x = 1; x <= n; x++) {
     let y = 0

@@ -14,6 +14,7 @@
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput, validateKey } from '../../utils'
+import { cryptoRandomBytes } from '@/lib/random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
     name: 'HC-128',
@@ -112,10 +113,7 @@ function hc128Keystream(state: HC128State, n: number): Uint8Array {
 }
 
 function randomBytes(n: number): Uint8Array {
-    const buf = new Uint8Array(n)
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(buf)
-    else for (let i = 0; i < n; i++) buf[i] = Math.floor(Math.random() * 256)
-    return buf
+    return cryptoRandomBytes(n)
 }
 function parseHex(s: string, lbl: string): Uint8Array {
     const c = s.replace(/\s+/g, '').toLowerCase()
@@ -187,7 +185,7 @@ function hc128Core(input: string, key: string, dec: boolean, instrument: boolean
  */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     validateInput(input)
-    const iv = (options as Record<string, unknown>).nonce as string | undefined
+    const iv = ((options as Record<string, unknown>).nonce ?? (options as Record<string, unknown>).iv) as string | undefined
     return hc128Core(input, key, false, !!options.instrument, iv)
 }
 /**
@@ -215,7 +213,15 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
  */
 export const TEST_VECTORS: TestVector[] = [
     {
-        input: '48656c6c6f20576f726c64', key: '00000000000000000000000000000000',
+        input: '000000000000000000000000000000000000000000000000',
+        key: '00000000000000000000000000000000',
+        expected: '0000000000000000000000000000000082001573a003fd3b7fd72ffb0eaf63aac20cf9a9491267a3',
+        description: 'HC-128 eSTREAM KAT (Key=0, IV=0, 24 bytes keystream)',
+        options: { nonce: '00000000000000000000000000000000' },
+    },
+    {
+        input: '48656c6c6f20576f726c64',
+        key: '00000000000000000000000000000000',
         expected: 'randomized',
         description: 'HC-128 stream cipher with 128-bit key (randomized 128-bit IV prepended to ciphertext)'
     },

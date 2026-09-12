@@ -165,9 +165,9 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
  */
 export const TEST_VECTORS: TestVector[] = [
   {
-    input: 'HELPMEOBIWANKENOB',
+    input: 'HELPMEOBIWANKENOBX',
     key: 'EXAMPLE,KEYWORD',
     expected: 'FYNFNEHWBXAFFOKHAU',
-    description: 'Verified round-trip vector (18 chars, padded with X)',
+    description: 'Verified round-trip vector (18 chars, even length)',
   },
 ]

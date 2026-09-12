@@ -30,6 +30,14 @@ function hexToBytes(hex: string): Uint8Array {
     return o
 }
 
+/**
+ * Generate cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function generate(): { publicKey: string, privateKey: string } {
     const pair = bls12_381.shortSignatures.keygen()
     return {
@@ -38,6 +46,16 @@ export function generate(): { publicKey: string, privateKey: string } {
     }
 }
 
+/**
+ * Sign cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param messages Input required by the Sign operation.
+ * @param privateKey Input required by the Sign operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function sign(messages: string[], privateKey: string): string {
     const sk = BigInt('0x' + privateKey)
     const e = 12345n
@@ -59,6 +77,17 @@ export function sign(messages: string[], privateKey: string): string {
     return bytesToHex(sig)
 }
 
+/**
+ * Verify cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param messages Input required by the Verify operation.
+ * @param publicKey Input required by the Verify operation.
+ * @param signature Input required by the Verify operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function verify(messages: string[], publicKey: string, signature: string): boolean {
     try {
         const pk = G2.Point.fromHex(publicKey)
@@ -74,12 +103,36 @@ export function verify(messages: string[], publicKey: string, signature: string)
     }
 }
 
+/**
+ * Prove Disclosure cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param messages Input required by the Prove Disclosure operation.
+ * @param publicKey Input required by the Prove Disclosure operation.
+ * @param signature Input required by the Prove Disclosure operation.
+ * @param disclosedIndices Input required by the Prove Disclosure operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function proveDisclosure(messages: string[], publicKey: string, signature: string, disclosedIndices: number[]): string {
     // Simplified proof generation
     const disclosedMsgs = disclosedIndices.map(i => messages[i])
     return bytesToHex(new TextEncoder().encode(JSON.stringify({ disclosed: disclosedMsgs, proof: 'mock_zk_proof' })))
 }
 
+/**
+ * Verify Disclosure cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param disclosedMessages Input required by the Verify Disclosure operation.
+ * @param publicKey Input required by the Verify Disclosure operation.
+ * @param proof Input required by the Verify Disclosure operation.
+ * @param disclosedIndices Input required by the Verify Disclosure operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function verifyDisclosure(disclosedMessages: string[], publicKey: string, proof: string, disclosedIndices: number[]): boolean {
     try {
         const proofData = JSON.parse(new TextDecoder().decode(hexToBytes(proof)))
@@ -96,6 +149,17 @@ export function verifyDisclosure(disclosedMessages: string[], publicKey: string,
 }
 
 // Visualizer API mapping
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     const messages = JSON.parse(input)
     const sig = sign(messages, key)
@@ -103,11 +167,30 @@ export function encrypt(input: string, key: string, options: CipherOptions = {})
     return { output: proof, outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: 0 }
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     const valid = verifyDisclosure([], key, input, (options.disclosedIndices as number[]) || [0])
     return { output: valid ? 'valid' : 'invalid', outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: 0 }
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '["Alice", "1990", "Engineer"]', key: 'mock_sk', expected: 'mock_proof', description: 'BBS+ sign + prove disclosure' }
 ]

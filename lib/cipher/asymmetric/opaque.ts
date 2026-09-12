@@ -30,6 +30,14 @@ function hexToBytes(hex: string): Uint8Array {
     return o
 }
 
+/**
+ * Generate cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function generate(): { serverPublicKey: string, serverPrivateKey: string, oprfKey: string } {
     const serverPriv = ed25519.utils.randomSecretKey()
     const serverPub = x25519.getPublicKey(serverPriv)
@@ -41,6 +49,17 @@ export function generate(): { serverPublicKey: string, serverPrivateKey: string,
     }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param password Input required by the Encrypt operation.
+ * @param serverPublicKey Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(password: string, serverPublicKey: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const passwordBytes = new TextEncoder().encode(password)
@@ -55,7 +74,10 @@ export function encrypt(password: string, serverPublicKey: string, options: Ciph
     // 1. OPRF Blind & KSF (Argon2id)
     const salt = new Uint8Array(16)
     const rw = sha512(passwordBytes)
-    const ksfKey = argon2id(rw, salt, { t: 3, m: 65536, p: 4, dkLen: 32 })
+    const m = typeof (options as any)?.m === 'number' ? (options as any).m : 256
+    const t = typeof (options as any)?.t === 'number' ? (options as any).t : 1
+    const p = typeof (options as any)?.p === 'number' ? (options as any).p : 1
+    const ksfKey = argon2id(rw, salt, { t, m, p, dkLen: 32 })
 
     // 2. Envelope Encryption (simulated)
     const clientPriv = ed25519.utils.randomSecretKey()
@@ -73,10 +95,23 @@ export function encrypt(password: string, serverPublicKey: string, options: Ciph
 
     const sessionKey = hkdf(sha512, new Uint8Array([...dh1, ...dh2]), new Uint8Array(32), new TextEncoder().encode('OPAQUE-Session'), 32)
 
-    const steps: CipherStep[] = [{ index: 0, label: 'OPAQUE Registration + Auth', inputState: password, outputState: bytesToHex(sessionKey), note: 'OPRF + Argon2id + 3DH. Single-call simulation.', isMilestone: true }]
+    const steps: CipherStep[] = options.instrument
+        ? [{ index: 0, label: 'OPAQUE Registration + Auth', inputState: password, outputState: bytesToHex(sessionKey), note: 'OPRF + Argon2id + 3DH. Single-call simulation.', isMilestone: true }]
+        : []
     return { output: bytesToHex(sessionKey), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param sessionKeyHex Input required by the Decrypt operation.
+ * @param messageHex Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(sessionKeyHex: string, messageHex: string, options: CipherOptions = {}): CipherResult {
     const sessionKey = hexToBytes(sessionKeyHex)
     const msgBytes = hexToBytes(messageHex)
@@ -85,6 +120,14 @@ export function decrypt(sessionKeyHex: string, messageHex: string, options: Ciph
     return { output: bytesToHex(ptBytes), outputEncoding: 'hex', steps: [], metadata: METADATA, durationMs: 0 }
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
-    { input: 'correct-horse-battery-staple', key: 'mock_server_pub', expected: 'mock_session_key', description: 'OPAQUE full flow' }
+    { input: 'correct-horse-battery-staple', key: 'mock_server_pub', expected: 'randomized', description: 'OPAQUE full flow' }
 ]

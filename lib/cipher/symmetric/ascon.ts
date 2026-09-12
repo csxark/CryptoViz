@@ -19,6 +19,7 @@
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput, validateKey } from '../../utils'
+import { cryptoRandomBytes } from '@/lib/random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
     name: 'ASCON-128',
@@ -141,13 +142,7 @@ function bigToBytesBE(v: bigint, len: number): Uint8Array {
 }
 
 function randomBytes(n: number): Uint8Array {
-    const buf = new Uint8Array(n)
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-        crypto.getRandomValues(buf)
-    } else {
-        for (let i = 0; i < n; i++) buf[i] = Math.floor(Math.random() * 256)
-    }
-    return buf
+    return cryptoRandomBytes(n)
 }
 
 function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
@@ -438,6 +433,13 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
  * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
  */
 export const TEST_VECTORS: TestVector[] = [
+    {
+        input: '',
+        key: '000102030405060708090a0b0c0d0e0f',
+        expected: '000102030405060708090a0b0c0d0e0fe355159f979352e04a30e4f045149a4f',
+        description: 'ASCON-128 NIST LWC KAT (Empty PT, 128-bit key and nonce)',
+        options: { nonce: '000102030405060708090a0b0c0d0e0f' },
+    },
     {
         input: '00',
         key: '000102030405060708090a0b0c0d0e0f',

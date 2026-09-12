@@ -149,6 +149,14 @@ function discreteLog(g: GFElement, target: GFElement): number {
     throw new CipherError('INVALID_INPUT', 'Discrete log not found')
 }
 
+/**
+ * Chor Rivest Keys cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export interface ChorRivestKeys {
     publicWeights: number[]  // Knapsack weights (public)
     privatePermutation: number[]  // Permutation disguising the structure

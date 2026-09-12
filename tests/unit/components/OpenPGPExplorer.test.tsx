@@ -83,6 +83,6 @@ describe('OpenPGPExplorer Component', () => {
     fireEvent.click(corruptBtn);
 
     expect(screen.getByText(/Cryptographic Verification Failed/i)).toBeInTheDocument();
-    expect(screen.getByText(/SEIPD MDC/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/SEIPD MDC/i)[0]).toBeInTheDocument();
   });
 });

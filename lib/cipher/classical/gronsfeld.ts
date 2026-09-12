@@ -230,6 +230,14 @@ function gronsfeldFast(
 // Public API
 // ---------------------------------------------------------------------------
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function encrypt(
   input: string,
   key: string = '31415',
@@ -240,6 +248,14 @@ export function encrypt(
   return gronsfeldFast(input, key, false)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function decrypt(
   input: string,
   key: string = '31415',

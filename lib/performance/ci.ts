@@ -84,7 +84,7 @@ export class PerformanceCI {
     if (opts.outputFile) {
       const report = await PerformanceReporter.generateReport(profiles, comparisons)
       const format: 'text' | 'json' | 'markdown' = (opts.outputFormat as 'text' | 'json' | 'markdown') || 'text'
-      PerformanceReporter.exportReportToFile(report, opts.outputFile, format)
+      await PerformanceReporter.exportReportToFile(report, opts.outputFile, format)
     }
 
     // Determine exit code
@@ -300,27 +300,27 @@ export class PerformanceCI {
   /**
    * Create performance baseline from current profiles for CI
    */
-  static createCIBaseline(
+  static async createCIBaseline(
     profiles: PerformanceProfile[],
     version: string,
     commitHash: string,
-  ): void {
+  ): Promise<void> {
     for (const profile of profiles) {
-      BaselineManager.saveBaseline(profile, version, commitHash)
+      await BaselineManager.saveBaseline(profile, version, commitHash)
     }
   }
 
   /**
    * Validate that all profiles have corresponding baselines
    */
-  static validateBaselinesExist(profiles: PerformanceProfile[]): {
+  static async validateBaselinesExist(profiles: PerformanceProfile[]): Promise<{
     missing: string[]
     allPresent: boolean
-  } {
+  }> {
     const missing: string[] = []
 
     for (const profile of profiles) {
-      const baseline = BaselineManager.getBaseline(profile.cipherId)
+      const baseline = await BaselineManager.getBaseline(profile.cipherId)
       if (!baseline) {
         missing.push(profile.cipherId)
       }

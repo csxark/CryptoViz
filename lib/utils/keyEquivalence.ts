@@ -41,7 +41,7 @@ export function getSearchSpaceString(securityBits: number): string {
   if (securityBits <= 56) {
     // For small spaces, we can compute exact or close
     const space = Math.pow(2, securityBits);
-    return space.toLocaleString();
+    return space.toLocaleString('en-US');
   }
   return `2^${securityBits} (approx. 10^${Math.floor(securityBits * Math.log10(2))})`;
 }

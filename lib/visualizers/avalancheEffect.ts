@@ -151,7 +151,7 @@ export function calculatePercentageDifference(changedBits: number, totalBits: nu
 }
 
 export function buildAvalancheResult(input: AvalancheInput): AvalancheResult {
-  const rounds = clamp(input.rounds || DEFAULT_ROUNDS, MIN_ROUNDS, MAX_ROUNDS);
+  const rounds = clamp(input.rounds ?? DEFAULT_ROUNDS, MIN_ROUNDS, MAX_ROUNDS);
   const originalMessageBits = bytesToBits(textToBytes(input.message));
   const safeBitIndex = clamp(input.flippedBitIndex, 0, originalMessageBits.length - 1);
   const changedMessageBits = flipBit(originalMessageBits, safeBitIndex);

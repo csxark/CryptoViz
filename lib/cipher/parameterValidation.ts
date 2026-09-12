@@ -2,8 +2,24 @@ import type { CipherDefinition } from "./registry";
 import type { CipherOptions } from "./types";
 import { CipherError, type CipherErrorCode } from "../utils/errors";
 
+/**
+ * Parameter Source cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export type ParameterSource = "input" | "key" | "option";
 
+/**
+ * Parameter Type cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export type ParameterType =
   | "string"
   | "number"
@@ -13,6 +29,14 @@ export type ParameterType =
   | "enum"
   | "composite";
 
+/**
+ * Parameter Part cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface ParameterPart {
   id: string;
   label: string;
@@ -26,6 +50,14 @@ export interface ParameterPart {
   pattern?: string;
 }
 
+/**
+ * Parameter Rule cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface ParameterRule {
   id: string;
   label: string;
@@ -48,6 +80,14 @@ export interface ParameterRule {
   distinctParts?: string[];
 }
 
+/**
+ * Parameter Dependency cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface ParameterDependency {
   when: {
     parameter: string;
@@ -58,6 +98,14 @@ export interface ParameterDependency {
   forbid?: string[];
 }
 
+/**
+ * Cipher Parameter Schema cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CipherParameterSchema {
   cipherId: string;
   parameters: ParameterRule[];
@@ -65,6 +113,14 @@ export interface CipherParameterSchema {
   warnings?: string[];
 }
 
+/**
+ * Parameter Validation Issue cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface ParameterValidationIssue {
   parameter: string;
   code: CipherErrorCode;
@@ -73,6 +129,14 @@ export interface ParameterValidationIssue {
   actual?: unknown;
 }
 
+/**
+ * Parameter Validation Result cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface ParameterValidationResult {
   valid: boolean;
   issues: ParameterValidationIssue[];
@@ -355,11 +419,13 @@ function validateScalar(
 
       const parts = value.split(rule.separator ?? "|");
 
-      if (!rule.parts || parts.length !== rule.parts.length) {
+      const minRequiredParts = rule.parts?.filter(p => p.required !== false).length ?? 0;
+      const maxParts = rule.parts?.length ?? 0;
+      if (!rule.parts || parts.length < minRequiredParts || parts.length > maxParts) {
         return {
           parameter: rule.id,
           code: "INVALID_KEY",
-          message: `${rule.label} must contain exactly ${rule.parts?.length ?? 0} parts separated by "${rule.separator ?? "|"}".`,
+          message: `${rule.label} must contain between ${minRequiredParts} and ${maxParts} parts separated by "${rule.separator ?? "|"}".`,
           expected: rule.parts?.map((part) => part.label),
           actual: parts.length,
         };
@@ -367,7 +433,11 @@ function validateScalar(
 
       for (let index = 0; index < rule.parts.length; index += 1) {
         const part = rule.parts[index];
-        const issue = validateScalar(parts[index], {
+        const partValue = parts[index];
+        if (partValue === undefined && part.required === false) {
+          continue;
+        }
+        const issue = validateScalar(partValue, {
           id: part.id,
           label: part.label,
           source: "key",
@@ -896,6 +966,14 @@ function createGenericSchema(
   };
 }
 
+/**
+ * Build Cipher Parameter Schema cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function buildCipherParameterSchema(
   definition: CipherDefinition,
 ): CipherParameterSchema {
@@ -905,6 +983,14 @@ export function buildCipherParameterSchema(
   );
 }
 
+/**
+ * Validate Cipher Parameters cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function validateCipherParameters(
   definition: CipherDefinition,
   input: string,
@@ -989,6 +1075,14 @@ export function validateCipherParameters(
   };
 }
 
+/**
+ * Assert Valid Cipher Parameters cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export function assertValidCipherParameters(
   definition: CipherDefinition,
   input: string,

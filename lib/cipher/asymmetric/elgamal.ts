@@ -16,12 +16,13 @@ import { CipherError } from '../../utils/errors'
 import { modInverse } from './rsa'
 import type { CipherResult, CipherStep, CipherMetadata, CipherOptions, TestVector } from '../types'
 import { parseAsymmetricInput } from './asymmetricInput'
+import { cryptoRandomBytes } from '@/lib/random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
   name: 'ElGamal',
   securityStatus: 'secure',
   securityWarning:
-    'Demo mode uses Math.random() for ephemeral key generation. Not suitable for real encryption.',
+    'Demo mode uses CSPRNG for ephemeral key generation. Not suitable for real encryption.',
   yearDesigned: 1985,
   standardBody: 'Discrete Logarithm Problem (DLP)',
 }
@@ -109,12 +110,24 @@ function parsePrivateKey(keyStr: string): ElGamalPrivateKey {
   }
 }
 
-// Cryptographically-irrelevant demo RNG: picks a k in [2, p-2]. Real ElGamal
-// requires a fresh, unpredictable k per message — this is teaching code only.
+// Cryptographically-secure ephemeral key generator: picks a k in [2, p-2].
 function randomEphemeral(p: bigint): bigint {
   const range = p - 3n // [2, p-2] has (p-4+1) = p-3 values
   if (range <= 0n) throw new CipherError('INVALID_KEY', 'Prime p is too small to pick an ephemeral key.')
-  const rand = BigInt(Math.floor(Math.random() * Number(range)))
+  const byteLength = Math.ceil(range.toString(2).length / 8) + 1
+  let rand = 0n
+  while (true) {
+    const bytes = cryptoRandomBytes(byteLength)
+    let val = 0n
+    for (let i = 0; i < bytes.length; i++) {
+      val = (val << 8n) | BigInt(bytes[i])
+    }
+    const limit = (1n << BigInt(byteLength * 8)) - ((1n << BigInt(byteLength * 8)) % range)
+    if (val < limit) {
+      rand = val % range
+      break
+    }
+  }
   return 2n + rand
 }
 
@@ -176,7 +189,7 @@ export function encrypt(input: string, key: string = '', options: CipherOptions 
         { key: 'k (ephemeral, this message only)', value: k.toString() },
       ],
       note:
-        'c1 = g^k mod p, c2 = m * y^k mod p. A fresh k should be used for every message in real usage. (⚠️ Educational demo uses Math.random() for ephemeral k).',
+        'c1 = g^k mod p, c2 = m * y^k mod p. A fresh k should be used for every message in real usage. (Uses CSPRNG for ephemeral k).',
       isMilestone: true,
     })
   }

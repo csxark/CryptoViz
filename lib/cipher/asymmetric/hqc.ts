@@ -104,13 +104,17 @@ function hqcCore(input: string, key: string, doDecrypt: boolean, options: Cipher
         const K = shake256(kdfInput, { dkLen: 32 })
 
         outHex = bytesToHex(K)
-        steps.push({ index: 0, label: 'HQC Encapsulation', inputState: input, outputState: outHex, note: `QC-MDPC ring arithmetic. n=${N}. Decryption failure probability is a core parameter.`, isMilestone: true })
+        if (options?.instrument) {
+            steps.push({ index: 0, label: 'HQC Encapsulation', inputState: input, outputState: outHex, note: `QC-MDPC ring arithmetic. n=${N}. Decryption failure probability is a core parameter.`, isMilestone: true })
+        }
     } else {
         // Decapsulation (Simplified RM decoding for visualizer)
         // In real HQC, v - u*y = m*G + noise, then Fast Hadamard Transform decodes RM.
         // Here we just return the input as a mock successful decapsulation.
         outHex = bytesToHex(msgBytes)
-        steps.push({ index: 0, label: 'HQC Decapsulation', inputState: input, outputState: outHex, note: 'Fast Hadamard Transform (FHT) decodes Reed-Muller code.', isMilestone: true })
+        if (options?.instrument) {
+            steps.push({ index: 0, label: 'HQC Decapsulation', inputState: input, outputState: outHex, note: 'Fast Hadamard Transform (FHT) decodes Reed-Muller code.', isMilestone: true })
+        }
     }
 
     return { output: outHex, outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
@@ -153,5 +157,5 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
  * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
  */
 export const TEST_VECTORS: TestVector[] = [
-    { input: '48656c6c6f', key: '00'.repeat(32), expected: 'mock_hqc_shared_key', description: 'HQC Encapsulation' }
+    { input: '48656c6c6f', key: '00'.repeat(32), expected: 'cbfec033e0d168425307199f8dd3795d54707b40182a9d2ebff022684efd686c', description: 'HQC Encapsulation' }
 ]

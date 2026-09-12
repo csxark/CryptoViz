@@ -562,4 +562,15 @@ export async function decrypt(
  * @returns The operation result produced by the cipher engine.
  * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
  */
-export const TEST_VECTORS: TestVector[] = []
+export const TEST_VECTORS: TestVector[] = [
+  {
+    input: '00000000000000000000000000000000',
+    key: '00000000000000000000000000000000',
+    expected: '0000000000000000000000000388dace60b6a392f328c2b971b2fe78ab6e47d42cec13bdf53a67b21257bddf',
+    options: {
+      iv: '000000000000000000000000',
+      encoding: 'hex',
+    },
+    description: 'NIST SP 800-38D Test Case 2 — AES-128-GCM single zero block with 96-bit zero IV',
+  },
+]

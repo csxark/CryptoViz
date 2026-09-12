@@ -72,6 +72,17 @@ function cshake128(X: Uint8Array, L: number, N: string, S: string): Uint8Array {
     return shake128(input, { dkLen: L / 8 })
 }
 
+/**
+ * Generate cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Generate operation.
+ * @param key Input required by the Generate operation.
+ * @param options Input required by the Generate operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function generate(input: string, key: string, options: CipherOptions = {}): CipherResult {
     const start = performance.now()
     const X = new TextEncoder().encode(input)
@@ -120,11 +131,31 @@ export function generate(input: string, key: string, options: CipherOptions = {}
     return { output: toHex(hash), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Verify cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Verify operation.
+ * @param key Input required by the Verify operation.
+ * @param hash Input required by the Verify operation.
+ * @param options Input required by the Verify operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function verify(input: string, key: string, hash: string, options: CipherOptions = {}): boolean {
     const result = generate(input, key, options)
     return result.output === hash.toLowerCase()
 }
 
+/**
+ * TEST VECTORS cryptographic hash export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
     { input: '', key: '8:', expected: '4fec041e653c9dd6bbf60f1408a824d7', description: 'ParallelHash128 empty input, B=8' }
 ]

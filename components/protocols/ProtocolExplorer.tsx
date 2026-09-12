@@ -123,7 +123,7 @@ const protocols: Protocol[] = [
 ]
 
 export default function ProtocolExplorer() {
-  const [activeTab, setActiveTab] = useState<string>(protocols[0].id)
+  const [activeTab, setActiveTab] = useState<string>('tls')
   const [activeStep, setActiveStep] = useState<number>(0)
 
   const activeProtocol = protocols.find(p => p.id === activeTab) || protocols[0]

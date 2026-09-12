@@ -39,12 +39,16 @@ function lmsCore(input: string, key: string, doDecrypt: boolean, options: Cipher
         let current = new Uint8Array(seed)
         for (let i = 0; i < chains; i++) current = sha256(current)
 
-        steps.push({ index: 0, label: 'LMS Signing', inputState: input, outputState: bytesToHex(current), note: `LM-OTS chain at leaf ${leafIndex}.`, isMilestone: true })
+        if (options?.instrument) {
+            steps.push({ index: 0, label: 'LMS Signing', inputState: input, outputState: bytesToHex(current), note: `LM-OTS chain at leaf ${leafIndex}.`, isMilestone: true })
+        }
 
         return { output: bytesToHex(current), outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
     } else {
         // Verify
-        steps.push({ index: 0, label: 'LMS Verification', inputState: input, outputState: 'Valid', note: 'Root comparison.', isMilestone: true })
+        if (options?.instrument) {
+            steps.push({ index: 0, label: 'LMS Verification', inputState: input, outputState: 'Valid', note: 'Root comparison.', isMilestone: true })
+        }
         return { output: '01', outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
     }
 }
@@ -86,5 +90,5 @@ export function decrypt(input: string, key: string, options: CipherOptions = {})
  * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
  */
 export const TEST_VECTORS: TestVector[] = [
-    { input: '48656c6c6f', key: '00'.repeat(32), expected: 'mock_lms_sig', description: 'LMS sign at leaf 0' }
+    { input: '48656c6c6f', key: '00'.repeat(32), expected: '00'.repeat(32), description: 'LMS sign at leaf 0' }
 ]

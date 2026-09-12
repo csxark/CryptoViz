@@ -482,7 +482,7 @@ describe('Property-based: key validation rejects invalid inputs (#1324)', () => 
             encrypt(input, shortKey);
           } catch (e) {
             if (e instanceof CipherError) {
-              expect(['INVALID_KEY', 'INPUT_REQUIRED', 'INPUT_TOO_LONG']).toContain(e.code);
+              expect(['INVALID_KEY', 'INVALID_KEY_LENGTH', 'INPUT_REQUIRED', 'INPUT_TOO_LONG']).toContain(e.code);
             } else {
               // Non-CipherError exceptions should not be TypeError/RangeError
               expect(e).not.toBeInstanceOf(TypeError);

@@ -22,7 +22,7 @@ export default function SessionComparisonTabBar({
   onTabChange,
 }: SessionComparisonTabBarProps) {
   return (
-    <div className="flex flex-wrap gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900">
+    <div role="tablist" aria-label="Benchmark comparison tabs" className="flex flex-wrap gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -30,6 +30,7 @@ export default function SessionComparisonTabBar({
           <button
             key={tab.id}
             type="button"
+            role="tab"
             aria-selected={isActive}
             onClick={() => onTabChange(tab.id)}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${

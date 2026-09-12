@@ -24,6 +24,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput } from '../../utils'
+import { cryptoRandomInt } from '../../random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
     name: 'Falcon',
@@ -87,7 +88,7 @@ function polyMul(a: Poly, b: Poly): Poly {
 function sampleShort(): Poly {
     const out: Poly = new Array(N).fill(0)
     for (let i = 0; i < N; i++) {
-        out[i] = modQ(Math.floor(Math.random() * 5) - 2)  // Range [-2, 2]
+        out[i] = modQ(cryptoRandomInt(5) - 2)  // Range [-2, 2]
     }
     return out
 }

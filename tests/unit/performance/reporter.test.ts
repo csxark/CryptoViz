@@ -89,8 +89,8 @@ describe('PerformanceReporter', () => {
   }
 
   describe('generateReport', () => {
-    it('should generate a complete report', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should generate a complete report', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       
       expect(report.generatedAt).toBeInstanceOf(Date)
       expect(report.environment).toEqual(mockProfile.environment)
@@ -99,19 +99,19 @@ describe('PerformanceReporter', () => {
       expect(report.summary).toBeDefined()
     })
 
-    it('should generate report with empty data', () => {
-      const report = PerformanceReporter.generateReport([], [])
+    it('should generate report with empty data', async () => {
+      const report = await PerformanceReporter.generateReport([], [])
       
       expect(report.profiles).toHaveLength(0)
       expect(report.comparisons).toHaveLength(0)
       expect(report.summary.totalCiphers).toBe(0)
     })
 
-    it('should calculate summary correctly', () => {
+    it('should calculate summary correctly', async () => {
       const profile2 = { ...mockProfile, cipherId: 'test-cipher-2' }
       const comparison2 = { ...mockComparison, cipherId: 'test-cipher-2', regression: 'improvement' as const }
       
-      const report = PerformanceReporter.generateReport([mockProfile, profile2], [mockComparison, comparison2])
+      const report = await PerformanceReporter.generateReport([mockProfile, profile2], [mockComparison, comparison2])
       
       expect(report.summary.totalCiphers).toBe(2)
       expect(report.summary.regressions).toBe(1)
@@ -120,8 +120,8 @@ describe('PerformanceReporter', () => {
   })
 
   describe('formatTextReport', () => {
-    it('should format report as text', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should format report as text', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const text = PerformanceReporter.formatTextReport(report)
       
       expect(text).toContain('CIPHER PERFORMANCE PROFILING REPORT')
@@ -132,8 +132,8 @@ describe('PerformanceReporter', () => {
       expect(text).toContain('REGRESSION')
     })
 
-    it('should include environment information', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [])
+    it('should include environment information', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [])
       const text = PerformanceReporter.formatTextReport(report)
       
       expect(text).toContain('ENVIRONMENT')
@@ -142,8 +142,8 @@ describe('PerformanceReporter', () => {
       expect(text).toContain('x64')
     })
 
-    it('should include summary section', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should include summary section', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const text = PerformanceReporter.formatTextReport(report)
       
       expect(text).toContain('SUMMARY')
@@ -151,8 +151,8 @@ describe('PerformanceReporter', () => {
       expect(text).toContain('Regressions: 1')
     })
 
-    it('should include comparison data', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should include comparison data', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const text = PerformanceReporter.formatTextReport(report)
       
       expect(text).toContain('BASELINE COMPARISONS')
@@ -162,8 +162,8 @@ describe('PerformanceReporter', () => {
   })
 
   describe('formatJsonReport', () => {
-    it('should format report as JSON', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should format report as JSON', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const json = PerformanceReporter.formatJsonReport(report)
       
       const parsed = JSON.parse(json)
@@ -174,8 +174,8 @@ describe('PerformanceReporter', () => {
       expect(parsed.summary).toBeDefined()
     })
 
-    it('should be valid JSON', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should be valid JSON', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const json = PerformanceReporter.formatJsonReport(report)
       
       expect(() => JSON.parse(json)).not.toThrow()
@@ -183,8 +183,8 @@ describe('PerformanceReporter', () => {
   })
 
   describe('formatMarkdownReport', () => {
-    it('should format report as markdown', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should format report as markdown', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const md = PerformanceReporter.formatMarkdownReport(report)
       
       expect(md).toContain('# Cipher Performance Profiling Report')
@@ -195,8 +195,8 @@ describe('PerformanceReporter', () => {
       expect(md).toContain('| Property | Value |')
     })
 
-    it('should include markdown tables', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should include markdown tables', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const md = PerformanceReporter.formatMarkdownReport(report)
       
       expect(md).toContain('|---')
@@ -204,8 +204,8 @@ describe('PerformanceReporter', () => {
       expect(md).toContain('| Platform |')
     })
 
-    it('should include cipher details', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should include cipher details', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const md = PerformanceReporter.formatMarkdownReport(report)
       
       expect(md).toContain('### Test Cipher')
@@ -213,8 +213,8 @@ describe('PerformanceReporter', () => {
       expect(md).toContain('#### Memory Usage')
     })
 
-    it('should include comparison details when available', () => {
-      const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
+    it('should include comparison details when available', async () => {
+      const report = await PerformanceReporter.generateReport([mockProfile], [mockComparison])
       const md = PerformanceReporter.formatMarkdownReport(report)
       
       expect(md).toContain('## Baseline Comparisons')
@@ -223,7 +223,7 @@ describe('PerformanceReporter', () => {
   })
 
   describe('exportReportToFile', () => {
-    it('should throw error in browser environment', () => {
+    it('should throw error in browser environment', async () => {
       const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
       
       // Mock browser environment
@@ -231,15 +231,15 @@ describe('PerformanceReporter', () => {
       // @ts-expect-error - Mocking browser environment
       delete global.process
       
-      expect(() => {
+      await expect(
         PerformanceReporter.exportReportToFile(report, '/tmp/report.txt', 'text')
-      }).toThrow('File export is only available in Node.js environment')
+      ).rejects.toThrow('File export is only available in Node.js environment')
       
       // Restore
       global.process = originalProcess
     })
 
-    it('should not throw when process exists but fs fails gracefully', () => {
+    it('should not throw when process exists but fs fails gracefully', async () => {
       const report = PerformanceReporter.generateReport([mockProfile], [mockComparison])
       
       // In a real Node.js environment, this would write to file
@@ -248,7 +248,7 @@ describe('PerformanceReporter', () => {
         // This will likely fail in test environment, but we're testing the logic
         // In a real scenario, you'd mock fs.writeFile
         try {
-          PerformanceReporter.exportReportToFile(report, '/tmp/test-report.txt', 'text')
+          await PerformanceReporter.exportReportToFile(report, '/tmp/test-report.txt', 'text')
         } catch (e) {
           // Expected in test environment
           expect((e as Error).message).toBeDefined()
@@ -258,7 +258,7 @@ describe('PerformanceReporter', () => {
   })
 
   describe('edge cases', () => {
-    it('should handle profile without throughput', () => {
+    it('should handle profile without throughput', async () => {
       const profileWithoutThroughput = {
         ...mockProfile,
         metrics: {
@@ -267,7 +267,7 @@ describe('PerformanceReporter', () => {
         },
       }
       
-      const report = PerformanceReporter.generateReport([profileWithoutThroughput], [])
+      const report = await PerformanceReporter.generateReport([profileWithoutThroughput], [])
       const text = PerformanceReporter.formatTextReport(report)
       
       expect(text).toContain('Test Cipher')
@@ -275,7 +275,7 @@ describe('PerformanceReporter', () => {
       expect(text).not.toContain('Throughput:')
     })
 
-    it('should handle profile without latency', () => {
+    it('should handle profile without latency', async () => {
       const profileWithoutLatency = {
         ...mockProfile,
         metrics: {
@@ -284,7 +284,7 @@ describe('PerformanceReporter', () => {
         },
       }
       
-      const report = PerformanceReporter.generateReport([profileWithoutLatency], [])
+      const report = await PerformanceReporter.generateReport([profileWithoutLatency], [])
       const text = PerformanceReporter.formatTextReport(report)
       
       expect(text).toContain('Test Cipher')
@@ -292,7 +292,7 @@ describe('PerformanceReporter', () => {
       expect(text).not.toContain('Latency:')
     })
 
-    it('should handle comparison without throughput', () => {
+    it('should handle comparison without throughput', async () => {
       const comparisonWithoutThroughput = {
         ...mockComparison,
         differences: {
@@ -301,7 +301,7 @@ describe('PerformanceReporter', () => {
         },
       }
       
-      const report = PerformanceReporter.generateReport([mockProfile], [comparisonWithoutThroughput])
+      const report = await PerformanceReporter.generateReport([mockProfile], [comparisonWithoutThroughput])
       const text = PerformanceReporter.formatTextReport(report)
       
       expect(text).toContain('BASELINE COMPARISONS')
@@ -309,8 +309,8 @@ describe('PerformanceReporter', () => {
       expect(text).not.toMatch(/Throughput:.*Change:/)
     })
 
-    it('should handle empty environment gracefully', () => {
-      const report = PerformanceReporter.generateReport([], [])
+    it('should handle empty environment gracefully', async () => {
+      const report = await PerformanceReporter.generateReport([], [])
       const text = PerformanceReporter.formatTextReport(report)
       
       expect(text).toContain('ENVIRONMENT')

@@ -39,6 +39,16 @@ function modPow(base: bigint, exp: bigint, modVal: bigint): bigint {
 }
 
 // Toy Bilinear Pairing
+/**
+ * Pairing cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param p1 Input required by the Pairing operation.
+ * @param p2 Input required by the Pairing operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function pairing(p1: bigint, p2: bigint): bigint {
     return modPow(G_GEN, modBigInt(p1 * p2, Q), P)
 }

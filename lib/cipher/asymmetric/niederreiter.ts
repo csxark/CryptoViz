@@ -20,6 +20,13 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput } from '../../utils'
+import { cryptoRandomBytes } from '../../random/cryptoRandom'
+
+function secureRandomFloat(): number {
+    const b = cryptoRandomBytes(4)
+    const u32 = ((b[0] << 24) >>> 0) + (b[1] << 16) + (b[2] << 8) + b[3]
+    return u32 / 0x100000000
+}
 
 // ---------------------------------------------------------------------------
 // Seeded LCG PRNG for deterministic key generation
@@ -106,7 +113,7 @@ function invertGF2Matrix(M: Matrix): Matrix | null {
 }
 
 function randomInvertibleMatrix(n: number, rng?: () => number): Matrix {
-    const rand = rng || Math.random.bind(Math)
+    const rand = rng || secureRandomFloat
     while (true) {
         const M: Matrix = Array.from({ length: n }, () =>
             Array.from({ length: n }, () => Math.round(rand()))
@@ -117,7 +124,7 @@ function randomInvertibleMatrix(n: number, rng?: () => number): Matrix {
 }
 
 function randomPermutationMatrix(n: number, rng?: () => number): Matrix {
-    const rand = rng || Math.random.bind(Math)
+    const rand = rng || secureRandomFloat
     const perm = Array.from({ length: n }, (_, i) => i)
     for (let i = n - 1; i > 0; i--) {
         const j = Math.floor(rand() * (i + 1));
@@ -139,7 +146,7 @@ interface NiederreiterKeys {
  * (Simplified: random full-rank matrix for toy demonstration)
  */
 function generateParityCheckMatrix(rng?: () => number): Matrix {
-    const rand = rng || Math.random.bind(Math)
+    const rand = rng || secureRandomFloat
     while (true) {
         const H: Matrix = Array.from({ length: M }, () =>
             Array.from({ length: N }, () => (rand() < 0.5 ? 0 : 1))

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CIPHER_PROVENANCE } from "../../../lib/cipher/registryMetadata";
+import { CIPHER_PROVENANCE } from "@/lib/cipher/registryMetadata";
 
 describe("cipher registry provenance", () => {
   it("provides explicit provenance for known high-risk and standardized entries", () => {

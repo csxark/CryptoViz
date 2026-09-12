@@ -46,6 +46,14 @@ function hydrateStep(serialized: string): CipherStep {
   return JSON.parse(serialized) as CipherStep
 }
 
+/**
+ * Create Virtualized Cipher Result cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function createVirtualizedCipherResult(
   result: CipherResult,
 ): VirtualizedCipherResult {

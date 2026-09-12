@@ -7,10 +7,34 @@
 
 import type { DataProvenanceMetadata } from "../provenance";
 
+/**
+ * Encoding cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export type Encoding = "utf8" | "hex" | "base64" | "binary";
 
+/**
+ * Cipher Direction cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export type CipherDirection = "encrypt" | "decrypt";
 
+/**
+ * Cipher Step cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CipherStep {
   /** Step index, zero-based */
   index: number;
@@ -50,6 +74,14 @@ export interface CipherStep {
   };
 }
 
+/**
+ * Cipher Result cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CipherResult {
   output: string;
   outputEncoding: Encoding;
@@ -59,8 +91,24 @@ export interface CipherResult {
   provenance?: DataProvenanceMetadata;
 }
 
+/**
+ * Cipher Name cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export type CipherName = string;
 
+/**
+ * Cipher Metadata cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CipherMetadata {
   name: string;
   keySize?: number;
@@ -83,6 +131,14 @@ export interface CipherMetadata {
   provenance?: DataProvenanceMetadata;
 }
 
+/**
+ * Cipher Options cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/197/final — FIPS 197.
+ */
 export interface CipherOptions {
   mode?: string;
   padding?: boolean | string;

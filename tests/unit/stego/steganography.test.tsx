@@ -263,8 +263,8 @@ describe('Steganography Workbench', () => {
       );
       
       // Check that selected state is indicated by more than just color
-      const selectedButton = screen.getByRole('button', { pressed: true });
-      expect(selectedButton).toBeInTheDocument();
+      const selectedButtons = screen.getAllByRole('button', { pressed: true });
+      expect(selectedButtons[0]).toBeInTheDocument();
     });
   });
 

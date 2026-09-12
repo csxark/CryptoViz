@@ -26,12 +26,28 @@ const DEFAULT_DEMO_Q = 23n
 const DEFAULT_DEMO_N = DEFAULT_DEMO_P * DEFAULT_DEMO_Q // 253n
 const DEFAULT_DEMO_X = 7n // Jacobi(7, 253) = 1, non-residue mod 11 and 23
 
+/**
+ * GMPublic Key cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export interface GMPublicKey {
   n: bigint
   x: bigint
   r?: bigint // Optional fixed blinding factor for deterministic testing/vectors
 }
 
+/**
+ * GMPrivate Key cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export interface GMPrivateKey {
   p: bigint
   q: bigint
@@ -101,6 +117,15 @@ function getRandomGMRandomness(n: bigint): bigint {
   }
 }
 
+/**
+ * Parse Public Key cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param keyStr Input required by the Parse Public Key operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function parsePublicKey(keyStr: string): GMPublicKey {
   const clean = keyStr.trim()
   if (!clean || clean === 'mock' || clean === 'mock_keys') {
@@ -163,6 +188,15 @@ export function parsePublicKey(keyStr: string): GMPublicKey {
   return { n, x, r }
 }
 
+/**
+ * Parse Private Key cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param keyStr Input required by the Parse Private Key operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function parsePrivateKey(keyStr: string): GMPrivateKey {
   const clean = keyStr.trim()
   if (!clean || clean === 'mock' || clean === 'mock_keys') {
@@ -360,16 +394,46 @@ function gmCore(input: string, key: string, doDecrypt: boolean, instrument: bool
   return { output: outHex, outputEncoding: 'hex', steps, metadata: METADATA, durationMs: performance.now() - start }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
   return gmCore(input, key, false, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
   validateInput(input)
   return gmCore(input, key, true, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   {
     input: '01',

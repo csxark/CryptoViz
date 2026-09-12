@@ -23,6 +23,7 @@
  */
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError, validateInput } from '../../utils'
+import { cryptoRandomInt } from '../../random/cryptoRandom'
 
 const METADATA: CipherMetadata = {
     name: 'Rainbow',
@@ -113,10 +114,10 @@ function invertAffine(map: AffineMap, y: number[]): number[] {
 // Random invertible affine map generation (L * U with non-zero diagonal)
 function randomInvertibleAffine(dim: number): AffineMap {
     const L: number[][] = Array.from({ length: dim }, (_, i) =>
-        Array.from({ length: dim }, (_, j) => (i === j ? 1 : i > j ? Math.floor(Math.random() * Q) : 0))
+        Array.from({ length: dim }, (_, j) => (i === j ? 1 : i > j ? cryptoRandomInt(Q) : 0))
     )
     const U: number[][] = Array.from({ length: dim }, (_, i) =>
-        Array.from({ length: dim }, (_, j) => (i === j ? 1 + Math.floor(Math.random() * (Q - 1)) : i < j ? Math.floor(Math.random() * Q) : 0))
+        Array.from({ length: dim }, (_, j) => (i === j ? 1 + cryptoRandomInt(Q - 1) : i < j ? cryptoRandomInt(Q) : 0))
     )
     const matrix: number[][] = Array.from({ length: dim }, (_, i) =>
         Array.from({ length: dim }, (_, j) => {
@@ -127,7 +128,7 @@ function randomInvertibleAffine(dim: number): AffineMap {
             return sum
         })
     )
-    const vector: number[] = Array.from({ length: dim }, () => Math.floor(Math.random() * Q))
+    const vector: number[] = Array.from({ length: dim }, () => cryptoRandomInt(Q))
     return { matrix, vector }
 }
 
@@ -166,7 +167,7 @@ function invertCentralMap(y: number[]): number[] {
     const x = new Array(N_VARS).fill(0)
 
     // Choose random vinegar variables (part of signing randomness)
-    for (let i = 0; i < V1; i++) x[i] = Math.floor(Math.random() * Q)
+    for (let i = 0; i < V1; i++) x[i] = cryptoRandomInt(Q)
 
     // Layer 1: solve for O1 oil variables (linear system given vinegar fixed)
     // Toy: brute-force small space

@@ -9,12 +9,31 @@
 import type { CipherResult, CipherStep, CipherOptions, TestVector, CipherMetadata } from '../types'
 import { CipherError } from '../../utils/errors'
 
+/**
+ * CSIDH METADATA cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const CSIDH_METADATA = {
   isSimulation: true,
   type: "Pedagogical Demonstration",
   description: "Simulates CSIDH class group action via simplified modular addition for educational visualization."
 };
 
+/**
+ * Compute Shared Secret cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param peerPub Input required by the Compute Shared Secret operation.
+ * @param privKey Input required by the Compute Shared Secret operation.
+ * @param P Input required by the Compute Shared Secret operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function computeSharedSecret(peerPub: bigint, privKey: bigint, P: bigint): bigint {
   // Pedagogical simulation of the commutative group action
   return (peerPub + privKey) % P;
@@ -115,14 +134,44 @@ export function describeCsidhGroupAction(peerPubHex: string, privKeyHex: string)
     }
 }
 
+/**
+ * Encrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Encrypt operation.
+ * @param key Input required by the Encrypt operation.
+ * @param options Input required by the Encrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function encrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     return csidhCore(input, key, !!options.instrument)
 }
 
+/**
+ * Decrypt cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @param input Input required by the Decrypt operation.
+ * @param key Input required by the Decrypt operation.
+ * @param options Input required by the Decrypt operation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export function decrypt(input: string, key: string, options: CipherOptions = {}): CipherResult {
     return csidhCore(input, key, !!options.instrument)
 }
 
+/**
+ * TEST VECTORS cipher-engine utility export.
+ *
+ * This API is intentionally documented at the engine boundary so callers
+ * can understand the input contract without opening the implementation.
+ * @returns The operation result produced by the cipher engine.
+ * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
+ */
 export const TEST_VECTORS: TestVector[] = [
   { input: '00', key: '00', expected: '00'.repeat(64), description: 'CSIDH identity element' },
   { input: '0a', key: '05', expected: '00'.repeat(63) + '0f', description: 'Pedagogical addition mockup vector (0a + 05 = 0f)' },

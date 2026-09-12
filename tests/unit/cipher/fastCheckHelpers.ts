@@ -11,8 +11,8 @@ export const cryptoArbitraries = {
   // Alphabetic-only strings for classical ciphers (Caesar, Playfair, Vigenere, etc.)
   arbitraryAlphabetic: fc.string({ unit: 'grapheme' }).map(s => s.replace(/[^a-zA-Z]/g, 'A')),
 
-  // Hexadecimal strings for ciphers requiring hex inputs/keys (fc.hexString in v4)
-  arbitraryHex: fc.hexString({ minLength: 2, maxLength: 64 }).filter(s => s.length % 2 === 0),
+  // Hexadecimal strings for ciphers requiring hex inputs/keys (fast-check v4 compatible)
+  arbitraryHex: fc.array(fc.constantFrom(...'0123456789abcdef'), { minLength: 2, maxLength: 64 }).map(arr => arr.join('')).filter(s => s.length % 2 === 0),
 
   // Variable-length keys
   arbitraryKey: fc.string({ minLength: 1, maxLength: 32 }),

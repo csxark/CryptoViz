@@ -71,7 +71,7 @@ describe('PerformanceCI', () => {
     })
 
     it('should fail when regressions detected', async () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const currentProfile = { 
         ...mockProfile, 
@@ -86,7 +86,7 @@ describe('PerformanceCI', () => {
     })
 
     it('should not fail when failOnRegression is false', async () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const currentProfile = { 
         ...mockProfile, 
@@ -101,7 +101,7 @@ describe('PerformanceCI', () => {
     })
 
     it('should handle inconclusive results', async () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const currentProfile = { 
         ...mockProfile, 
@@ -128,7 +128,7 @@ describe('PerformanceCI', () => {
     })
 
     it('should use custom thresholds', async () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const currentProfile = { 
         ...mockProfile, 
@@ -146,7 +146,7 @@ describe('PerformanceCI', () => {
     })
 
     it('should generate appropriate message', async () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const currentProfile = { 
         ...mockProfile, 
@@ -428,39 +428,40 @@ describe('PerformanceCI', () => {
   })
 
   describe('createCIBaseline', () => {
-    it('should create baselines for all profiles', () => {
+    it('should create baselines for all profiles', async () => {
       const profile2 = { ...mockProfile, cipherId: 'test-cipher-2' }
       
-      PerformanceCI.createCIBaseline([mockProfile, profile2], '1.0.0', 'abc123')
+      await PerformanceCI.createCIBaseline([mockProfile, profile2], '1.0.0', 'abc123')
       
-      expect(BaselineManager.getBaseline('test-cipher')).not.toBeNull()
-      expect(BaselineManager.getBaseline('test-cipher-2')).not.toBeNull()
-      expect(BaselineManager.getBaseline('test-cipher')?.version).toBe('1.0.0')
+      expect(await BaselineManager.getBaseline('test-cipher')).not.toBeNull()
+      expect(await BaselineManager.getBaseline('test-cipher-2')).not.toBeNull()
+      const testCipherBaseline = await BaselineManager.getBaseline('test-cipher')
+      expect(testCipherBaseline?.version).toBe('1.0.0')
     })
   })
 
   describe('validateBaselinesExist', () => {
-    it('should return true when all baselines exist', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+    it('should return true when all baselines exist', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
-      const result = PerformanceCI.validateBaselinesExist([mockProfile])
+      const result = await PerformanceCI.validateBaselinesExist([mockProfile])
       
       expect(result.allPresent).toBe(true)
       expect(result.missing).toHaveLength(0)
     })
 
-    it('should return false when baselines are missing', () => {
-      const result = PerformanceCI.validateBaselinesExist([mockProfile])
+    it('should return false when baselines are missing', async () => {
+      const result = await PerformanceCI.validateBaselinesExist([mockProfile])
       
       expect(result.allPresent).toBe(false)
       expect(result.missing).toContain('test-cipher')
     })
 
-    it('should handle mixed scenarios', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+    it('should handle mixed scenarios', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const profile2 = { ...mockProfile, cipherId: 'test-cipher-2' }
-      const result = PerformanceCI.validateBaselinesExist([mockProfile, profile2])
+      const result = await PerformanceCI.validateBaselinesExist([mockProfile, profile2])
       
       expect(result.allPresent).toBe(false)
       expect(result.missing).toContain('test-cipher-2')

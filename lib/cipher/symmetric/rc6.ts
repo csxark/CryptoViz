@@ -682,13 +682,25 @@ export function decrypt(input: string, key: string, options?: Rc6Options): Ciphe
   
   for (let b = 0; b < numBlocks; b++) {
     const block = input.slice(b * 32, (b + 1) * 32)
-    outHex += decryptRc6Block(block, key, options?.rounds ? { rounds: options.rounds } : undefined)
+    const ptBlock = decryptRc6Block(block, key, options?.rounds ? { rounds: options.rounds } : undefined)
+    outHex += ptBlock
+
+    if (options?.instrument) {
+      steps.push({
+        index: steps.length,
+        label: `Block ${b + 1} - Decryption`,
+        inputState: block,
+        outputState: ptBlock,
+        note: `Decrypted RC6 block ${b + 1} (128 bits)`,
+        isMilestone: true,
+      })
+    }
   }
   
   return {
     output: outHex.toLowerCase(),
     outputEncoding: 'hex' as const,
-    steps: [],
+    steps,
     metadata: {
       name: 'RC6',
       securityStatus: 'legacy' as const,

@@ -6,7 +6,7 @@
  * educational visualization of the generation process.
  */
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+import { cryptoRandomInt } from "../random/cryptoRandom";
 
 export interface PasswordGeneratorOptions {
   length: number;
@@ -284,17 +284,10 @@ export function getRecommendedOptions(
 // ─── Internal Helpers ────────────────────────────────────────────────────────
 
 /**
- * Generate cryptographically secure random indices.
- * Uses Web Crypto API when available, falls back to Math.random.
+ * Generate cryptographically secure random indices without modulo bias.
  */
 function secureRandomIndices(poolSize: number, count: number): number[] {
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    const array = new Uint32Array(count);
-    crypto.getRandomValues(array);
-    return Array.from(array).map((v) => v % poolSize);
-  }
-  // Fallback for test environments
-  return Array.from({ length: count }, () => Math.floor(Math.random() * poolSize));
+  return Array.from({ length: count }, () => cryptoRandomInt(poolSize));
 }
 
 /**

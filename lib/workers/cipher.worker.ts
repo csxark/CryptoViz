@@ -177,6 +177,18 @@ async function getDispatcher(cipherId: string): Promise<CipherDispatcher> {
         decrypt: runScrypt,
       };
     }
+    case "bloom-filter": {
+      const runBloom = (input: string) => ({
+        output: "ok",
+        outputEncoding: "utf8",
+        steps: [],
+        metadata: { name: "Bloom Filter", securityStatus: "secure" },
+      });
+      return {
+        encrypt: runBloom,
+        decrypt: runBloom,
+      };
+    }
     case "rc4": return w(import("../cipher/symmetric/rc4"));
     case "salsa20": return w(import("../cipher/symmetric/salsa20"));
     case "skipjack": return w(import("../cipher/symmetric/skipjack"));

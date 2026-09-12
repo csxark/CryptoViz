@@ -16,8 +16,8 @@ describe('PerformanceProfiler', () => {
   })
 
   describe('getEnvironmentInfo', () => {
-    it('should return environment info in Node.js', () => {
-      const env = PerformanceProfiler.getEnvironmentInfo()
+    it('should return environment info in Node.js', async () => {
+      const env = await PerformanceProfiler.getEnvironmentInfo()
       
       expect(env).toHaveProperty('runtime')
       expect(env).toHaveProperty('platform')
@@ -27,7 +27,7 @@ describe('PerformanceProfiler', () => {
       expect(env.runtime).toBe('node')
     })
 
-    it('should return browser environment info when in browser', () => {
+    it('should return browser environment info when in browser', async () => {
       // Skip this test in Node.js environment
       if (typeof process !== 'undefined' && process.versions?.node) {
         return
@@ -51,7 +51,7 @@ describe('PerformanceProfiler', () => {
         userAgent: 'Mozilla/5.0',
       }
 
-      const env = PerformanceProfiler.getEnvironmentInfo()
+      const env = await PerformanceProfiler.getEnvironmentInfo()
       
       expect(env.runtime).toBe('browser')
       expect(env.platform).toBe('MacIntel')

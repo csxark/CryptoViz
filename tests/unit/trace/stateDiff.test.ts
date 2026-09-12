@@ -262,7 +262,7 @@ describe('State Diff Viewer', () => {
 
       const summary = formatStateDiffSummary(result);
       expect(summary).toContain('✗ Traces differ at step 5');
-      expect(summary).toContain('5 divergences');
+      expect(summary).toContain('Total divergences: 5');
       expect(summary).toContain('SubBytes');
     });
   });

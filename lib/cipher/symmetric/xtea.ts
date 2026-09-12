@@ -220,12 +220,14 @@ export const TEST_VECTORS: TestVector[] = [
     input: '4142434445464748',
     key: '000102030405060708090a0b0c0d0e0f',
     expected: '497df3d072612cb5',
+    options: { encoding: 'hex' },
     description: 'Reference vector — key bytes 00-0F, plaintext "ABCDEFGH"',
   },
   {
     input: '0000000000000000',
     key: '00000000000000000000000000000000',
     expected: 'dee9d4d8f7131ed9',
+    options: { encoding: 'hex' },
     description: 'All-zero key (32 hex chars) and plaintext',
   },
 ]

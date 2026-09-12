@@ -73,59 +73,57 @@ describe('BaselineManager', () => {
   })
 
   describe('saveBaseline and getBaseline', () => {
-    it('should save and retrieve baseline', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
-      const retrieved = BaselineManager.getBaseline('test-cipher')
+    it('should save and retrieve baseline', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+      const retrieved = await BaselineManager.getBaseline('test-cipher')
       
       expect(retrieved).not.toBeNull()
       expect(retrieved?.cipherId).toBe('test-cipher')
       expect(retrieved?.version).toBe('1.0.0')
     })
 
-    it('should return null for non-existent baseline', () => {
-      const retrieved = BaselineManager.getBaseline('non-existent')
+    it('should return null for non-existent baseline', async () => {
+      const retrieved = await BaselineManager.getBaseline('non-existent')
       expect(retrieved).toBeNull()
     })
 
-    it('should overwrite existing baseline', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+    it('should overwrite existing baseline', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const updatedProfile = { ...mockProfile, metrics: { ...mockProfile.metrics, executionTime: { ...mockProfile.metrics.executionTime, averageMs: 20 } } }
-      BaselineManager.saveBaseline(updatedProfile, '2.0.0', 'def456')
+      await BaselineManager.saveBaseline(updatedProfile, '2.0.0', 'def456')
       
-      const retrieved = BaselineManager.getBaseline('test-cipher')
+      const retrieved = await BaselineManager.getBaseline('test-cipher')
       expect(retrieved?.version).toBe('2.0.0')
       expect(retrieved?.metrics.executionTime.averageMs).toBe(20)
     })
   })
 
   describe('removeBaseline', () => {
-    it('should remove existing baseline', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
-      BaselineManager.removeBaseline('test-cipher')
+    it('should remove existing baseline', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+      await BaselineManager.removeBaseline('test-cipher')
       
-      const retrieved = BaselineManager.getBaseline('test-cipher')
+      const retrieved = await BaselineManager.getBaseline('test-cipher')
       expect(retrieved).toBeNull()
     })
 
-    it('should handle removing non-existent baseline', () => {
-      expect(() => {
-        BaselineManager.removeBaseline('non-existent')
-      }).not.toThrow()
+    it('should handle removing non-existent baseline', async () => {
+      await expect(BaselineManager.removeBaseline('non-existent')).resolves.not.toThrow()
     })
   })
 
   describe('clearBaselines', () => {
-    it('should clear all baselines', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+    it('should clear all baselines', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const profile2 = { ...mockProfile, cipherId: 'test-cipher-2' }
-      BaselineManager.saveBaseline(profile2, '1.0.0', 'abc123')
+      await BaselineManager.saveBaseline(profile2, '1.0.0', 'abc123')
       
-      BaselineManager.clearBaselines()
+      await BaselineManager.clearBaselines()
       
-      expect(BaselineManager.getBaseline('test-cipher')).toBeNull()
-      expect(BaselineManager.getBaseline('test-cipher-2')).toBeNull()
+      expect(await BaselineManager.getBaseline('test-cipher')).toBeNull()
+      expect(await BaselineManager.getBaseline('test-cipher-2')).toBeNull()
     })
   })
 
@@ -224,67 +222,65 @@ describe('BaselineManager', () => {
   })
 
   describe('batchCompare', () => {
-    it('should compare multiple profiles', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+    it('should compare multiple profiles', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const profile2 = { ...mockProfile, cipherId: 'test-cipher-2', cipherName: 'Test Cipher 2' }
-      BaselineManager.saveBaseline(profile2, '1.0.0', 'abc123')
+      await BaselineManager.saveBaseline(profile2, '1.0.0', 'abc123')
       
       const currentProfiles = [
         { ...mockProfile, metrics: { ...mockProfile.metrics, executionTime: { ...mockProfile.metrics.executionTime, averageMs: 11 } } },
         { ...profile2, metrics: { ...profile2.metrics, executionTime: { ...profile2.metrics.executionTime, averageMs: 9 } } },
       ]
       
-      const comparisons = BaselineManager.batchCompare(currentProfiles)
+      const comparisons = await BaselineManager.batchCompare(currentProfiles)
       
       expect(comparisons).toHaveLength(2)
       expect(comparisons[0].cipherId).toBe('test-cipher')
       expect(comparisons[1].cipherId).toBe('test-cipher-2')
     })
 
-    it('should skip profiles without baselines', () => {
+    it('should skip profiles without baselines', async () => {
       const currentProfiles = [
         { ...mockProfile, cipherId: 'no-baseline' },
       ]
       
-      const comparisons = BaselineManager.batchCompare(currentProfiles)
+      const comparisons = await BaselineManager.batchCompare(currentProfiles)
       
       expect(comparisons).toHaveLength(0)
     })
   })
 
   describe('exportBaselinesToString and importBaselinesFromString', () => {
-    it('should export and import baselines', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+    it('should export and import baselines', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
-      const exported = BaselineManager.exportBaselinesToString()
+      const exported = await BaselineManager.exportBaselinesToString()
       expect(exported).toContain('test-cipher')
       expect(exported).toContain('1.0.0')
       
-      BaselineManager.clearBaselines()
-      expect(BaselineManager.getBaseline('test-cipher')).toBeNull()
+      await BaselineManager.clearBaselines()
+      expect(await BaselineManager.getBaseline('test-cipher')).toBeNull()
       
-      BaselineManager.importBaselinesFromString(exported)
-      const retrieved = BaselineManager.getBaseline('test-cipher')
+      await BaselineManager.importBaselinesFromString(exported)
+      const retrieved = await BaselineManager.getBaseline('test-cipher')
       expect(retrieved).not.toBeNull()
       expect(retrieved?.version).toBe('1.0.0')
     })
 
-    it('should handle invalid import data', () => {
-      expect(() => {
-        BaselineManager.importBaselinesFromString('invalid json')
-      }).toThrow()
+    it('should handle invalid import data', async () => {
+      await expect(BaselineManager.importBaselinesFromString('invalid json')).rejects.toThrow()
     })
   })
 
   describe('getBaselineSummary', () => {
-    it('should return summary of baselines', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+    it('should return summary of baselines', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
       const profile2 = { ...mockProfile, cipherId: 'test-cipher-2' }
-      BaselineManager.saveBaseline(profile2, '2.0.0', 'def456')
+      await BaselineManager.saveBaseline(profile2, '2.0.0', 'def456')
       
-      const summary = BaselineManager.getBaselineSummary()
+      const summary = await BaselineManager.getBaselineSummary()
       
       expect(summary.count).toBe(2)
       expect(summary.ciphers).toContain('test-cipher')
@@ -294,10 +290,10 @@ describe('BaselineManager', () => {
       expect(summary.dateRange).not.toBeNull()
     })
 
-    it('should return empty summary when no baselines', () => {
-      BaselineManager.clearBaselines()
+    it('should return empty summary when no baselines', async () => {
+      await BaselineManager.clearBaselines()
       
-      const summary = BaselineManager.getBaselineSummary()
+      const summary = await BaselineManager.getBaselineSummary()
       
       expect(summary.count).toBe(0)
       expect(summary.ciphers).toEqual([])
@@ -307,14 +303,14 @@ describe('BaselineManager', () => {
   })
 
   describe('loadBaselines and saveBaselines', () => {
-    it('should persist baselines across calls', () => {
-      BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
+    it('should persist baselines across calls', async () => {
+      await BaselineManager.saveBaseline(mockProfile, '1.0.0', 'abc123')
       
-      const baselines1 = BaselineManager.loadBaselines()
+      const baselines1 = await BaselineManager.loadBaselines()
       expect(baselines1.size).toBe(1)
       
       // Create new instance simulation
-      const baselines2 = BaselineManager.loadBaselines()
+      const baselines2 = await BaselineManager.loadBaselines()
       expect(baselines2.size).toBe(1)
       expect(baselines2.get('test-cipher')?.version).toBe('1.0.0')
     })

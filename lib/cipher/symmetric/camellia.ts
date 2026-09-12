@@ -6,6 +6,7 @@
 
 import type { CipherResult, CipherStep, CipherOptions, TestVector } from '../types'
 import { fromByteArray, toByteArray, CipherError, validateInput, validateKey } from '../../utils'
+import { cryptoRandomBytes } from '../../random/cryptoRandom'
 
 const METADATA = {
   name: 'Camellia',
@@ -435,13 +436,7 @@ export function encrypt(
         throw new CipherError('INVALID_IV', 'Invalid IV format.')
       }
     } else {
-      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-        crypto.getRandomValues(iv)
-      } else {
-        for (let i = 0; i < 16; i++) {
-          iv[i] = Math.floor(Math.random() * 256)
-        }
-      }
+      iv = cryptoRandomBytes(16)
     }
   }
 
@@ -649,6 +644,13 @@ function executeCamellia(
  * @see https://csrc.nist.gov/pubs/fips/46-3/final — FIPS 46-3.
  */
 export const TEST_VECTORS: TestVector[] = [
+  {
+    input: '0123456789abcdeffedcba9876543210',
+    key: '0123456789abcdeffedcba9876543210',
+    expected: '67673138549669730857065648eabe43',
+    description: 'Camellia-128 ECB (RFC 3713 Section A.1)',
+    options: { mode: 'ECB', hexInput: true },
+  },
   {
     input: '0123456789ABCDEFFEDCBA9876543210',
     key: '0123456789ABCDEFFEDCBA9876543210',

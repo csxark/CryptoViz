@@ -1,3 +1,5 @@
+import type { CryptographicOperation } from "./types";
+
 /**
  * Cipher Option Value cipher-engine utility export.
  *
@@ -25,6 +27,8 @@ export interface CipherDefinition {
   defaultKey: string;
   defaultInput: string;
   securityStatus: "recommended" | "secure" | "legacy" | "deprecated" | "broken" | "experimental";
+  primaryOperation?: CryptographicOperation;
+  supportedOperations?: CryptographicOperation[];
   keyPlaceholder?: string;
   keySize?: string;
   practicalUseCases?: string[];

@@ -28,7 +28,7 @@ const METADATA = {
   standardBody: 'RFC 8439',
 }
 
-const CONSTANTS = new Uint32Array([0x61707865, 0x3320646e, 0x79622d32, 0x6b206574])
+export const CONSTANTS = new Uint32Array([0x61707865, 0x3320646e, 0x79622d32, 0x6b206574])
 
 function rotl32(x: number, n: number): number {
   return ((x << n) | (x >>> (32 - n))) >>> 0

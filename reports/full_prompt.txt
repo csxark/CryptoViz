@@ -1,0 +1,390 @@
+<USER_REQUEST>
+# CryptoViz — Verification Integrity Gate
+
+The previous audit is NOT yet considered final.
+
+The latest verification run uncovered two critical issues:
+
+1. A real SHA-512 constant corruption was discovered in `K_512[57]`.
+2. `conformanceParity.test.ts` was consuming placeholder `mock_*` expected values, producing 149 false conformance failures.
+
+These discoveries demonstrate that both the implementation and the verification infrastructure require another independent integrity pass.
+
+## PRIMARY OBJECTIVE
+
+Do NOT attempt to make the entire suite green.
+
+Do NOT modify tests merely to remove failures.
+
+Do NOT classify an algorithm as verified simply because its internal tests pass.
+
+Your objective is:
+
+> Prove that the verification system itself is trustworthy before using it as evidence of cryptographic correctness.
+
+---
+
+## PHASE 1 — FREEZE AND BASELINE
+
+Before any modifications:
+
+* record git commit
+* record git status
+* record complete diff
+* identify all files modified during this audit
+* record current test results
+* create a reproducible checkpoint
+
+Do not use stale build artifacts or temporary audit configurations as evidence.
+
+---
+
+## PHASE 2 — TEST CONTAMINATION AUDIT
+
+Audit every conformance/KAT/differential test and fixture for:
+
+* `mock_*`
+* placeholder values
+* dummy values
+* TODO/FIXME expected outputs
+* values generated from the implementation under test
+* self-referential expected values
+* copied outputs from the implementation under test
+
+The conformance suite MUST FAIL LOUDLY if it encounters a placeholder vector.
+
+Never silently skip contaminated vectors.
+
+Every expected cryptographic value must have documented provenance.
+
+---
+
+## PHASE 3 — SHA-512 FORENSIC VERIFICATION
+
+The discovered `K_512[57]` corruption must be treated as a serious cryptographic defect.
+
+Do NOT merely replace the incorrect constant.
+
+Independently verify the entire SHA-512 implementation against FIPS 180-4:
+
+* all 80 round constants
+* initial hash values
+* message schedule
+* rotations
+* shifts
+* Ch/Maj
+* compression function
+* padding
+* message length encoding
+* endian handling
+* block processing
+
+Verify both:
+
+* optimized/non-instrumented path
+* instrumented/visualization path
+
+Require:
+
+optimized.output === instrumented.output
+
+for all valid test vectors.
+
+Test:
+
+* empty message
+* "a"
+* "abc"
+* 55-byte message
+* 56-byte message
+* 63-byte message
+* 64-byte message
+* 65-byte message
+* 111-byte message
+* 112-byte message
+* 113-byte message
+* long deterministic input
+* randomized deterministic inputs
+
+Compare against at least one independent implementation.
+
+---
+
+## PHASE 4 — CRYPTOGRAPHIC CONSTANT AUDIT
+
+For every algorithm containing important cryptographic tables/constants, independently verify:
+
+* S-boxes
+* inverse S-boxes
+* round constants
+* IVs
+* initial states
+* rotation constants
+* permutation tables
+* matrices
+* curve parameters
+* generator points
+* primes
+
+Look specifically for:
+
+* missing nibbles
+* swapped bytes
+* wrong endian order
+* duplicated constants
+* off-by-one entries
+* truncated arrays
+* incorrect generated tables
+
+Where practical, maintain a machine-readable provenance/checksum manifest.
+
+---
+
+## PHASE 5 — CORRECT TEST SEMANTICS
+
+Separate:
+
+### Authoritative KAT
+
+Exact published expected output.
+
+### Differential
+
+CryptoViz compared against an independent implementation.
+
+### Property
+
+Mathematical invariant.
+
+### Round-trip
+
+Internal encrypt/decrypt or sign/verify consistency.
+
+### UI/E2E
+
+Browser behavior.
+
+Never call a round-trip test a KAT.
+
+Never treat sign→verify as proof that a signature is standards-compliant.
+
+Never treat encrypt→decrypt as proof that ciphertext matches a standard.
+
+---
+
+## PHASE 6 — ALGORITHM CAPABILITY AUDIT
+
+Do not force every cryptographic primitive into an `encrypt()/decrypt()` abstraction.
+
+Classify operations correctly:
+
+* encrypt/decrypt
+* hash
+* MAC/verify
+* sign/verify
+* key generation
+* key agreement
+* KEM encapsulate/decapsulate
+* KDF
+* split/combine
+* encode/decode
+* educational/demo
+
+Verify that the UI, registry, worker, implementation and tests all use the correct semantic operation.
+
+In particular audit:
+
+* Ed25519
+* SPHINCS+
+* Falcon
+* Lamport/WOTS
+* LMS
+* ML-KEM
+* X25519
+* HKDF
+* scrypt
+* Shamir Secret Sharing
+
+Do not invent encryption semantics for signature/KEM/key-agreement algorithms merely to satisfy a generic interface.
+
+---
+
+## PHASE 7 — CONFORMANCE MATRIX
+
+Create a complete matrix for every active algorithm:
+
+| Algorithm | Operation | Classification | Standard | KAT | Independent Oracle | Differential | Property | Browser | Evidence Grade |
+| --------- | --------- | -------------- | -------- | --- | ------------------ | ------------ | -------- | ------- | -------------- |
+
+Use:
+
+A = authoritative + independent validation
+
+B = independent validation
+
+C = strong property validation
+
+D = internal consistency only
+
+E = unverified
+
+Do not claim an algorithm is standards-compliant without sufficient evidence.
+
+---
+
+## PHASE 8 — NEGATIVE TESTING
+
+For each applicable primitive test:
+
+* malformed input
+* invalid key
+* invalid key size
+* malformed encoding
+* invalid IV
+* invalid nonce
+* invalid padding
+* corrupted ciphertext
+* truncated ciphertext
+* incorrect parameters
+
+For AEAD:
+
+* modified ciphertext
+* modified tag
+* modified AAD
+* wrong key
+* wrong nonce
+
+Authentication failures must never be interpreted as successful decryption.
+
+---
+
+## PHASE 9 — INSTRUMENTED VS FAST PARITY
+
+For every algorithm with both execution paths:
+
+# fast(input, parameters).output
+
+instrumented(input, parameters).output
+
+Run this against authoritative vectors and deterministic randomized inputs.
+
+A discrepancy between the two paths is a release-blocking defect.
+
+---
+
+## PHASE 10 — MUTATION TESTING
+
+Expand mutation testing substantially.
+
+Include:
+
+* cryptographic constants
+* S-boxes
+* round counts
+* rotations
+* shifts
+* endian handling
+* padding
+* IV/nonce handling
+* registry mappings
+* worker dispatch
+* cache keys
+* stale responses
+* authentication verification
+* visualization state
+
+Explicitly inject the exact SHA-512 constant corruption discovered during this audit.
+
+The corresponding test MUST fail.
+
+Report:
+
+* total mutants
+* killed
+* survived
+* equivalent
+* invalid
+* mutation score
+* surviving mutants
+* untested bug classes
+
+Do not claim 100% mutation confidence from five hand-selected mutants.
+
+---
+
+## PHASE 11 — TEST SELF-AUDIT
+
+For every newly created test answer:
+
+1. What is the source of truth?
+2. Is it independent?
+3. Could a wrong implementation pass it?
+4. What bug class does it detect?
+5. What bug classes can it miss?
+
+Reject self-referential tests.
+
+---
+
+## PHASE 12 — NO FALSE GREEN
+
+The following are forbidden:
+
+* `.skip`
+* `.only`
+* weakened assertions
+* arbitrary expected values
+* replacing expected outputs with implementation outputs
+* catching errors and ignoring them
+* silently skipping unsupported algorithms
+* converting failures into warnings
+* marking placeholders as conformance tests
+* modifying tests solely because production code fails them
+
+If an algorithm cannot currently be independently verified, mark it:
+
+UNVERIFIED
+
+Do not force it to PASS.
+
+---
+
+## PHASE 13 — FINAL ACCEPTANCE
+
+Do not produce a final “96/100” or “100% verified” claim yet.
+
+The audit is complete only when:
+
+1. Test contamination has been eliminated.
+2. SHA-512 is independently verified.
+3. Instrumented and optimized paths agree.
+4. Every active algorithm has a verification classification.
+5. KATs contain only authoritative expected values.
+6. Differential tests use independent implementations.
+7. Round-trip tests are correctly labelled.
+8. Cryptographic semantics are correct for each primitive type.
+9. Negative security behavior is tested.
+10. Mutation testing is broad and diverse.
+11. The exact SHA-512 mutation is detected.
+12. Surviving mutants are documented.
+13. Unverified algorithms remain explicitly unverified.
+14. No test has been weakened merely to achieve green status.
+
+The final goal is NOT:
+
+“All tests pass.”
+
+The final goal is:
+
+> “The test suite can be trusted to distinguish a correct cryptographic implementation from a deliberately incorrect one.”
+
+Only after this verification-integrity gate passes should the project proceed to the broader browser, load, accessibility, persistence and UX validation phases.
+
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-09-12T20:34:09+05:30.
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from None to Gemini 3.8 Flash (High). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>

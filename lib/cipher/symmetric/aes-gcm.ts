@@ -529,7 +529,17 @@ export async function decrypt(
     )
   }
 
-  const iv = toByteArray(clean.slice(0, GCM_IV_BYTES * 2), 'hex')
+  const embeddedIvHex = clean.slice(0, GCM_IV_BYTES * 2)
+  if (options.iv) {
+    const optIvHex = typeof options.iv === 'string'
+      ? options.iv.replace(/\s+/g, '')
+      : fromByteArray(options.iv as Uint8Array, 'hex')
+    if (optIvHex.toLowerCase() !== embeddedIvHex.toLowerCase()) {
+      throw new CipherError('INVALID_IV', 'Provided IV does not match the IV in ciphertext payload.')
+    }
+  }
+
+  const iv = toByteArray(embeddedIvHex, 'hex')
   const tag = toByteArray(clean.slice(clean.length - TAG_BYTES * 2), 'hex')
   const ciphertext = toByteArray(clean.slice(GCM_IV_BYTES * 2, clean.length - TAG_BYTES * 2), 'hex')
 

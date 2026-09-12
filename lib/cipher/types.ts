@@ -28,6 +28,30 @@ export type Encoding = "utf8" | "hex" | "base64" | "binary";
 export type CipherDirection = "encrypt" | "decrypt";
 
 /**
+ * Semantic cryptographic operation classification.
+ * Primitives must not be forced into an encrypt/decrypt abstraction when they
+ * perform hashing, signing, key agreement, KEM, KDF, or secret sharing.
+ */
+export type CryptographicOperation =
+  | "encrypt"
+  | "decrypt"
+  | "hash"
+  | "mac"
+  | "mac-verify"
+  | "sign"
+  | "verify"
+  | "keygen"
+  | "key-agreement"
+  | "kem-encapsulate"
+  | "kem-decapsulate"
+  | "kdf"
+  | "split"
+  | "combine"
+  | "encode"
+  | "decode"
+  | "educational-demo";
+
+/**
  * Cipher Step cipher-engine utility export.
  *
  * This API is intentionally documented at the engine boundary so callers
@@ -129,6 +153,8 @@ export interface CipherMetadata {
   standardBody?: string;
   securityWarning?: string;
   provenance?: DataProvenanceMetadata;
+  primaryOperation?: CryptographicOperation;
+  supportedOperations?: CryptographicOperation[];
 }
 
 /**

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-09-12T20:34:26+05:30",
+  "commit": "b814e4f455240d675029ed1b0a308a3a8bfa5f6b",
+  "branch": "main",
+  "workingTreeClean": true,
+  "diff": "",
+  "testSuiteBaseline": {
+    "totalTestFiles": 513,
+    "passedTestFiles": 483,
+    "failedTestFiles": 30,
+    "totalTests": 8530,
+    "passedTests": 8223,
+    "failedTests": 307,
+    "failedSnapshots": 3
+  },
+  "criticalDiscoveries": [
+    "SHA-512 K_512 array had 119 elements instead of 80; corrupted entries at [46], [56] missing nibble, [63-79], and trailing garbage [80-118]",
+    "151 instances of mock_ / placeholder / dummy expected values across 76 files in lib/cipher/",
+    "conformanceParity.test.ts produced 149 false conformance failures by asserting fast.output against mock_* expected values",
+    "Sosemanuk SERPENT_S2 had truncated 16 elements followed by 240 zeros",
+    "Square SQUARE_SBOX had truncated 64 elements instead of 256"
+  ]
+}

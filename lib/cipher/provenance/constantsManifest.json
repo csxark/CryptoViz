@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "name": "CryptoViz Cryptographic Constants & Tables Provenance Manifest",
+  "description": "Machine-readable checksums and authoritative provenance for cryptographic tables, S-boxes, P-boxes, and round constants in CryptoViz.",
+  "generatedAt": "2026-09-12T15:15:00Z",
+  "tables": {
+    "AES_SBOX": {
+      "standard": "NIST FIPS 197 Section 5.1.1",
+      "entries": 256,
+      "elementBits": 8,
+      "sha256": "5c689cfad28793081e7d7b37ff96181f08e45851493cf02052fecae0041d8e62",
+      "sourceFile": "lib/cipher/symmetric/aes.ts",
+      "status": "verified"
+    },
+    "AES_INV_SBOX": {
+      "standard": "NIST FIPS 197 Section 5.3.2",
+      "entries": 256,
+      "elementBits": 8,
+      "sha256": "3cb0657155e7fae44ebf2c5e53beee738734a66e4a298a0c20ab9674f3eef431",
+      "sourceFile": "lib/cipher/symmetric/aes.ts",
+      "status": "verified"
+    },
+    "SHA256_H_INIT": {
+      "standard": "NIST FIPS 180-4 Section 5.3.3",
+      "entries": 8,
+      "elementBits": 32,
+      "sha256": "c45dff2e11cbbd25dc7ea2fae93ffbf9d9ae50ea8a26829d5b4104fb566e2cbb",
+      "sourceFile": "lib/cipher/hash/sha256.ts",
+      "status": "verified"
+    },
+    "SHA256_K": {
+      "standard": "NIST FIPS 180-4 Section 4.2.2",
+      "entries": 64,
+      "elementBits": 32,
+      "sha256": "098e9a6e382d6349c218ca80ec4a9ab7ca60946b5394be562bca3ee3871dd6cf",
+      "sourceFile": "lib/cipher/hash/sha256.ts",
+      "status": "verified"
+    },
+    "SHA512_H_INIT": {
+      "standard": "NIST FIPS 180-4 Section 5.3.5",
+      "entries": 8,
+      "elementBits": 64,
+      "sha256": "1e50529d84bf4181a49f57ebbf795e1dc768ef42159048c5eec780e9221fc305",
+      "sourceFile": "lib/cipher/hash/sha512.ts",
+      "status": "verified"
+    },
+    "SHA512_K": {
+      "standard": "NIST FIPS 180-4 Section 4.2.3",
+      "entries": 80,
+      "elementBits": 64,
+      "sha256": "270ca8c081e74f830e0ec2d9894e24daec0ebce5b3b7e415ef4ebfb579979354",
+      "sourceFile": "lib/cipher/hash/sha512.ts",
+      "status": "verified"
+    },
+    "DES_IP": {
+      "standard": "NIST FIPS 46-3",
+      "entries": 64,
+      "elementBits": 8,
+      "sha256": "636eece124ff656c1283d6a782410aee719ad61aeeeb9272379586111162ca45",
+      "sourceFile": "lib/cipher/symmetric/des.ts",
+      "status": "verified"
+    },
+    "DES_FP": {
+      "standard": "NIST FIPS 46-3",
+      "entries": 64,
+      "elementBits": 8,
+      "sha256": "27d6d1d4ad00a4d5e783777553adcfbc308d515f4ae1297e06ff49be117c0765",
+      "sourceFile": "lib/cipher/symmetric/des.ts",
+      "status": "verified"
+    },
+    "DES_PC1": {
+      "standard": "NIST FIPS 46-3",
+      "entries": 56,
+      "elementBits": 8,
+      "sha256": "e30e6bc2e8bebc9e1d8849f1db71fa84c3ea81d6aa57eb3c56d7dfd332be150e",
+      "sourceFile": "lib/cipher/symmetric/des.ts",
+      "status": "verified"
+    },
+    "DES_PC2": {
+      "standard": "NIST FIPS 46-3",
+      "entries": 48,
+      "elementBits": 8,
+      "sha256": "4e73b22cfd893ad29148dbe4889ea67e89e3bb889345e5bb82998a1a36e529dc",
+      "sourceFile": "lib/cipher/symmetric/des.ts",
+      "status": "verified"
+    },
+    "DES_E": {
+      "standard": "NIST FIPS 46-3",
+      "entries": 48,
+      "elementBits": 8,
+      "sha256": "b0a68d0bb1485ea4f839fae61cb6bf6888497d3419992ba8736e6e2329b35b6b",
+      "sourceFile": "lib/cipher/symmetric/des.ts",
+      "status": "verified"
+    },
+    "DES_P": {
+      "standard": "NIST FIPS 46-3",
+      "entries": 32,
+      "elementBits": 8,
+      "sha256": "0fa52ee04cbb6cbf38260d8a571f54452033bc674d898c0d38865611387d853e",
+      "sourceFile": "lib/cipher/symmetric/des.ts",
+      "status": "verified"
+    },
+    "SM4_SBOX": {
+      "standard": "GB/T 32907-2016 Section 6 / RFC 8998",
+      "entries": 256,
+      "elementBits": 8,
+      "sha256": "1674d0631a2e37b60ec748bc3899fee1550c108af30b85ce96a70c5ca4682d03",
+      "sourceFile": "lib/cipher/symmetric/sm4.ts",
+      "status": "verified"
+    },
+    "CAMELLIA_SBOX1": {
+      "standard": "ISO/IEC 18033-3:2010 / RFC 3713 Section 2.1",
+      "entries": 256,
+      "elementBits": 8,
+      "sha256": "4867a63842b7afbf7a120c1310940f29048d0b73ef1747e15ad67a3aa0d9af9d",
+      "sourceFile": "lib/cipher/symmetric/camellia.ts",
+      "status": "verified"
+    },
+    "ARIA_SB1": {
+      "standard": "KS X 1213:2004 / RFC 5794 Section 2.4.2",
+      "entries": 256,
+      "elementBits": 8,
+      "sha256": "c2d8e5eed6cbebd8625fc18f81486a7733c04f9b0129ffbe974c68b90308b4f2",
+      "sourceFile": "lib/cipher/symmetric/aria.ts",
+      "status": "verified"
+    },
+    "ARIA_SB2": {
+      "standard": "KS X 1213:2004 / RFC 5794 Section 2.4.2",
+      "entries": 256,
+      "elementBits": 8,
+      "sha256": "360e7dadb4427717af4cb4e82f530229193e21b1bfb8dbedbc46f77ff251ca15",
+      "sourceFile": "lib/cipher/symmetric/aria.ts",
+      "status": "verified"
+    },
+    "SHA3_RC": {
+      "standard": "NIST FIPS 202 Section 3.2.5 Algorithm 5 (Keccak-p Round Constants)",
+      "entries": 24,
+      "elementBits": 64,
+      "sha256": "3da4c46b66bb151ef665aacd3090f397b2dec51dde39e1166c2131a955d84027",
+      "sourceFile": "lib/cipher/hash/sha3.ts",
+      "status": "verified"
+    },
+    "CHACHA20_CONSTANTS": {
+      "standard": "RFC 7539 Section 2.3",
+      "entries": 4,
+      "elementBits": 32,
+      "valuesHex": ["61707865", "3320646e", "79622d32", "6b206574"],
+      "ascii": "expand 32-byte k",
+      "sourceFile": "lib/cipher/symmetric/chacha20.ts",
+      "status": "verified"
+    },
+    "BLOWFISH_P": {
+      "standard": "Bruce Schneier, Fast Software Encryption (1993)",
+      "entries": 18,
+      "elementBits": 32,
+      "sourceFile": "lib/cipher/symmetric/blowfish.ts",
+      "status": "verified"
+    },
+    "SOSEMANUK_SERPENT_S2": {
+      "standard": "eSTREAM Software Profile (Serpent S2 FSM S-box)",
+      "entries": 16,
+      "sourceFile": "lib/cipher/symmetric/sosemanuk.ts",
+      "status": "truncated_placeholder",
+      "warning": "Implementation contains 16-entry stub padded with 240 zeros. Unverified."
+    },
+    "SQUARE_SBOX": {
+      "standard": "Joan Daemen, Vincent Rijmen (1997)",
+      "entries": 64,
+      "sourceFile": "lib/cipher/symmetric/square.ts",
+      "status": "truncated_placeholder",
+      "warning": "Implementation contains 64-entry stub instead of full 256 bytes. Unverified."
+    },
+    "KALYNA_SBOXES": {
+      "standard": "DSTU 7624:2014 (Ukrainian National Standard)",
+      "entries": 8,
+      "sourceFile": "lib/cipher/symmetric/kalyna.ts",
+      "status": "truncated_placeholder",
+      "warning": "Implementation contains placeholder S-box table. Unverified."
+    }
+  }
+}

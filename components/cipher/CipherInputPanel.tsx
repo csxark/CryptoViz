@@ -6,7 +6,7 @@ import type { CipherDefinition } from "../../lib/cipher/registry";
 interface CipherInputPanelProps {
   cipher: CipherDefinition;
   input: string;
-  key: string;
+  cipherKey: string;
   onInputChange: (value: string) => void;
   onKeyChange: (value: string) => void;
   keylessCiphers: readonly string[];
@@ -15,7 +15,7 @@ interface CipherInputPanelProps {
 export default function CipherInputPanel({
   cipher,
   input,
-  key,
+  cipherKey,
   onInputChange,
   onKeyChange,
   keylessCiphers,
@@ -47,9 +47,9 @@ export default function CipherInputPanel({
           <input
             id={keyId}
             type="text"
-            value={key}
+            value={cipherKey}
             onChange={(event) => onKeyChange(event.target.value)}
-            className="w-full rounded-lg border border-zinc-200 bg-zinc-50/50 p-2.5 font-mono text-sm text-zinc-900 outline-none transition-all focus:border-teal-500 focus:bg-white dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-100 dark:focus:border-teal-400"
+            className="w-full rounded-lg border border-zinc-200 bg-zinc-50/50 p-2.5 font-mono text-sm text-zinc-900 outline-none transition-all focus:border-teal-500 focus:bg-white dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-100 dark:focus:border-teal-400 dark:focus:bg-zinc-950"
             placeholder={cipher.keyPlaceholder || "Enter key..."}
             aria-label="Cryptographic key or shift"
           />

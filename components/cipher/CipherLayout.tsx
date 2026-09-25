@@ -267,7 +267,7 @@ const virtualizedResult = result;  const activeStep = result?.steps?.[currentSte
           <CipherInputPanel
             cipher={cipher}
             input={input}
-            key={key}
+            cipherKey={key}
             onInputChange={setInput}
             onKeyChange={setKey}
             keylessCiphers={KEYLESS_CIPHERS}
@@ -293,11 +293,7 @@ const virtualizedResult = result;  const activeStep = result?.steps?.[currentSte
             onPaddingChange={setPadding}
             onRun={() => void run()}
           />
-          <WorkspacePresetManager
-            cipherId={cipher.id}
-            workspace={{ cipherId: cipher.id, direction, input, key, options, animationSpeed }}
-            onLoad={handlePresetLoad}
-          />
+          {/* WorkspacePresetManager hidden from UI; component code retained */}
           {(error || workerError) && (
             <div
               role="alert"
@@ -406,36 +402,7 @@ const virtualizedResult = result;  const activeStep = result?.steps?.[currentSte
                       {activeAnnotation?.bookmarked ? "Bookmarked ★" : "Bookmark Step"}
                     </button>
                   </div>
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <div className="flex gap-2">
-                      <input
-                        value={stepNoteInput || activeAnnotation?.note || ""}
-                        onChange={(event) => setStepNoteInput(event.target.value)}
-                        placeholder="Add a personal note to this step..."
-                        className="flex-1 rounded-md border px-3 py-1.5 text-xs dark:bg-zinc-950"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (activeStep && activeStepId) {
-                            setAnnotationStore(
-                              updateStepNote(
-                                annotationStore,
-                                annotationScope,
-                                activeStepId,
-                                activeStep.label,
-                                stepNoteInput
-                              )
-                            );
-                            setStepNoteInput("");
-                          }
-                        }}
-                        className="rounded-md bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white"
-                      >
-                        Save Note
-                      </button>
-                    </div>
-                  </div>
+
                   <StepAnimator
 steps={result.steps}
 stepMetadata={
